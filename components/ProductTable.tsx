@@ -1,9 +1,10 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Product, User, ProductVariant, Language } from '../types';
-import { ProductStatus, Role } from '../types';
-import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, QrCodeIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, BarcodeIcon, CubeIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
-import { getCategoryDisplay, getCategoryByKey } from '../categories';
+import type { Product, User, ProductVariant, Language } from '../types.ts';
+import { ProductStatus, Role } from '../types.ts';
+import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, QrCodeIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, BarcodeIcon, CubeIcon } from './icons/HeroIcons.tsx';
+import type { TranslationKey } from '../translations.ts';
+import { getCategoryDisplay, getCategoryByKey } from '../categories.ts';
 
 declare const XLSX: any;
 

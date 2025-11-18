@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 // FIX: Corrected import paths
-import type { NewUserData } from '../types';
-import { Role } from '../types';
-import { XMarkIcon, PhotoIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
-import { getPermissionsFromRoles } from '../lib/permissions';
+import type { NewUserData } from '../types.ts';
+import { Role } from '../types.ts';
+import { XMarkIcon, PhotoIcon } from './icons/HeroIcons.tsx';
+import type { TranslationKey } from '../translations.ts';
+import { getPermissionsFromRoles } from '../lib/permissions.ts';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -117,7 +118,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onAddUser,
                             />
                             <label htmlFor={`add-role-${roleValue}`} className="ml-3 block text-sm text-text-primary">
                                 {/* Fix: Cast roleValue to string to ensure toLowerCase can be called safely */}
-                                {t(`role_${String(roleValue).toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}
+                                {t(`role_${(roleValue as string).toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}
                             </label>
                         </div>
                     ))}

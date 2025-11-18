@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 // FIX: Corrected import path
-import { XMarkIcon } from './icons/HeroIcons';
+import { XMarkIcon } from './icons/HeroIcons.tsx';
 
 declare global {
     interface Window {

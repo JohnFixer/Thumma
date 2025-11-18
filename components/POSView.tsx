@@ -1,15 +1,16 @@
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import ProductGrid from './ProductGrid';
-import CartPanel from './CartPanel';
-import PaymentModal from './PaymentModal';
-import ReceiptModal from './ReceiptModal';
-import VariantSelectionModal from './VariantSelectionModal';
-import CreateInvoiceModal from './CreateInvoiceModal';
-import OutsourcePurchaseModal from './OutsourcePurchaseModal';
-import AddMiscItemModal from './AddMiscItemModal';
-import type { Product, CartItem, Transaction, User, CustomerType, Customer, StoreCredit, Order, ProductVariant, Language, StoreSettings, PaymentMethod, NewCustomerData } from '../types';
-import { FulfillmentStatus, PaymentStatus } from '../types';
-import type { TranslationKey } from '../translations';
+import ProductGrid from './ProductGrid.tsx';
+import CartPanel from './CartPanel.tsx';
+import PaymentModal from './PaymentModal.tsx';
+import ReceiptModal from './ReceiptModal.tsx';
+import VariantSelectionModal from './VariantSelectionModal.tsx';
+import CreateInvoiceModal from './CreateInvoiceModal.tsx';
+import OutsourcePurchaseModal from './OutsourcePurchaseModal.tsx';
+import AddMiscItemModal from './AddMiscItemModal.tsx';
+import type { Product, CartItem, Transaction, User, CustomerType, Customer, StoreCredit, Order, ProductVariant, Language, StoreSettings, PaymentMethod, NewCustomerData } from '../types.ts';
+import { FulfillmentStatus, PaymentStatus } from '../types.ts';
+import type { TranslationKey } from '../translations.ts';
 
 interface POSViewProps {
   products: Product[];

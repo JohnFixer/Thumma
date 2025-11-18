@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
-import { XMarkIcon, CreditCardIcon, CheckCircleIcon, CurrencyDollarIcon, BuildingLibraryIcon } from './icons/HeroIcons';
-import type { User } from '../types';
-import type { TranslationKey } from '../translations';
+import { XMarkIcon, CreditCardIcon, CheckCircleIcon, CurrencyDollarIcon, BuildingLibraryIcon } from './icons/HeroIcons.tsx';
+import type { User } from '../types.ts';
+import type { TranslationKey } from '../translations.ts';
 
 interface PaymentModalProps {
   isOpen: boolean;

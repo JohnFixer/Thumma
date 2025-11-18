@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>บจก.ธรรมะคอนกรีต</title>
+    <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="/manifest.json" />
+    <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'primary': '#1e40af', // A deep blue
+              'secondary': '#f97316', // A vibrant orange
+              'background': '#f1f5f9', // A light gray
+              'surface': '#ffffff',
+              'text-primary': '#1e293b',
+              'text-secondary': '#64748b',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: 0, transform: 'translateY(5px)' },
+                '100%': { opacity: 1, transform: 'translateY(0)' },
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 150ms ease-out',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      @media print {
+        @page {
+          size: A5;
+          margin: 1cm;
+        }
+
+        body, html {
+          margin: 0;
+          padding: 0;
+          background-color: #fff !important; /* Ensure background is white for printing */
+        }
+        
+        /* Ensure colors and backgrounds are printed */
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          width: 100%; /* Make body fill the A5 page width */
+        }
+
+        .no-print {
+          display: none !important;
+        }
+
+        .print-center-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Use vh to fill the viewport of the print page */
+        }
+      }
+    </style>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "react-dropzone": "https://aistudiocdn.com/react-dropzone@^14.3.8",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.81.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

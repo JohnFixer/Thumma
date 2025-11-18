@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 // FIX: Corrected import paths
-import type { User, NewUserData } from '../types.ts';
-import { Role } from '../types.ts';
-import { XMarkIcon, PhotoIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
-import { getPermissionsFromRoles } from '../lib/permissions.ts';
+import type { User, NewUserData } from '../types';
+import { Role } from '../types';
+import { XMarkIcon, PhotoIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
+import { getPermissionsFromRoles } from '../lib/permissions';
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -105,7 +104,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onEditUs
                 <label className="block text-sm font-medium text-text-secondary">{t('roles')}</label>
                 <div className="mt-2 space-y-2 grid grid-cols-2">
                     {Object.values(Role).map(roleValue => (
-                        <div key={roleValue} className="flex items-center">
+                        <div key={roleValue as string} className="flex items-center">
                             <input
                                 id={`edit-role-${roleValue}`}
                                 name="role"

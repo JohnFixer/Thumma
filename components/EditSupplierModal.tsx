@@ -1,10 +1,8 @@
-
-
 import React, { useState, useEffect } from 'react';
 // FIX: Corrected import paths
-import type { Supplier, NewSupplierData } from '../types.ts';
-import { XMarkIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { Supplier, NewSupplierData } from '../types';
+import { XMarkIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
 
 interface EditSupplierModalProps {
   isOpen: boolean;

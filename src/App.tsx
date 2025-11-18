@@ -8,7 +8,6 @@ import EditProductModal from './components/EditProductModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import ProductDetailModal from './components/ProductDetailModal';
 import UserManagementView from './components/UserManagementView';
-import ProfileModal from './components/ProfileModal';
 import SuppliersView from './components/SuppliersView';
 import AddSupplierModal from './components/AddSupplierModal';
 import AlertModal from './components/AlertModal';
@@ -115,7 +114,6 @@ const App: React.FC = () => {
     const [isEditProductModalOpen, setIsEditProductModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isViewProductModalOpen, setIsViewProductModalOpen] = useState(false);
-    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -1100,8 +1098,6 @@ const App: React.FC = () => {
     const handleUpdateUser = async (userId: string, data: Partial<Omit<User, 'id' | 'password'>>) => {
         if (!currentUser) return;
         
-        // In `handleUpdateUser`, safely merge user settings to prevent crashes
-        // if `currentUser.settings` or `data.settings` are null or undefined.
         const currentUserSettings = currentUser.settings || {};
         const dataSettings = data.settings || {};
 
@@ -1109,7 +1105,6 @@ const App: React.FC = () => {
             ...data,
             settings: { ...currentUserSettings, ...dataSettings }
         };
-
     
         const { data: updatedUserData, error } = await supabase
             .from('users')
@@ -2150,15 +2145,15 @@ const App: React.FC = () => {
         const customerMap: Map<string, Customer> = new Map(customers.map(c => [c.name, c]));
         const transactionsToInsert: Omit<Transaction, 'id'>[] = [];
 
-        for (const invoiceData of pastInvoices) {
-            if (!invoiceData.customerId) {
+        for (const invoice of pastInvoices) {
+            if (!invoice.customerId) {
                 continue;
             }
-            const customer = customerMap.get(invoiceData.customerId);
+            const customer = customerMap.get(invoice.customerId);
             if (!customer) continue;
 
-            const total = invoiceData.totalAmount;
-            const paid_amount = invoiceData.amountAlreadyPaid;
+            const total = invoice.totalAmount;
+            const paid_amount = invoice.amountAlreadyPaid;
             const subtotal = total / 1.07;
             const tax = total - subtotal;
 
@@ -2167,10 +2162,10 @@ const App: React.FC = () => {
             else if (paid_amount > 0) payment_status = PaymentStatus.PARTIALLY_PAID;
 
             transactionsToInsert.push({
-                date: new Date(invoiceData.invoiceDate).toISOString(),
+                date: new Date(invoice.invoiceDate).toISOString(),
                 items: [{
-                    productId: 'PAST_INVOICE', variantId: invoiceData.originalInvoiceId,
-                    name: { en: `Past Invoice #${invoiceData.originalInvoiceId}`, th: `ใบแจ้งหนี้ย้อนหลัง #${invoiceData.originalInvoiceId}` },
+                    productId: 'PAST_INVOICE', variantId: invoice.originalInvoiceId,
+                    name: { en: `Past Invoice #${invoice.originalInvoiceId}`, th: `ใบแจ้งหนี้ย้อนหลัง #${invoice.originalInvoiceId}` },
                     size: '', imageUrl: '', sku: 'PAST-DUE', quantity: 1, stock: 0,
                     price: { walkIn: total, contractor: total, government: total, cost: total },
                 }],
@@ -2178,7 +2173,7 @@ const App: React.FC = () => {
                 customerAddress: customer.address, customerPhone: customer.phone,
                 customerType: customer.type, operator: currentUser.name,
                 paymentMethod: 'Cash', vatIncluded: true, payment_status, paid_amount,
-                due_date: new Date(invoiceData.invoiceDate).toISOString(),
+                due_date: new Date(invoice.invoiceDate).toISOString(),
             });
         }
         

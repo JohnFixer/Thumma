@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 // FIX: Corrected import paths
-import type { User, NewUserData } from '../types.ts';
-import { Role } from '../types.ts';
-import { PencilIcon, TrashIcon, PlusIcon, KeyIcon } from './icons/HeroIcons.tsx';
-import ConfirmationModal from './ConfirmationModal.tsx';
-import EditUserModal from './EditUserModal.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { User, NewUserData } from '../types';
+import { Role } from '../types';
+import { PencilIcon, TrashIcon, PlusIcon, KeyIcon } from './icons/HeroIcons';
+import ConfirmationModal from './ConfirmationModal';
+import EditUserModal from './EditUserModal';
+import type { TranslationKey } from '../translations';
 
 interface UserTableProps {
   users: User[];

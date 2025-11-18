@@ -1,9 +1,7 @@
-
-
 import React from 'react';
 // FIX: Corrected import paths
-import { XMarkIcon, ExclamationTriangleIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
+import { XMarkIcon, ExclamationTriangleIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
 
 interface ConfirmationModalProps {
   isOpen: boolean;

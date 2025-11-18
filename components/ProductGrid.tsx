@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
-import type { Product, Language } from '../types.ts';
-import { MagnifyingGlassIcon, CubeIcon, BarcodeIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
-import { CATEGORIES } from '../categories.ts';
+import type { Product, Language } from '../types';
+import { MagnifyingGlassIcon, CubeIcon, BarcodeIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
+import { CATEGORIES } from '../categories';
 
 interface ProductGridProps {
   products: Product[];

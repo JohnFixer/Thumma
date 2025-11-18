@@ -1,12 +1,11 @@
-
 import React, { useState, useMemo } from 'react';
-import type { Supplier, User, NewSupplierData } from '../types.ts';
-import { Role } from '../types.ts';
-import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, TruckIcon } from './icons/HeroIcons.tsx';
-import ConfirmationModal from './ConfirmationModal.tsx';
-import EditSupplierModal from './EditSupplierModal.tsx';
-import SupplierDetailModal from './SupplierDetailModal.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { Supplier, User, NewSupplierData } from '../types';
+import { Role } from '../types';
+import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, TruckIcon } from './icons/HeroIcons';
+import ConfirmationModal from './ConfirmationModal';
+import EditSupplierModal from './EditSupplierModal';
+import SupplierDetailModal from './SupplierDetailModal';
+import type { TranslationKey } from '../translations';
 
 declare const XLSX: any;
 

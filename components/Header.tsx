@@ -1,9 +1,7 @@
-
-
 import React from 'react';
-import type { User, Language } from '../types.ts';
-import { BellIcon, LanguageIcon, Bars3Icon, ArrowLeftIcon, ExclamationTriangleIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { User, Language } from '../types';
+import { BellIcon, LanguageIcon, Bars3Icon, ArrowLeftIcon, ExclamationTriangleIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
 
 interface HeaderProps {
   currentUser: User;

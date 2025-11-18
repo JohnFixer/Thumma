@@ -1,12 +1,11 @@
-
 import React, { useMemo } from 'react';
-import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types.ts';
-import type { TranslationKey } from '../translations.ts';
-import SalesOverviewWidget from './widgets/SalesOverviewWidget.tsx';
-import AccountsPayableWidget from './widgets/AccountsPayableWidget.tsx';
-import InventoryOverviewWidget from './widgets/InventoryOverviewWidget.tsx';
-import LowStockListWidget from './widgets/LowStockListWidget.tsx';
-import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget.tsx';
+import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types';
+import type { TranslationKey } from '../translations';
+import SalesOverviewWidget from './widgets/SalesOverviewWidget';
+import AccountsPayableWidget from './widgets/AccountsPayableWidget';
+import InventoryOverviewWidget from './widgets/InventoryOverviewWidget';
+import LowStockListWidget from './widgets/LowStockListWidget';
+import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget';
 
 interface DashboardProps {
   products: Product[];
@@ -46,8 +45,8 @@ const Dashboard: React.FC<DashboardProps> = ({ products, users, transactions, bi
 
         let widgetsToShow: string[];
 
-        if (visibilitySettings && visibilitySettings[userRole]) {
-            widgetsToShow = visibilitySettings[userRole];
+        if (visibilitySettings && visibilitySettings[userRole as keyof typeof visibilitySettings]) {
+            widgetsToShow = visibilitySettings[userRole as keyof typeof visibilitySettings];
         } else {
             // Default visibility if no setting is found for the role
             widgetsToShow = DEFAULT_WIDGETS;

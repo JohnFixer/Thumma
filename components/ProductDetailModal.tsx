@@ -1,9 +1,10 @@
 import React from 'react';
-import type { Product, ProductVariant, Language } from '../types';
-import { ProductStatus } from '../types';
-import { XMarkIcon, ClockIcon, QrCodeIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
-import { getCategoryDisplay } from '../categories';
+// FIX: Corrected import paths to include file extensions.
+import type { Product, ProductVariant, Language } from '../types.ts';
+import { ProductStatus } from '../types.ts';
+import { XMarkIcon, ClockIcon, QrCodeIcon } from './icons/HeroIcons.tsx';
+import type { TranslationKey } from '../translations.ts';
+import { getCategoryDisplay } from '../categories.ts';
 
 interface ProductDetailModalProps {
   isOpen: boolean;

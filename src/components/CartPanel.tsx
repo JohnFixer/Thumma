@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-// FIX: Corrected import paths to include file extensions.
-import type { CartItem, CustomerType, Customer, StoreCredit, Product, Language, StoreSettings } from '../types.ts';
-import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from './icons/HeroIcons.tsx';
-import SalesAssistantModal from './SalesAssistantModal.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { CartItem, CustomerType, Customer, StoreCredit, Product, Language, StoreSettings } from '../types';
+import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from './icons/HeroIcons';
+import SalesAssistantModal from './SalesAssistantModal';
+import type { TranslationKey } from '../translations';
 
 interface CartPanelProps {
   cartItems: CartItem[];
@@ -362,4 +361,29 @@ const CartPanel: React.FC<CartPanelProps> = ({
             </div>
             {creditMessage && (
                 <p className={`text-xs mt-1 flex items-center gap-1 ${creditMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                    {creditMessage.type === 'success
+                    {creditMessage.type === 'success' ? <CheckCircleIcon className="h-4 w-4"/> : <XCircleIcon className="h-4 w-4"/>}
+                    {creditMessage.text}
+                </p>
+            )}
+        </div>
+
+        <div className="border-t pt-3 mt-3 flex justify-between items-baseline">
+          <span className="text-lg font-bold">{t('grand_total')}</span>
+          <span className="text-2xl font-bold text-primary">฿{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        </div>
+        <div className="mt-2">
+            {renderActionButtons()}
+        </div>
+      </div>
+    </div>
+    <SalesAssistantModal
+        isOpen={isAssistantModalOpen}
+        onClose={() => setIsAssistantModalOpen(false)}
+        products={products}
+        cartItems={cartItems}
+        language={language}
+    />
+    </>
+  );
+};
+export default CartPanel;

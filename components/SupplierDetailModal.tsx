@@ -1,8 +1,8 @@
 import React from 'react';
-// FIX: Corrected import paths
-import type { Supplier } from '../types';
-import { OrderStatus } from '../types';
-import { XMarkIcon, PhoneIcon, EnvelopeIcon, CheckCircleIcon, ClockIcon } from './icons/HeroIcons';
+// FIX: Corrected import paths to include file extensions.
+import type { Supplier } from '../types.ts';
+import { OrderStatus } from '../types.ts';
+import { XMarkIcon, PhoneIcon, EnvelopeIcon, CheckCircleIcon, ClockIcon } from './icons/HeroIcons.tsx';
 
 interface SupplierDetailModalProps {
   isOpen: boolean;

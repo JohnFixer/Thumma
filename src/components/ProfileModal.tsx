@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Corrected import paths to include file extensions.
-import type { User } from '../types.ts';
-import { XMarkIcon, CameraIcon } from './icons/HeroIcons.tsx';
+import type { User } from '../types';
+import { XMarkIcon, CameraIcon } from './icons/HeroIcons';
 
 interface ProfileModalProps {
   isOpen: boolean;

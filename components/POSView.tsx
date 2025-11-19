@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
 import PaymentModal from './PaymentModal';
+// FIX: Corrected import paths by removing file extensions.
 import ReceiptModal from './ReceiptModal';
 import VariantSelectionModal from './VariantSelectionModal';
 import CreateInvoiceModal from './CreateInvoiceModal';
@@ -351,7 +352,6 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
     
     const handleConfirmInvoice = (dueDate: string) => {
         if (!invoiceData) return;
-        // FIX: Add explicit type to resolve TS inference issue.
         const finalInvoiceData: Omit<Transaction, 'payment_status' | 'paymentMethod' | 'paid_amount'> = { ...invoiceData, due_date: dueDate };
         onNewInvoice(finalInvoiceData, cartItems);
         setIsCreateInvoiceModalOpen(false);

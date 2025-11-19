@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Corrected import paths
+// FIX: Corrected import paths by removing file extensions.
 import type { User, NewUserData } from '../types';
 import { Role } from '../types';
 import { XMarkIcon, PhotoIcon } from './icons/HeroIcons';
@@ -104,7 +104,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onEditUs
                 <label className="block text-sm font-medium text-text-secondary">{t('roles')}</label>
                 <div className="mt-2 space-y-2 grid grid-cols-2">
                     {Object.values(Role).map(roleValue => (
-                        <div key={roleValue as string} className="flex items-center">
+                        <div key={roleValue} className="flex items-center">
                             <input
                                 id={`edit-role-${roleValue}`}
                                 name="role"
@@ -114,8 +114,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onEditUs
                                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                             />
                             <label htmlFor={`edit-role-${roleValue}`} className="ml-3 block text-sm text-text-primary">
-                                {/* Fix: Cast roleValue to string to ensure toLowerCase can be called safely */}
-                                {t(`role_${(roleValue as string).toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}
+                                {t(`role_${roleValue.toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}
                             </label>
                         </div>
                     ))}

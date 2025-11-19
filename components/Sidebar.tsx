@@ -1,4 +1,5 @@
 import React from 'react';
+// FIX: Corrected import paths by removing file extensions.
 import type { User, StoreSettings, Language, UserPermissions } from '../types';
 import { Role } from '../types';
 import { WrenchScrewdriverIcon, ArrowLeftOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, PuzzlePieceIcon } from './icons/HeroIcons';
@@ -100,8 +101,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                             >
                                 <option value="" disabled>Select a role...</option>
                                 {Object.values(Role).filter(r => r !== Role.CEO).map(role => (
-                                    // FIX: Cast role to string to resolve toLowerCase error.
-                                    <option key={role as string} value={role}>{t(`role_${(role as string).toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}</option>
+                                    
+                                    <option key={role as string} value={role as string}>{t(`role_${(role as string).toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}</option>
                                 ))}
                             </select>
                         </div>

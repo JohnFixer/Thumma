@@ -1,7 +1,7 @@
 
 
+
 import React, { useState, useMemo } from 'react';
-// FIX: Added CustomerType to handle all customer types in getPriceForCustomer.
 import type { Transaction, CartItem, StoreCredit, ReturnedItem, Product, Language, CustomerType } from '../types';
 import { ReturnReason } from '../types';
 import { MagnifyingGlassIcon, CurrencyDollarIcon, XCircleIcon } from './icons/HeroIcons';
@@ -20,7 +20,6 @@ interface ReturnsViewProps {
   language: Language;
 }
 
-// FIX: Changed parameter type to CustomerType to handle 'organization' and other types.
 const getPriceForCustomer = (item: CartItem, customerType: CustomerType) => {
     if (customerType === 'government') return item.price.government;
     if (customerType === 'contractor') return item.price.contractor;
@@ -192,7 +191,7 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
                                             onChange={(e) => handleItemChange(item.variantId, currentReturnInfo?.quantity || 0, e.target.value as ReturnReason)}
                                             className="p-1 border rounded-md text-sm"
                                         >
-                                            {Object.values(ReturnReason).map(reason => <option key={reason} value={reason}>{reason}</option>)}
+                                            {(Object.values(ReturnReason) as ReturnReason[]).map(reason => <option key={reason} value={reason}>{reason}</option>)}
                                         </select>
                                     </div>
                                 </div>

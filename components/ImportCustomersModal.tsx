@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import type { NewCustomerData } from '../types';
+import type { NewCustomerData, CustomerType } from '../types';
 import { XMarkIcon, ArrowUpTrayIcon } from './icons/HeroIcons';
 import type { TranslationKey } from '../translations';
 
@@ -57,14 +57,17 @@ const ImportCustomersModal: React.FC<ImportCustomersModalProps> = ({ isOpen, onC
                 errors.push(`Row ${index + 2}: Missing required 'Name' or 'Type'. Row skipped.`);
                 continue;
             }
-            if (!['walkin', 'contractor', 'government'].includes(type)) {
-                errors.push(`Row ${index + 2}: Invalid 'Type' specified. Must be one of: walkIn, contractor, government.`);
+            const validTypes = ['walkin', 'contractor', 'government', 'organization'];
+            const normalizedType = type === 'walkin' ? 'walkIn' : type;
+
+            if (!validTypes.includes(type)) {
+                errors.push(`Row ${index + 2}: Invalid 'Type' specified. Must be one of: walkIn, contractor, government, organization.`);
                 continue;
             }
 
             customersToCreate.push({
                 name,
-                type: type === 'walkin' ? 'walkIn' : type as 'contractor' | 'government',
+                type: normalizedType as CustomerType,
                 phone: row['Phone'] ? String(row['Phone']) : undefined,
                 address: row['Address'] ? String(row['Address']) : undefined,
             });

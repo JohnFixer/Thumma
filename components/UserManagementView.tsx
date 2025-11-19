@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// FIX: Corrected import paths
+// FIX: Corrected import paths by removing file extensions.
 import type { User, NewUserData } from '../types';
 import UserTable from './UserTable';
 import AddUserModal from './AddUserModal';

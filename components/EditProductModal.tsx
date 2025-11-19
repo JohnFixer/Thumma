@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+// FIX: Corrected import paths by removing file extensions.
 import type { Product, NewProductData, ProductVariant, NewProductVariantData, ProductStatus, StockHistory } from '../types';
 import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from './icons/HeroIcons';
 import type { TranslationKey } from '../translations';

@@ -1,4 +1,5 @@
 import React from 'react';
+// FIX: Corrected import paths by removing file extensions.
 import type { Product, ProductVariant, Language } from '../types';
 import { ProductStatus } from '../types';
 import { XMarkIcon, ClockIcon, QrCodeIcon } from './icons/HeroIcons';

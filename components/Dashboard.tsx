@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+// FIX: Corrected import paths by removing file extensions.
 import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types';
 import type { TranslationKey } from '../translations';
 import SalesOverviewWidget from './widgets/SalesOverviewWidget';

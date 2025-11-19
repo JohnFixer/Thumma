@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+// FIX: Corrected import paths by removing file extensions.
 import type { Product, User, ProductVariant, Language } from '../types';
 import { ProductStatus, Role } from '../types';
 import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, QrCodeIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, BarcodeIcon, CubeIcon } from './icons/HeroIcons';

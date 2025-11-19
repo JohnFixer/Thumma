@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import type { Transaction, Language, PaymentMethod, StoreSettings } from '../types.ts';
-import { XMarkIcon, PrinterIcon } from './icons/HeroIcons.tsx';
-import { useTranslations } from '../translations.ts';
-import type { TranslationKey } from '../translations.ts';
+import type { Transaction, Language, PaymentMethod, StoreSettings } from '../types';
+import { XMarkIcon, PrinterIcon } from './icons/HeroIcons';
+import { useTranslations } from '../translations';
+import type { TranslationKey } from '../translations';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -101,4 +101,64 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
               <p>{t_receipt('operator')}: {transaction.operator}</p>
               <p>{t_receipt('customer')}: {transaction.customerName}</p>
             </div>
-            <table className="w-full text-sm font-
+            <table className="w-full text-sm font-sans">
+              <thead>
+                <tr className="border-b border-dashed border-black">
+                  <th className="text-left py-1">{t_receipt('item')}</th>
+                  <th className="text-center py-1">{t_receipt('qty')}</th>
+                  <th className="text-right py-1">{t_receipt('price')}</th>
+                  <th className="text-right py-1">{t_receipt('total')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transaction.items.map(item => {
+                  const price = transaction.customerType === 'government' ? item.price.government : transaction.customerType === 'contractor' ? item.price.contractor : item.price.walkIn;
+                  return (
+                  <tr key={item.variantId}>
+                    <td className="align-top">{item.name[receiptLanguage]} ({item.size})</td>
+                    <td className="text-center align-top">{item.quantity}</td>
+                    <td className="text-right align-top">{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="text-right align-top">{(price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                )})}
+              </tbody>
+            </table>
+            <div className="border-t border-dashed border-black mt-2 pt-1 font-sans">
+              <div className="flex justify-between"><span>{t_receipt('subtotal')}:</span><span>{transaction.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between"><span>{t_receipt('tax_7')}:</span><span>{transaction.tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              {transaction.appliedStoreCredit && (
+                <div className="flex justify-between"><span>{t_receipt('store_credit')}:</span><span>-{transaction.appliedStoreCredit.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              )}
+              <div className="flex justify-between font-bold text-lg mt-1"><span>{t_receipt('total')}:</span><span>฿{transaction.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+            </div>
+            <div className="border-t border-dashed border-black mt-2 pt-1 text-xs font-sans">
+              <p>{t_receipt('payment_method')}: {getTranslatedPaymentMethod(transaction.paymentMethod)}</p>
+            </div>
+            <div className="text-center text-xs mt-4 font-sans">
+                <p>{t_receipt('receipt_footer_line1')}</p>
+                <p>{t_receipt('receipt_footer_line2')}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-background px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+          <button
+            type="button"
+            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm-text-sm"
+            onClick={handlePrint}
+          >
+            <PrinterIcon className="h-5 w-5 mr-2" /> {t('print')}
+          </button>
+          <button
+            type="button"
+            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            onClick={onClose}
+          >
+            {t('close')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ReceiptModal;

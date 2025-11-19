@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Corrected import paths to include file extensions.
 import type { User } from '../types.ts';
 import { XMarkIcon, CameraIcon } from './icons/HeroIcons.tsx';
 

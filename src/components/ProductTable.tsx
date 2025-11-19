@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-// FIX: Add .ts extension for consistent module resolution.
-import type { Product, User, ProductVariant, Language } from '../types.ts';
-// FIX: Add .ts extension for consistent module resolution.
-import { ProductStatus, Role } from '../types.ts';
-// FIX: Add .tsx extension for consistent module resolution.
-import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, QrCodeIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, BarcodeIcon, CubeIcon } from './icons/HeroIcons.tsx';
-// FIX: Add .ts extension for consistent module resolution.
-import type { TranslationKey } from '../translations.ts';
-// FIX: Add .ts extension for consistent module resolution.
-import { getCategoryDisplay, getCategoryByKey } from '../categories.ts';
+// FIX: Removed .ts extension for consistent module resolution.
+import type { Product, User, ProductVariant, Language } from '../types';
+// FIX: Removed .ts extension for consistent module resolution.
+import { ProductStatus, Role } from '../types';
+// FIX: Removed .tsx extension for consistent module resolution.
+import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, QrCodeIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, BarcodeIcon, CubeIcon } from './icons/HeroIcons';
+// FIX: Removed .ts extension for consistent module resolution.
+import type { TranslationKey } from '../translations';
+// FIX: Removed .ts extension for consistent module resolution.
+import { getCategoryDisplay, getCategoryByKey } from '../categories';
 
 declare const XLSX: any;
 

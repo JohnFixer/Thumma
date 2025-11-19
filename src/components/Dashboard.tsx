@@ -1,10 +1,17 @@
 import React, { useMemo } from 'react';
+// FIX: Removed .ts extension for consistent module resolution.
 import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types';
+// FIX: Removed .ts extension for consistent module resolution.
 import type { TranslationKey } from '../translations';
+// FIX: Removed .tsx extension for consistent module resolution.
 import SalesOverviewWidget from './widgets/SalesOverviewWidget';
+// FIX: Removed .tsx extension for consistent module resolution.
 import AccountsPayableWidget from './widgets/AccountsPayableWidget';
+// FIX: Removed .tsx extension for consistent module resolution.
 import InventoryOverviewWidget from './widgets/InventoryOverviewWidget';
+// FIX: Removed .tsx extension for consistent module resolution.
 import LowStockListWidget from './widgets/LowStockListWidget';
+// FIX: Removed .tsx extension for consistent module resolution.
 import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget';
 
 interface DashboardProps {

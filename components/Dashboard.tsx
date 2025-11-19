@@ -1,11 +1,17 @@
 import React, { useMemo } from 'react';
-// FIX: Corrected import paths to include file extensions.
+// FIX: Standardize relative imports to use file extensions.
 import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types.ts';
+// FIX: Standardize relative imports to use file extensions.
 import type { TranslationKey } from '../translations.ts';
+// FIX: Standardize relative imports to use file extensions.
 import SalesOverviewWidget from './widgets/SalesOverviewWidget.tsx';
+// FIX: Standardize relative imports to use file extensions.
 import AccountsPayableWidget from './widgets/AccountsPayableWidget.tsx';
+// FIX: Standardize relative imports to use file extensions.
 import InventoryOverviewWidget from './widgets/InventoryOverviewWidget.tsx';
+// FIX: Standardize relative imports to use file extensions.
 import LowStockListWidget from './widgets/LowStockListWidget.tsx';
+// FIX: Standardize relative imports to use file extensions.
 import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget.tsx';
 
 interface DashboardProps {

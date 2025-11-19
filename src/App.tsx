@@ -184,7 +184,7 @@ const App: React.FC = () => {
                 supabase.from('shift_reports').select('*').order('endTime', { ascending: false }),
                 supabase.from('store_settings').select('*').single(),
                 supabase.from('bills')
-                    .select('id, supplierId:supplier_id, invoiceNumber:invoice_number, billDate:bill_date, dueDate:due_date, amount, status, paidAmount:paid_amount, payments, notes, fileUrl:file_url')
+                    .select('id, supplierId:supplier_id, invoiceNumber:invoice_number, billDate:bill_date, dueDate:due_date, amount, status, paidAmount:paid_amount, payments, fileUrl:file_url')
                     .order('due_date', { ascending: true }),
             ]);
             

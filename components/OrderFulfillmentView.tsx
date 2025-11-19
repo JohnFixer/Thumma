@@ -177,7 +177,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
                                                     onChange={(e) => onUpdateOrderStatus(order.id, e.target.value as FulfillmentStatus)}
                                                     className="text-xs p-1 border rounded-md bg-background focus:ring-primary focus:border-primary"
                                                 >
-                                                    {Object.values(FulfillmentStatus).map(status => (
+                                                    {(Object.values(FulfillmentStatus) as FulfillmentStatus[]).map(status => (
                                                         <option key={status} value={status}>{getTranslatedFulfillmentStatus(status)}</option>
                                                     ))}
                                                 </select>

@@ -100,7 +100,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                             >
                                 <option value="" disabled>Select a role...</option>
                                 {Object.values(Role).filter(r => r !== Role.CEO).map(role => (
-                                    <option key={role} value={role}>{t(`role_${role.toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}</option>
+                                    
+                                    <option key={role as string} value={role as string}>{t(`role_${(role as string).toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}</option>
                                 ))}
                             </select>
                         </div>

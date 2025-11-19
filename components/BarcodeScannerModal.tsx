@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// FIX: Corrected import path to include file extension.
 import { XMarkIcon } from './icons/HeroIcons.tsx';
 
 declare global {

@@ -16,8 +16,6 @@ root.render(
 
 // Register the service worker for PWA functionality
 if ('serviceWorker' in navigator) {
-  // We wait for the 'load' event to ensure the page is fully loaded before registering the service worker.
-  // This is the most robust method to avoid "invalid state" errors during registration.
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {

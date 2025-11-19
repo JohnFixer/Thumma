@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// FIX: Corrected import paths to include file extensions.
 import type { User, NewUserData } from '../types.ts';
 import { Role } from '../types.ts';
 import { PencilIcon, TrashIcon, PlusIcon, KeyIcon } from './icons/HeroIcons.tsx';

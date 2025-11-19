@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import type { Product, Language } from '../types.ts';
-import { MagnifyingGlassIcon, CubeIcon, BarcodeIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
-import { CATEGORIES } from '../categories.ts';
+import type { Product, Language } from '../types';
+import { MagnifyingGlassIcon, CubeIcon, BarcodeIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
+import { CATEGORIES } from '../categories';
 
 interface ProductGridProps {
   products: Product[];
@@ -101,4 +101,26 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, on
                                         )}
                                     </div>
                                     <div className="mt-2">
-                                        <p className="font-semibold text-
+                                        <p className="font-semibold text-sm text-text-primary leading-tight h-10 overflow-hidden">{product.name[language]}</p>
+                                        <div className="flex justify-between items-center mt-1">
+                                            <p className="text-xs text-text-secondary">{hasMultipleVariants ? t('sizes_available_title', { count: product.variants.length.toString() }) : t('in_stock_count', { count: totalStock.toLocaleString() })}</p>
+                                            <p className="text-base font-bold text-primary">{hasMultipleVariants && t('price_from')} ฿{displayPrice.toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="text-center py-16 text-text-secondary">
+                        <CubeIcon className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="font-semibold mt-4 text-lg text-text-primary">{t('no_products_found')}</p>
+                        <p className="text-sm mt-1">{t('try_adjusting_search')}</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default ProductGrid;

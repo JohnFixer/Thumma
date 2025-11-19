@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Product, NewProductData, ProductVariant, NewProductVariantData, ProductStatus, StockHistory } from '../types.ts';
-import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
-import { CATEGORIES } from '../categories.ts';
+import type { NewProductData, NewProductVariantData, Language } from '../types';
+import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
+import { CATEGORIES } from '../categories';
 
-interface EditProductModalProps {
+interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onEditProduct: (productId: string, productData: NewProductData) => void;
-  product: Product | null;
+  onAddProduct: (productData: NewProductData) => void;
+  initialBarcode?: string | null;
   showAlert: (title: string, message: string) => void;
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
 }
 
 interface VariantFormState {
-  id?: string;
   sku: string;
   size: string;
   stock: string;
@@ -25,8 +24,6 @@ interface VariantFormState {
     cost: string;
   };
   barcode: string;
-  status?: ProductStatus;
-  history?: StockHistory[];
 }
 
 const createEmptyVariantFormState = (): VariantFormState => ({
@@ -37,12 +34,13 @@ const createEmptyVariantFormState = (): VariantFormState => ({
   barcode: '',
 });
 
-const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, onEditProduct, product, showAlert, t }) => {
+
+const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onAddProduct, initialBarcode, showAlert, t }) => {
   const [name, setName] = useState({ en: '', th: '' });
   const [description, setDescription] = useState({ en: '', th: '' });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [variants, setVariants] = useState<VariantFormState[]>([]);
-  
+  const [variants, setVariants] = useState<VariantFormState[]>([createEmptyVariantFormState()]);
+
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
 
@@ -58,35 +56,25 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
   }, [selectedSubCategory, subCategoryOptions]);
 
   useEffect(() => {
-    if (product) {
-      setName(product.name);
-      setDescription(product.description || { en: '', th: '' });
-      setImagePreview(product.imageUrl);
-      
-      const formVariants = product.variants.map(v => ({
-          ...v,
-          stock: String(v.stock),
-          price: {
-              walkIn: String(v.price.walkIn),
-              contractor: String(v.price.contractor),
-              government: String(v.price.government),
-              cost: String(v.price.cost),
-          },
-          barcode: v.barcode || '',
-      }));
-      setVariants(formVariants);
-      
-      const [mainKey, subKey] = product.category.split('.');
-      setSelectedMainCategory(mainKey || '');
-      setSelectedSubCategory(subKey || '');
+    if (isOpen) {
+      setName({ en: '', th: '' });
+      setDescription({ en: '', th: '' });
+      setSelectedMainCategory('');
+      setSelectedSubCategory('');
+      setImagePreview(null);
+      const firstVariant = createEmptyVariantFormState();
+      if (initialBarcode) {
+        firstVariant.barcode = initialBarcode;
+      }
+      setVariants([firstVariant]);
     }
-  }, [product]);
+  }, [isOpen, initialBarcode]);
 
   const handleMainCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedMainCategory(e.target.value);
-    setSelectedSubCategory('');
+    setSelectedSubCategory(''); // Reset sub-category when main changes
   };
-
+  
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -97,7 +85,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
       reader.readAsDataURL(file);
     }
   };
-  
+
   const handleVariantChange = (index: number, field: keyof VariantFormState | 'walkIn' | 'contractor' | 'government' | 'cost', value: string) => {
     const newVariants = [...variants];
     const variant = { ...newVariants[index] };
@@ -106,8 +94,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
 
     let sanitizedValue = value;
     if (isPriceField) {
+        // Allow decimals, but only one dot
         if (!/^\d*\.?\d*$/.test(sanitizedValue)) return;
     } else if (isStockField) {
+        // Only integers
         if (!/^\d*$/.test(sanitizedValue)) return;
     }
 
@@ -119,7 +109,6 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
     newVariants[index] = variant;
     setVariants(newVariants);
   };
-
 
   const addVariant = () => {
     setVariants([...variants, createEmptyVariantFormState()]);
@@ -134,16 +123,14 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!product || !name.en || !name.th || !selectedMainCategory || !selectedSubCategory || !imagePreview) {
+    if (!name.en || !name.th || !selectedMainCategory || !selectedSubCategory || !imagePreview) {
         showAlert(t('missing_information'), t('add_product_validation1'));
         return;
     }
     
-    const variantsForPayload: (ProductVariant | NewProductVariantData)[] = variants.map(v => ({
-        ...v,
-        id: v.id,
-        status: v.status,
-        history: v.history,
+    const variantsWithNumbers: NewProductVariantData[] = variants.map(v => ({
+        sku: v.sku,
+        size: v.size,
         stock: parseInt(v.stock, 10) || 0,
         price: {
             walkIn: parseFloat(v.price.walkIn) || 0,
@@ -154,27 +141,20 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
         barcode: v.barcode || undefined,
     }));
 
-    if (variantsForPayload.some(v => !v.sku || !v.size || v.price.walkIn <= 0 || v.price.cost < 0)) {
+    if (variantsWithNumbers.some(v => !v.sku || !v.size || v.price.walkIn <= 0 || v.price.cost < 0)) {
         showAlert(t('invalid_variant'), t('add_product_validation2'));
         return;
     }
-    const productData: NewProductData = {
-        name,
-        description,
-        category: `${selectedMainCategory}.${selectedSubCategory}`,
-        imageUrl: imagePreview,
-        variants: variantsForPayload,
-    };
-    onEditProduct(product.id, productData);
+    onAddProduct({ name, description, category: `${selectedMainCategory}.${selectedSubCategory}`, imageUrl: imagePreview, variants: variantsWithNumbers });
   };
 
-  if (!isOpen || !product) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center" aria-modal="true" role="dialog" onClick={onClose}>
       <div className="bg-surface rounded-lg shadow-xl w-full max-w-4xl m-4" onClick={e => e.stopPropagation()}>
         <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-text-primary">{t('edit')} "{name.en}"</h3>
+          <h3 className="text-lg font-semibold text-text-primary">{t('add_product')}</h3>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-gray-100">
             <XMarkIcon className="h-6 w-6" />
           </button>
@@ -183,7 +163,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
           <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary">Product Image</label>
+                  <label className="block text-sm font-medium text-text-secondary">{t('product')} Image</label>
                   <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                     <div className="space-y-1 text-center">
                       {imagePreview ? (
@@ -192,24 +172,25 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
                         <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
                       )}
                       <div className="flex text-sm text-gray-600 justify-center">
-                        <label htmlFor="edit-file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-blue-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
-                          <span>Change image</span>
-                          <input id="edit-file-upload" name="edit-file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
+                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-blue-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
+                          <span>Upload a file</span>
+                          <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} required/>
                         </label>
                       </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                     </div>
                   </div>
                 </div>
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="edit-name_en" className="block text-sm font-medium text-text-secondary">Product Name (EN)</label>
-                        <input type="text" id="edit-name_en" value={name.en} onChange={(e) => setName(p => ({...p, en: e.target.value}))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
+                        <label htmlFor="name_en" className="block text-sm font-medium text-text-secondary">Product Name (EN)</label>
+                        <input type="text" id="name_en" value={name.en} onChange={(e) => setName(p => ({...p, en: e.target.value}))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
                     </div>
                     <div>
-                        <label htmlFor="edit-name_th" className="block text-sm font-medium text-text-secondary">Product Name (TH)</label>
-                        <input type="text" id="edit-name_th" value={name.th} onChange={(e) => setName(p => ({...p, th: e.target.value}))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
+                        <label htmlFor="name_th" className="block text-sm font-medium text-text-secondary">Product Name (TH)</label>
+                        <input type="text" id="name_th" value={name.th} onChange={(e) => setName(p => ({...p, th: e.target.value}))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
                     </div>
-                     <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="main_category" className="block text-sm font-medium text-text-secondary">{t('main_category')}</label>
                             <select id="main_category" value={selectedMainCategory} onChange={handleMainCategoryChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required>
@@ -234,20 +215,20 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
                     )}
                 </div>
             </div>
-            
-            <div>
+
+             <div>
                 <label className="block text-sm font-medium text-text-secondary">Product Description (Optional)</label>
                 <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <textarea value={description.en} onChange={(e) => setDescription(p => ({...p, en: e.target.value}))} rows={3} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background" placeholder="Description in English"></textarea>
                     <textarea value={description.th} onChange={(e) => setDescription(p => ({...p, th: e.target.value}))} rows={3} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background" placeholder="คำอธิบายสินค้า (ภาษาไทย)"></textarea>
                 </div>
             </div>
-
+            
             <div className="border-t pt-4">
-                <h4 className="text-md font-semibold text-text-primary mb-2">Product Variants</h4>
+                <h4 className="text-md font-semibold text-text-primary mb-2">Product Variants (Sizes, Types, etc.)</h4>
                 <div className="space-y-4">
                     {variants.map((variant, index) => (
-                        <div key={variant.id || index} className="grid grid-cols-12 gap-x-4 gap-y-2 items-end p-3 bg-background rounded-lg border">
+                        <div key={index} className="grid grid-cols-12 gap-x-4 gap-y-2 items-end p-3 bg-background rounded-lg border">
                             <div className="col-span-6 sm:col-span-2">
                                 <label className="block text-xs font-medium text-text-secondary">{t('size')}</label>
                                 <input type="text" placeholder="e.g., 12mm" value={variant.size} onChange={e => handleVariantChange(index, 'size', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
@@ -278,7 +259,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
                             </div>
                             <div className="col-span-11">
                                 <label className="block text-xs font-medium text-text-secondary">Barcode (Optional)</label>
-                                <input type="text" value={variant.barcode || ''} onChange={e => handleVariantChange(index, 'barcode', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
+                                <input type="text" value={variant.barcode} onChange={e => handleVariantChange(index, 'barcode', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
                             </div>
                             <div className="col-span-1 flex items-center justify-end">
                                 <button type="button" onClick={() => removeVariant(index)} disabled={variants.length <= 1} className="text-red-500 hover:text-red-700 disabled:text-gray-300 p-1">
@@ -295,7 +276,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
           </div>
           <div className="bg-background px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
             <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
-              Save Changes
+              Add Product
             </button>
             <button type="button" onClick={onClose} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
               Cancel
@@ -307,4 +288,4 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
   );
 };
 
-export default EditProductModal;
+export default AddProductModal;

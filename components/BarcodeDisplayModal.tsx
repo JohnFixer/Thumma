@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: Corrected import paths to include file extensions.
 import type { Product, ProductVariant, Language } from '../types.ts';
 import { XMarkIcon, PrinterIcon } from './icons/HeroIcons.tsx';
 import type { TranslationKey } from '../translations.ts';

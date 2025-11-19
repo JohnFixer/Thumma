@@ -1,7 +1,7 @@
 import React from 'react';
-import type { Product, ProductVariant, Language } from '../types.ts';
-import { XMarkIcon, PrinterIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { Product, ProductVariant, Language } from '../types';
+import { XMarkIcon, PrinterIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
 
 interface BarcodeDisplayModalProps {
   isOpen: boolean;

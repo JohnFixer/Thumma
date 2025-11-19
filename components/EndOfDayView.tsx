@@ -1,12 +1,11 @@
 
-
 import React, { useMemo, useState } from 'react';
-import type { Transaction, Product, ShiftReport, User, Language, CartItem } from '../types.ts';
-import StatsCard from './StatsCard.tsx';
-import { CurrencyDollarIcon, BanknotesIcon, ArrowTrendingUpIcon, TicketIcon } from './icons/HeroIcons.tsx';
-import ConfirmationModal from './ConfirmationModal.tsx';
-import ShiftReportModal from './ShiftReportModal.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { Transaction, Product, ShiftReport, User, Language, CartItem } from '../types';
+import StatsCard from './StatsCard';
+import { CurrencyDollarIcon, BanknotesIcon, ArrowTrendingUpIcon, TicketIcon } from './icons/HeroIcons';
+import ConfirmationModal from './ConfirmationModal';
+import ShiftReportModal from './ShiftReportModal';
+import type { TranslationKey } from '../translations';
 
 interface EndOfDayViewProps {
     transactions: Transaction[];
@@ -14,14 +13,13 @@ interface EndOfDayViewProps {
     shiftReports: ShiftReport[];
     currentUser: User;
     onCloseShift: () => void;
-    t: (key: TranslationKey) => string;
+    t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
     language: Language;
 }
 
 const EndOfDayView: React.FC<EndOfDayViewProps> = ({ transactions, products, shiftReports, currentUser, onCloseShift, t, language }) => {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-
+    
     const productCostMap = useMemo(() => {
         const map = new Map<string, number>();
         products.forEach(p => {
@@ -104,8 +102,8 @@ const EndOfDayView: React.FC<EndOfDayViewProps> = ({ transactions, products, shi
                     <div className="flex flex-wrap justify-between items-start">
                         <div>
                             <h2 className="text-2xl font-bold text-text-primary">{t('end_of_day')}</h2>
-                            <p className="text-text-secondary mt-1">Summary of sales for the current open shift.</p>
-                            <p className="text-xs text-text-secondary mt-1">Started since: {currentShiftData.startTime.toLocaleString()}</p>
+                            <p className="text-text-secondary mt-1">{t('end_of_day_summary_desc')}</p>
+                            <p className="text-xs text-text-secondary mt-1">{t('shift_start_time')}: {currentShiftData.startTime.toLocaleString()}</p>
                         </div>
                         <button
                             onClick={() => setIsConfirmModalOpen(true)}
@@ -120,7 +118,7 @@ const EndOfDayView: React.FC<EndOfDayViewProps> = ({ transactions, products, shi
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatsCard title={t('total_sales')} value={`฿${currentShiftData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={<CurrencyDollarIcon className="h-6 w-6" />} color="text-green-500" />
                     <StatsCard title={t('total_profit')} value={`฿${currentShiftData.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={<ArrowTrendingUpIcon className="h-6 w-6" />} color="text-blue-500" />
-                    <StatsCard title="Transactions" value={currentShiftData.totalTransactions.toLocaleString()} icon={<TicketIcon className="h-6 w-6" />} color="text-purple-500" />
+                    <StatsCard title={t('transactions')} value={currentShiftData.totalTransactions.toLocaleString()} icon={<TicketIcon className="h-6 w-6" />} color="text-purple-500" />
                     <StatsCard title={t('profit_margin')} value={`${currentShiftData.profitMargin.toFixed(2)}%`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-indigo-500" />
                 </div>
                 
@@ -128,9 +126,9 @@ const EndOfDayView: React.FC<EndOfDayViewProps> = ({ transactions, products, shi
                     <div className="bg-surface rounded-lg shadow p-4">
                         <h3 className="font-semibold text-text-primary mb-3">{t('sales_by_payment_method')}</h3>
                         <div className="space-y-2 text-sm">
-                            <div className="flex justify-between"><span>Cash</span><span className="font-semibold">฿{currentShiftData.paymentMethodBreakdown.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                            <div className="flex justify-between"><span>Card</span><span className="font-semibold">฿{currentShiftData.paymentMethodBreakdown.card.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                            <div className="flex justify-between"><span>Bank Transfer</span><span className="font-semibold">฿{currentShiftData.paymentMethodBreakdown.bankTransfer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                            <div className="flex justify-between"><span>{t('payment_cash')}</span><span className="font-semibold">฿{currentShiftData.paymentMethodBreakdown.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                            <div className="flex justify-between"><span>{t('payment_card')}</span><span className="font-semibold">฿{currentShiftData.paymentMethodBreakdown.card.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                            <div className="flex justify-between"><span>{t('payment_bank_transfer')}</span><span className="font-semibold">฿{currentShiftData.paymentMethodBreakdown.bankTransfer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                         </div>
                     </div>
                      <div className="bg-surface rounded-lg shadow p-4">
@@ -145,7 +143,7 @@ const EndOfDayView: React.FC<EndOfDayViewProps> = ({ transactions, products, shi
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-sm text-center text-text-secondary py-4">No items sold in this shift yet.</p>
+                            <p className="text-sm text-center text-text-secondary py-4">{t('no_items_sold_yet')}</p>
                         )}
                     </div>
                 </div>

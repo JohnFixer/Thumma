@@ -1,18 +1,11 @@
 import React, { useMemo } from 'react';
-// FIX: Standardize relative imports to use file extensions.
-import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types.ts';
-// FIX: Standardize relative imports to use file extensions.
-import type { TranslationKey } from '../translations.ts';
-// FIX: Standardize relative imports to use file extensions.
-import SalesOverviewWidget from './widgets/SalesOverviewWidget.tsx';
-// FIX: Standardize relative imports to use file extensions.
-import AccountsPayableWidget from './widgets/AccountsPayableWidget.tsx';
-// FIX: Standardize relative imports to use file extensions.
-import InventoryOverviewWidget from './widgets/InventoryOverviewWidget.tsx';
-// FIX: Standardize relative imports to use file extensions.
-import LowStockListWidget from './widgets/LowStockListWidget.tsx';
-// FIX: Standardize relative imports to use file extensions.
-import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget.tsx';
+import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types';
+import type { TranslationKey } from '../translations';
+import SalesOverviewWidget from './widgets/SalesOverviewWidget';
+import AccountsPayableWidget from './widgets/AccountsPayableWidget';
+import InventoryOverviewWidget from './widgets/InventoryOverviewWidget';
+import LowStockListWidget from './widgets/LowStockListWidget';
+import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget';
 
 interface DashboardProps {
   products: Product[];

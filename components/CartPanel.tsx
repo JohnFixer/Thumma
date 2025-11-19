@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { CartItem, CustomerType, Customer, StoreCredit, Product, Language, StoreSettings } from '../types.ts';
-import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from './icons/HeroIcons.tsx';
-import SalesAssistantModal from './SalesAssistantModal.tsx';
-import type { TranslationKey } from '../translations.ts';
+import type { CartItem, CustomerType, Customer, StoreCredit, Product, Language, StoreSettings } from '../types';
+import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from './icons/HeroIcons';
+import SalesAssistantModal from './SalesAssistantModal';
+import type { TranslationKey } from '../translations';
 
 interface CartPanelProps {
   cartItems: CartItem[];

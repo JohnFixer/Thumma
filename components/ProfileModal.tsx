@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { User } from '../types.ts';
-import { XMarkIcon, CameraIcon } from './icons/HeroIcons.tsx';
+import type { User } from '../types';
+import { XMarkIcon, CameraIcon } from './icons/HeroIcons';
 
 interface ProfileModalProps {
   isOpen: boolean;

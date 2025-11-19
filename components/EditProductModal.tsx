@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Product, NewProductData, ProductVariant, NewProductVariantData, ProductStatus, StockHistory } from '../types.ts';
-import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from './icons/HeroIcons.tsx';
-import type { TranslationKey } from '../translations.ts';
-import { CATEGORIES } from '../categories.ts';
+import type { Product, NewProductData, ProductVariant, NewProductVariantData, ProductStatus, StockHistory } from '../types';
+import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
+import { CATEGORIES } from '../categories';
 
 interface EditProductModalProps {
   isOpen: boolean;

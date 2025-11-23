@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { Transaction, Customer, User, Language } from '../types';
 import { PaymentStatus, Role } from '../types';
 import StatsCard from './StatsCard';
-import { BanknotesIcon, ExclamationTriangleIcon, UserGroupIcon, TrashIcon, ArrowDownTrayIcon, PlusIcon, ClipboardDocumentListIcon, PencilIcon, BackspaceIcon } from './icons/HeroIcons';
+import { BanknotesIcon, ExclamationTriangleIcon, UserGroupIcon, TrashIcon, ArrowDownTrayIcon, PlusIcon, ClipboardDocumentListIcon, PencilIcon, BackspaceIcon, ChevronUpIcon, ChevronDownIcon } from './icons/HeroIcons';
 import type { TranslationKey } from '../translations';
 
 interface AccountsReceivableViewProps {
@@ -21,17 +21,19 @@ interface AccountsReceivableViewProps {
     onNavigate: (view: string, state?: any) => void;
 }
 
-const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({ 
-    transactions, customers, currentUser, onReceivePaymentClick, onCreateConsolidatedInvoice, 
+const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
+    transactions, customers, currentUser, onReceivePaymentClick, onCreateConsolidatedInvoice,
     onRecordPastInvoiceClick, onImportPastInvoicesClick, onEditPastInvoiceClick, onUndoConsolidationClick, t, language,
     viewState, onNavigate
 }) => {
     const [groupByCustomer, setGroupByCustomer] = useState(false);
     const [selectedInvoices, setSelectedInvoices] = useState<Record<string, Set<string>>>({});
+    const [sortField, setSortField] = useState<'id' | 'customer' | 'total' | 'balance' | 'status' | 'date'>('date');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-    const canManage = useMemo(() => 
+    const canManage = useMemo(() =>
         currentUser.role.includes(Role.ADMIN) || currentUser.role.includes(Role.ACCOUNT_MANAGER),
-    [currentUser]);
+        [currentUser]);
 
     const isTodayFilterActive = viewState?.filter === 'today';
 
@@ -43,12 +45,36 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
             filtered = filtered.filter(tx => tx.payment_status === PaymentStatus.UNPAID && new Date(tx.date).toDateString() === today);
         }
 
-        return filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }, [transactions, isTodayFilterActive]);
+        // Apply sorting
+        return filtered.sort((a, b) => {
+            let comparison = 0;
+            switch (sortField) {
+                case 'id':
+                    comparison = a.id.localeCompare(b.id);
+                    break;
+                case 'customer':
+                    comparison = (a.customerName || '').localeCompare(b.customerName || '');
+                    break;
+                case 'total':
+                    comparison = a.total - b.total;
+                    break;
+                case 'balance':
+                    comparison = (a.total - a.paid_amount) - (b.total - b.paid_amount);
+                    break;
+                case 'status':
+                    comparison = (a.payment_status || '').localeCompare(b.payment_status || '');
+                    break;
+                case 'date':
+                    comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+                    break;
+            }
+            return sortDirection === 'asc' ? comparison : -comparison;
+        });
+    }, [transactions, isTodayFilterActive, sortField, sortDirection]);
 
-    const totalReceivables = useMemo(() => 
+    const totalReceivables = useMemo(() =>
         unpaidTransactions.reduce((sum, tx) => sum + (tx.total - tx.paid_amount), 0),
-    [unpaidTransactions]);
+        [unpaidTransactions]);
 
     const groupedByCustomer = useMemo(() => {
         const groups: Record<string, { customer: Customer, transactions: Transaction[], total_due: number }> = {};
@@ -65,7 +91,7 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
                 groups[tx.customerId].total_due += (tx.total - tx.paid_amount);
             }
         }
-        return Object.values(groups).sort((a,b) => b.total_due - a.total_due);
+        return Object.values(groups).sort((a, b) => b.total_due - a.total_due);
     }, [unpaidTransactions, customers]);
 
     const handleSelectInvoice = (customerId: string, transactionId: string) => {
@@ -108,9 +134,25 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
         }
     };
 
+    const handleSort = (field: typeof sortField) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
+    const SortIcon = ({ field }: { field: typeof sortField }) => {
+        if (sortField !== field) return null;
+        return sortDirection === 'asc' ?
+            <ChevronUpIcon className="h-4 w-4 inline ml-1" /> :
+            <ChevronDownIcon className="h-4 w-4 inline ml-1" />;
+    };
+
     return (
         <div className="space-y-6">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <StatsCard title={t('total_receivables')} value={`฿${totalReceivables.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-orange-500" />
                 <StatsCard title="Customers with Debt" value={groupedByCustomer.length.toLocaleString()} icon={<UserGroupIcon className="h-6 w-6" />} color="text-blue-500" />
             </div>
@@ -161,7 +203,7 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
                                 <div className="mt-2 space-y-1 pl-4 border-l-2">
                                     {transactions.map(tx => (
                                         <div key={tx.id} className="flex items-center gap-2 p-1 rounded hover:bg-background">
-                                            <input type="checkbox" checked={selectedInvoices[customer.id]?.has(tx.id)} onChange={() => handleSelectInvoice(customer.id, tx.id)} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"/>
+                                            <input type="checkbox" checked={selectedInvoices[customer.id]?.has(tx.id)} onChange={() => handleSelectInvoice(customer.id, tx.id)} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
                                             <p className="flex-1 text-sm font-mono">{tx.id}</p>
                                             <p className="text-sm">Balance: <span className="font-semibold">฿{(tx.total - tx.paid_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
                                             <p className="text-xs text-text-secondary">Due: {tx.due_date ? new Date(tx.due_date).toLocaleDateString() : 'N/A'}</p>
@@ -173,52 +215,74 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3">Invoice ID</th>
-                                    <th className="px-6 py-3">Customer</th>
-                                    <th className="px-6 py-3 text-right">{t('total')}</th>
-                                    <th className="px-6 py-3 text-right">{t('balance_due')}</th>
-                                    <th className="px-6 py-3 text-center">{t('status')}</th>
-                                    <th className="px-6 py-3 text-center">{t('actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {unpaidTransactions.map(tx => {
-                                    const statusInfo = getStatusInfo(tx);
-                                    const isPastInvoice = tx.id.startsWith('PAST-');
-                                    const isConsolidated = tx.id.startsWith('C-INV-');
-                                    return (
-                                        <tr key={tx.id} className="bg-white border-b hover:bg-gray-50">
-                                            <td className="px-6 py-4 font-mono text-xs">{tx.id}</td>
-                                            <td className="px-6 py-4 font-medium">{tx.customerName}</td>
-                                            <td className="px-6 py-4 text-right">฿{tx.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                            <td className="px-6 py-4 text-right font-bold text-red-600">฿{(tx.total - tx.paid_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusInfo.color}`}>{statusInfo.text}</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    {canManage && <button onClick={() => onReceivePaymentClick(tx)} className="text-xs px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700">{t('receive_payment')}</button>}
-                                                    {isPastInvoice && canManage && (
-                                                        <button onClick={() => onEditPastInvoiceClick(tx)} className="text-primary hover:text-blue-700 p-1" title="Edit Past Invoice"><PencilIcon className="h-4 w-4" /></button>
-                                                    )}
-                                                    {isConsolidated && canManage && (
-                                                        <button onClick={() => onUndoConsolidationClick(tx)} className="text-yellow-600 hover:text-yellow-800 p-1" title={t('undo_consolidation')}><BackspaceIcon className="h-4 w-4" /></button>
-                                                    )}
-                                                    {tx.file_url && (
-                                                        <a href={tx.file_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary p-1" title="View attached invoice">
-                                                            <ClipboardDocumentListIcon className="h-4 w-4" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                        {unpaidTransactions.length > 0 ? (
+                            <table className="w-full text-sm">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('id')}>
+                                            Invoice ID <SortIcon field="id" />
+                                        </th>
+                                        <th className="px-6 py-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('customer')}>
+                                            {t('customer')} <SortIcon field="customer" />
+                                        </th>
+                                        <th className="px-6 py-3 text-right cursor-pointer hover:bg-gray-100" onClick={() => handleSort('total')}>
+                                            {t('total')} <SortIcon field="total" />
+                                        </th>
+                                        <th className="px-6 py-3 text-right cursor-pointer hover:bg-gray-100" onClick={() => handleSort('balance')}>
+                                            {t('balance_due')} <SortIcon field="balance" />
+                                        </th>
+                                        <th className="px-6 py-3 text-center cursor-pointer hover:bg-gray-100" onClick={() => handleSort('status')}>
+                                            {t('status')} <SortIcon field="status" />
+                                        </th>
+                                        <th className="px-6 py-3 text-center">{t('actions')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {unpaidTransactions.map(tx => {
+                                        const statusInfo = getStatusInfo(tx);
+                                        const isPastInvoice = tx.id.startsWith('PAST-');
+                                        const isConsolidated = tx.id.startsWith('C-INV-');
+                                        return (
+                                            <tr key={tx.id} className="bg-white border-b hover:bg-gray-50">
+                                                <td className="px-6 py-4 font-mono text-xs">{tx.id}</td>
+                                                <td className="px-6 py-4 font-medium">{tx.customerName}</td>
+                                                <td className="px-6 py-4 text-right">฿{tx.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                <td className="px-6 py-4 text-right font-bold text-red-600">฿{(tx.total - tx.paid_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusInfo.color}`}>{statusInfo.text}</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        {canManage && <button onClick={() => onReceivePaymentClick(tx)} className="text-xs px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700">{t('receive_payment')}</button>}
+                                                        {isPastInvoice && canManage && (
+                                                            <button onClick={() => onEditPastInvoiceClick(tx)} className="text-primary hover:text-blue-700 p-1" title="Edit Past Invoice"><PencilIcon className="h-4 w-4" /></button>
+                                                        )}
+                                                        {isConsolidated && canManage && (
+                                                            <button onClick={() => onUndoConsolidationClick(tx)} className="text-yellow-600 hover:text-yellow-800 p-1" title={t('undo_consolidation')}><BackspaceIcon className="h-4 w-4" /></button>
+                                                        )}
+                                                        {tx.file_url && (
+                                                            <a href={tx.file_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary p-1" title="View attached invoice">
+                                                                <ClipboardDocumentListIcon className="h-4 w-4" />
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div className="text-center p-12 text-text-secondary">
+                                <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
+                                <p className="font-semibold mt-4 text-lg text-text-primary">
+                                    {isTodayFilterActive ? t('no_new_ar_today') : t('no_accounts_receivable')}
+                                </p>
+                                <p className="text-sm mt-1">
+                                    {isTodayFilterActive ? t('no_new_ar_today_desc') : t('all_invoices_paid')}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

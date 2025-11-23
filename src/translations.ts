@@ -431,6 +431,10 @@ const translations = {
     end_of_day_summary_desc: "Summary of sales since the last shift was closed.",
     shift_start_time: "Shift start time",
     transactions: 'Transactions',
+    no_new_ar_today: 'No New A/R Today',
+    no_new_ar_today_desc: 'There are no new unpaid invoices created today.',
+    no_accounts_receivable: 'No Accounts Receivable',
+    all_invoices_paid: 'All invoices have been paid.',
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -860,6 +864,10 @@ const translations = {
     no_items_sold_yet: 'ยังไม่มีสินค้าที่ขายในกะนี้',
     end_of_day_summary_desc: "สรุปยอดขายนับจากการปิดกะครั้งล่าสุด",
     shift_start_time: "เวลาเริ่มกะ",
+    no_new_ar_today: 'ไม่มีลูกหนี้ใหม่วันนี้',
+    no_new_ar_today_desc: 'ไม่มีใบแจ้งหนี้ที่ยังไม่ได้ชำระที่สร้างวันนี้',
+    no_accounts_receivable: 'ไม่มีบัญชีลูกหนี้',
+    all_invoices_paid: 'ใบแจ้งหนี้ทั้งหมดชำระแล้ว',
   }
 };
 

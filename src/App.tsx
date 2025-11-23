@@ -477,7 +477,10 @@ const App: React.FC = () => {
     const handleImportProducts = (payload: any) => { console.log("Import Products", payload); };
 
     // NAVIGATION & UI LOGIC
-    const handleNavigate = (view: string, state?: any) => { setActiveView(view); };
+    const handleNavigate = (view: string, state?: any) => {
+        setActiveView(view);
+        setViewState(state || null);
+    };
     const handleLogin = (username: string, password: string) => {
         const permissions = getPermissionsFromRoles([Role.ADMIN]);
         setCurrentUser({ id: '1', name: 'Admin', role: [Role.ADMIN], avatar: '', permissions });

@@ -154,7 +154,7 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <StatsCard title={t('total_receivables')} value={`฿${totalReceivables.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-orange-500" />
-                <StatsCard title="Customers with Debt" value={groupedByCustomer.length.toLocaleString()} icon={<UserGroupIcon className="h-6 w-6" />} color="text-blue-500" />
+                <StatsCard title={t('customers_with_debt')} value={groupedByCustomer.length.toLocaleString()} icon={<UserGroupIcon className="h-6 w-6" />} color="text-blue-500" />
             </div>
 
             <div className="bg-surface rounded-lg shadow overflow-hidden">

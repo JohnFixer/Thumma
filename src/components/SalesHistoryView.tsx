@@ -91,7 +91,7 @@ const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({ transactions, curre
                         <table className="w-full text-sm text-left text-gray-500">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
-                                    <th scope="col" className="px-6 py-3">Transaction ID</th>
+                                    <th scope="col" className="px-6 py-3">{t('transaction_id')}</th>
                                     <th scope="col" className="px-6 py-3">{t('date')}</th>
                                     <th scope="col" className="px-6 py-3">{t('customer')}</th>
                                     <th scope="col" className="px-6 py-3 text-right">{t('total')}</th>

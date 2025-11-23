@@ -40,6 +40,7 @@ export interface UserPermissions {
   user_management: PermissionSet & { reset_password: boolean };
   store_settings: { read: boolean; write: boolean };
   dashboard_management: { read: boolean; write: boolean };
+  category_management: { read: boolean; write: boolean; delete: boolean };
   sidebar: {
     dashboard: boolean;
     pos: boolean;
@@ -58,6 +59,7 @@ export interface UserPermissions {
     user_management: boolean;
     store_settings: boolean;
     dashboard_management: boolean;
+    category_management: boolean;
   };
 }
 

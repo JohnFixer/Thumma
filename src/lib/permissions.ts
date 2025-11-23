@@ -19,8 +19,9 @@ const NO_ACCESS_PERMISSIONS: UserPermissions = {
     user_management: { read: false, write: false, delete: false, reset_password: false },
     store_settings: { read: false, write: false },
     dashboard_management: { read: false, write: false },
+    category_management: { read: false, write: false, delete: false },
     sidebar: {
-        dashboard: false, pos: false, inventory: false, returns: false, customers: false, suppliers: false, accounts_payable: false, accounts_receivable: false, sales_history: false, order_fulfillment: false, customer_assist: false, end_of_day: false, shift_history: false, activity_log: false, user_management: false, store_settings: false, dashboard_management: false,
+        dashboard: false, pos: false, inventory: false, returns: false, customers: false, suppliers: false, accounts_payable: false, accounts_receivable: false, sales_history: false, order_fulfillment: false, customer_assist: false, end_of_day: false, shift_history: false, activity_log: false, user_management: false, store_settings: false, dashboard_management: false, category_management: false,
     }
 };
 
@@ -42,8 +43,9 @@ const FULL_ACCESS_PERMISSIONS: UserPermissions = {
     user_management: { read: true, write: true, delete: true, reset_password: true },
     store_settings: { read: true, write: true },
     dashboard_management: { read: true, write: true },
+    category_management: { read: true, write: true, delete: true },
     sidebar: {
-        dashboard: true, pos: true, inventory: true, returns: true, customers: true, suppliers: true, accounts_payable: true, accounts_receivable: true, sales_history: true, order_fulfillment: true, customer_assist: true, end_of_day: true, shift_history: true, activity_log: true, user_management: true, store_settings: true, dashboard_management: true
+        dashboard: true, pos: true, inventory: true, returns: true, customers: true, suppliers: true, accounts_payable: true, accounts_receivable: true, sales_history: true, order_fulfillment: true, customer_assist: true, end_of_day: true, shift_history: true, activity_log: true, user_management: true, store_settings: true, dashboard_management: true, category_management: true
     }
 };
 
@@ -78,7 +80,8 @@ const ROLE_PERMISSIONS: Record<Role, Partial<UserPermissions>> = {
             activity_log: true,
             user_management: false,
             store_settings: true,
-            dashboard_management: true
+            dashboard_management: true,
+            category_management: true
         },
     },
     [Role.STORE_MANAGER]: {
@@ -114,7 +117,8 @@ const ROLE_PERMISSIONS: Record<Role, Partial<UserPermissions>> = {
             activity_log: true,
             user_management: false,
             store_settings: true,
-            dashboard_management: true
+            dashboard_management: true,
+            category_management: true
         },
     },
     [Role.STORE_STAFF]: {
@@ -142,7 +146,8 @@ const ROLE_PERMISSIONS: Record<Role, Partial<UserPermissions>> = {
             activity_log: false,
             user_management: false,
             store_settings: false,
-            dashboard_management: false
+            dashboard_management: false,
+            category_management: false
         },
     },
     [Role.POS_OPERATOR]: {
@@ -168,7 +173,8 @@ const ROLE_PERMISSIONS: Record<Role, Partial<UserPermissions>> = {
             activity_log: false,
             user_management: false,
             store_settings: false,
-            dashboard_management: false
+            dashboard_management: false,
+            category_management: false
         },
     },
 };

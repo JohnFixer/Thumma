@@ -102,8 +102,8 @@ const App: React.FC = () => {
             const savedUserJSON = localStorage.getItem('currentUser');
             if (savedUserJSON) {
                 const savedUser = JSON.parse(savedUserJSON);
-                // Quick validation to ensure it's a user object
-                if (savedUser && savedUser.id && savedUser.name) {
+                // Quick validation to ensure it's a user object and has new permissions
+                if (savedUser && savedUser.id && savedUser.name && savedUser.permissions && savedUser.permissions.category_management) {
                     return savedUser as User;
                 }
             }

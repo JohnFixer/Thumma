@@ -63,12 +63,12 @@ export interface UserPermissions {
 
 
 export interface UserSettings {
-    defaultPaymentMethod?: PaymentMethod;
-    playScanSound?: boolean;
-    defaultInventoryExpanded?: boolean;
-    defaultLoginView?: string;
-    lowStockThreshold?: number;
-    defaultCustomerType?: CustomerType;
+  defaultPaymentMethod?: PaymentMethod;
+  playScanSound?: boolean;
+  defaultInventoryExpanded?: boolean;
+  defaultLoginView?: string;
+  lowStockThreshold?: number;
+  defaultCustomerType?: CustomerType;
 }
 
 export interface User {
@@ -92,10 +92,10 @@ export enum ProductStatus {
 }
 
 export interface StockHistory {
-    date: string;
-    change: number;
-    reason: string;
-    operator: string;
+  date: string;
+  change: number;
+  reason: string;
+  operator: string;
 }
 
 export interface ProductPrice {
@@ -128,26 +128,40 @@ export interface Product {
 }
 
 export type NewProductData = Omit<Product, 'id' | 'variants'> & {
-    variants: (ProductVariant | NewProductVariantData)[];
+  variants: (ProductVariant | NewProductVariantData)[];
 };
 
 export interface ProductImportPayload {
-    productsToCreate: NewProductData[];
-    variantsToUpdate: ProductVariant[];
+  productsToCreate: NewProductData[];
+  variantsToUpdate: ProductVariant[];
 }
+
+// Category Types
+export interface Category {
+  id: string;
+  name: LocalizedString;
+  slug: string;
+  parentId: string | null;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NewCategoryData = Omit<Category, 'id' | 'createdAt' | 'updatedAt'>;
+
 
 
 export enum OrderStatus {
-    PENDING = 'Pending',
-    COMPLETED = 'Completed',
-    CANCELLED = 'Cancelled',
+  PENDING = 'Pending',
+  COMPLETED = 'Completed',
+  CANCELLED = 'Cancelled',
 }
 
 export interface SupplierOrder {
-    orderId: string;
-    date: string;
-    totalAmount: number;
-    status: OrderStatus;
+  orderId: string;
+  date: string;
+  totalAmount: number;
+  status: OrderStatus;
 }
 
 export interface Supplier {
@@ -190,180 +204,180 @@ export interface CartItem {
 }
 
 export interface ReturnedItem {
-    productId: string;
-    variantId: string;
-    name: LocalizedString;
-    size: string;
-    quantity: number;
-    reason: ReturnReason;
-    unitPrice: number;
+  productId: string;
+  variantId: string;
+  name: LocalizedString;
+  size: string;
+  quantity: number;
+  reason: ReturnReason;
+  unitPrice: number;
 }
 
 export enum ReturnReason {
-    CUSTOMER_CHOICE = 'Customer Choice',
-    DAMAGED_PRODUCT = 'Damaged Product',
-    WRONG_ITEM = 'Wrong Item',
+  CUSTOMER_CHOICE = 'Customer Choice',
+  DAMAGED_PRODUCT = 'Damaged Product',
+  WRONG_ITEM = 'Wrong Item',
 }
 
 export type PaymentMethod = 'Card' | 'Cash' | 'Bank Transfer' | 'Cheque';
 
 export interface ShiftReportItem {
-    productId: string;
-    variantId: string;
-    productName: LocalizedString;
-    variantSize: string;
-    quantitySold: number;
-    totalSales: number;
-    totalProfit: number;
+  productId: string;
+  variantId: string;
+  productName: LocalizedString;
+  variantSize: string;
+  quantitySold: number;
+  totalSales: number;
+  totalProfit: number;
 }
 
 export interface ShiftReport {
-    id: string;
-    startTime: string; // ISO date
-    endTime: string; // ISO date
-    closedByUserId: string;
-    totalSales: number;
-    totalProfit: number;
-    totalTransactions: number;
-    paymentMethodBreakdown: {
-        cash: number;
-        card: number;
-        bankTransfer: number;
-    };
-    topSellingItems: ShiftReportItem[];
-    transactionIds: string[];
+  id: string;
+  startTime: string; // ISO date
+  endTime: string; // ISO date
+  closedByUserId: string;
+  totalSales: number;
+  totalProfit: number;
+  totalTransactions: number;
+  paymentMethodBreakdown: {
+    cash: number;
+    card: number;
+    bankTransfer: number;
+  };
+  topSellingItems: ShiftReportItem[];
+  transactionIds: string[];
 }
 export enum FulfillmentStatus {
-    PENDING = 'Pending',
-    PROCESSING = 'Processing',
-    READY_FOR_PICKUP = 'Ready for Pickup',
-    COMPLETED = 'Completed',
-    CANCELLED = 'Cancelled',
+  PENDING = 'Pending',
+  PROCESSING = 'Processing',
+  READY_FOR_PICKUP = 'Ready for Pickup',
+  COMPLETED = 'Completed',
+  CANCELLED = 'Cancelled',
 }
 
 export enum PaymentStatus {
-    UNPAID = 'Unpaid',
-    PAID = 'Paid',
-    PARTIALLY_PAID = 'Partially Paid',
-    REFUNDED = 'Refunded',
-    CONSOLIDATED = 'Consolidated',
+  UNPAID = 'Unpaid',
+  PAID = 'Paid',
+  PARTIALLY_PAID = 'Partially Paid',
+  REFUNDED = 'Refunded',
+  CONSOLIDATED = 'Consolidated',
 }
 
 export interface Transaction {
-    id: string;
-    date: string;
-    items: CartItem[];
-    subtotal: number;
-    tax: number;
-    transportationFee?: number;
-    total: number;
-    customerId?: string;
-    customerName: string;
-    customerAddress?: string;
-    customerPhone?: string;
-    customerType: CustomerType;
-    operator: string;
-    paymentMethod: PaymentMethod;
-    vatIncluded: boolean;
-    appliedStoreCredit?: { id: string, amount: number };
-    returnedItems?: ReturnedItem[];
-    shiftId?: string;
-    payment_status: PaymentStatus;
-    paid_amount: number;
-    due_date?: string;
-    file_url?: string;
+  id: string;
+  date: string;
+  items: CartItem[];
+  subtotal: number;
+  tax: number;
+  transportationFee?: number;
+  total: number;
+  customerId?: string;
+  customerName: string;
+  customerAddress?: string;
+  customerPhone?: string;
+  customerType: CustomerType;
+  operator: string;
+  paymentMethod: PaymentMethod;
+  vatIncluded: boolean;
+  appliedStoreCredit?: { id: string, amount: number };
+  returnedItems?: ReturnedItem[];
+  shiftId?: string;
+  payment_status: PaymentStatus;
+  paid_amount: number;
+  due_date?: string;
+  file_url?: string;
 }
 
 export interface Order {
-    id: string;
-    customer: Customer;
-    date: string;
-    items: CartItem[];
-    total: number;
-    transportationFee?: number;
-    status: FulfillmentStatus;
-    type: 'Pickup' | 'Delivery';
-    address?: string;
-    notes?: string;
-    paymentStatus: PaymentStatus;
-    paymentMethod?: PaymentMethod;
+  id: string;
+  customer: Customer;
+  date: string;
+  items: CartItem[];
+  total: number;
+  transportationFee?: number;
+  status: FulfillmentStatus;
+  type: 'Pickup' | 'Delivery';
+  address?: string;
+  notes?: string;
+  paymentStatus: PaymentStatus;
+  paymentMethod?: PaymentMethod;
 }
 
 
 export interface StoreCredit {
-    id: string;
-    amount: number;
-    isUsed: boolean;
-    originalTransactionId: string;
-    dateIssued: string;
+  id: string;
+  amount: number;
+  isUsed: boolean;
+  originalTransactionId: string;
+  dateIssued: string;
 }
 
 export interface ActivityLog {
-    id: string;
-    userId: string;
-    action: string;
-    timestamp: string;
+  id: string;
+  userId: string;
+  action: string;
+  timestamp: string;
 }
 
 export interface StoreSettings {
-    id: number;
-    store_name: LocalizedString;
-    logo_url: string;
-    address: LocalizedString;
-    phone: LocalizedString;
-    tax_id: LocalizedString;
-    default_outsource_markup?: number;
-    delivery_rate_per_km?: number;
-    dashboard_widget_visibility?: Record<Role, string[]>;
+  id: number;
+  store_name: LocalizedString;
+  logo_url: string;
+  address: LocalizedString;
+  phone: LocalizedString;
+  tax_id: LocalizedString;
+  default_outsource_markup?: number;
+  delivery_rate_per_km?: number;
+  dashboard_widget_visibility?: Record<Role, string[]>;
 }
 
 export enum BillStatus {
-    DUE = 'Due',
-    PAID = 'Paid',
-    OVERDUE = 'Overdue',
+  DUE = 'Due',
+  PAID = 'Paid',
+  OVERDUE = 'Overdue',
 }
 
 export interface BillPayment {
-    id: string;
-    paymentDate: string;
-    paymentMethod: PaymentMethod;
-    amount: number;
-    referenceNote?: string;
+  id: string;
+  paymentDate: string;
+  paymentMethod: PaymentMethod;
+  amount: number;
+  referenceNote?: string;
 }
 
 export interface Bill {
-    id: string;
-    supplierId: string;
-    invoiceNumber: string;
-    billDate: string; // ISO date string
-    dueDate: string; // ISO date string
-    amount: number;
-    status: BillStatus;
-    paidAmount: number;
-    payments: BillPayment[];
-    notes?: string;
-    fileUrl?: string; // Optional URL to the scanned invoice
+  id: string;
+  supplierId: string;
+  invoiceNumber: string;
+  billDate: string; // ISO date string
+  dueDate: string; // ISO date string
+  amount: number;
+  status: BillStatus;
+  paidAmount: number;
+  payments: BillPayment[];
+  notes?: string;
+  fileUrl?: string; // Optional URL to the scanned invoice
 }
 
 export type NewBillData = Omit<Bill, 'id' | 'status' | 'paidAmount' | 'payments'> & {
-    file?: File;
+  file?: File;
 };
 
 export interface PastInvoiceData {
-    id?: string;
-    customerId?: string;
-    newCustomerName?: string;
-    originalInvoiceId: string;
-    invoiceDate: string;
-    totalAmount: number;
-    amountAlreadyPaid: number;
-    notes?: string;
-    file?: File;
+  id?: string;
+  customerId?: string;
+  newCustomerName?: string;
+  originalInvoiceId: string;
+  invoiceDate: string;
+  totalAmount: number;
+  amountAlreadyPaid: number;
+  notes?: string;
+  file?: File;
 }
 
 export interface ToDoItem {
-    id: string;
-    text: string;
-    completed: boolean;
-    dueDate?: string;
+  id: string;
+  text: string;
+  completed: boolean;
+  dueDate?: string;
 }

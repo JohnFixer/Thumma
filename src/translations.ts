@@ -107,6 +107,7 @@ const translations = {
     role_store_staff: 'Store Staff',
     role_pos_operator: 'POS Operator',
     dashboard_management: 'Dashboard Management',
+    category_management: 'Category Management',
     inventory_management: 'Inventory Management',
     search_or_scan_barcode_placeholder: 'Search by name, SKU, or scan barcode...',
     scan: 'Scan',
@@ -429,6 +430,7 @@ const translations = {
     no_items_sold_yet: 'No items sold in this shift yet.',
     end_of_day_summary_desc: "Summary of sales since the last shift was closed.",
     shift_start_time: "Shift start time",
+    transactions: 'Transactions',
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -534,6 +536,7 @@ const translations = {
     role_store_staff: 'พนักงานร้าน',
     role_pos_operator: 'พนักงานขาย',
     dashboard_management: 'จัดการแดชบอร์ด',
+    category_management: 'จัดการหมวดหมู่',
     inventory_management: 'จัดการคลังสินค้า',
     search_or_scan_barcode_placeholder: 'ค้นหาด้วยชื่อ, SKU, หรือสแกนบาร์โค้ด...',
     scan: 'สแกน',
@@ -823,6 +826,7 @@ const translations = {
     product_not_found: 'ไม่พบสินค้า',
     product_not_found_alert: 'ไม่พบสินค้าที่มีบาร์โค้ด "{code}" ในคลัง',
     total_sales: 'Total Sales',
+    transactions: 'Transactions',
     total_profit: 'Total Profit',
     customer: 'Customer',
     payment_method: 'Payment Method',
@@ -862,17 +866,17 @@ const translations = {
 export type TranslationKey = keyof typeof translations.en;
 
 export const useTranslations = (language: Language) => {
-    return useMemo(() => {
-        return function t(key: TranslationKey, vars: Record<string, string | number> = {}): string {
-            const langDict = translations[language] || translations.en;
-            let text = (langDict as any)[key] || key;
+  return useMemo(() => {
+    return function t(key: TranslationKey, vars: Record<string, string | number> = {}): string {
+      const langDict = translations[language] || translations.en;
+      let text = (langDict as any)[key] || key;
 
-            for (const varKey in vars) {
-                const regex = new RegExp(`{${varKey}}`, 'g');
-                text = text.replace(regex, String(vars[varKey]));
-            }
+      for (const varKey in vars) {
+        const regex = new RegExp(`{${varKey}}`, 'g');
+        text = text.replace(regex, String(vars[varKey]));
+      }
 
-            return text;
-        };
-    }, [language]);
+      return text;
+    };
+  }, [language]);
 };

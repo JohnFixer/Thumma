@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-// FIX: Corrected import path to ensure module resolution.
-import type { CartItem, CustomerType, Customer, StoreCredit, Product, Language, StoreSettings } from '../types.ts';
-// FIX: Corrected import path to ensure module resolution.
-import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from './icons/HeroIcons.tsx';
-// FIX: Corrected import path to ensure module resolution.
-import SalesAssistantModal from './SalesAssistantModal.tsx';
-// FIX: Corrected import path to ensure module resolution.
-import type { TranslationKey } from '../translations.ts';
+import type { CartItem, CustomerType, Customer, StoreCredit, Product, Language, StoreSettings } from '../types';
+import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from './icons/HeroIcons';
+import SalesAssistantModal from './SalesAssistantModal';
+import type { TranslationKey } from '../translations';
 
 interface CartPanelProps {
   cartItems: CartItem[];

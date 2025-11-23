@@ -1,7 +1,0 @@
-{
-  "name": "บจก ธรรมะคอนกรีต",
-  "description": "A comprehensive hardware shop management application to streamline operations, enhance inventory control, and improve customer service across multiple user roles.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}

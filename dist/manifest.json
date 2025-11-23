@@ -1,0 +1,22 @@
+{
+    "short_name": "ธรรมะคอนกรีต",
+    "name": "บจก ธรรมะคอนกรีต",
+    "description": "A comprehensive hardware shop management application to streamline operations, enhance inventory control, and improve customer service across multiple user roles.",
+    "icons": [
+      {
+        "src": "/icon-192x192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/icon-512x512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ],
+    "start_url": "/",
+    "background_color": "#f1f5f9",
+    "display": "standalone",
+    "theme_color": "#1e40af"
+  }
+  

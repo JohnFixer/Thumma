@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react';
-// FIX: Corrected import path to ensure module resolution.
-import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types.ts';
-// FIX: Corrected import path to ensure module resolution.
-import type { TranslationKey } from '../translations.ts';
-import SalesOverviewWidget from './widgets/SalesOverviewWidget.tsx';
-import AccountsPayableWidget from './widgets/AccountsPayableWidget.tsx';
-import InventoryOverviewWidget from './widgets/InventoryOverviewWidget.tsx';
-import LowStockListWidget from './widgets/LowStockListWidget.tsx';
-import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget.tsx';
+// FIX: Corrected import paths by removing file extensions.
+import type { Product, Transaction, Language, Bill, StoreSettings, User, Role } from '../types';
+import type { TranslationKey } from '../translations';
+import SalesOverviewWidget from './widgets/SalesOverviewWidget';
+import AccountsPayableWidget from './widgets/AccountsPayableWidget';
+import InventoryOverviewWidget from './widgets/InventoryOverviewWidget';
+import LowStockListWidget from './widgets/LowStockListWidget';
+import DailySalesOverviewWidget from './widgets/DailySalesOverviewWidget';
 
 interface DashboardProps {
   products: Product[];

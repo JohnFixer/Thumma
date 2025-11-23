@@ -14,7 +14,7 @@ interface SalesHistoryViewProps {
     onEditPastInvoiceClick: (transaction: Transaction) => void;
     onUndoConsolidationClick: (transaction: Transaction) => void;
     storeSettings: StoreSettings | null;
-    t: (key: TranslationKey, vars?: Record<string, string>) => string;
+    t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
     language: Language;
 }
 
@@ -38,7 +38,7 @@ const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({ transactions, curre
             t.operator.toLowerCase().includes(lowercasedQuery)
         );
     }, [transactions, searchQuery]);
-    
+
     const handleDeleteConfirm = () => {
         if (transactionToDelete) {
             onDeleteTransaction(transactionToDelete.id);
@@ -108,49 +108,50 @@ const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({ transactions, curre
                                     const isPastInvoice = transaction.id.startsWith('PAST-');
                                     const isConsolidated = transaction.id.startsWith('C-INV-');
                                     return (
-                                    <tr key={transaction.id} className="bg-white border-b hover:bg-gray-50">
-                                        <td className="px-6 py-4 font-mono text-xs font-medium text-gray-900">{transaction.id}</td>
-                                        <td className="px-6 py-4">{new Date(transaction.date).toLocaleString()}</td>
-                                        <td className="px-6 py-4">{transaction.customerName}</td>
-                                        <td className="px-6 py-4 text-right font-semibold">฿{transaction.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                        <td className="px-6 py-4 text-right text-green-600">฿{transaction.paid_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                        <td className={`px-6 py-4 text-right font-bold ${balanceDue > 0 ? 'text-red-600' : 'text-text-primary'}`}>฿{balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                                                {statusInfo.text}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex justify-center items-center gap-2">
-                                                {balanceDue > 0 && transaction.payment_status !== PaymentStatus.CONSOLIDATED && canWrite && (
-                                                     <button
-                                                        onClick={() => onReceivePaymentClick(transaction)}
-                                                        className="text-xs p-1 px-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                                                    >
-                                                        {t('receive_payment')}
-                                                    </button>
-                                                )}
-                                                {isPastInvoice && canWrite && (
-                                                    <button onClick={() => onEditPastInvoiceClick(transaction)} className="text-primary hover:text-blue-700 p-1" title={t('edit')}><PencilIcon className="h-4 w-4" /></button>
-                                                )}
-                                                {isConsolidated && canWrite && (
-                                                    <button onClick={() => onUndoConsolidationClick(transaction)} className="text-yellow-600 hover:text-yellow-800 p-1" title={t('undo_consolidation')}><BackspaceIcon className="h-4 w-4" /></button>
-                                                )}
-                                                {transaction.file_url && (
-                                                    <a href={transaction.file_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary p-1" title={t('view_attached_invoice')}>
-                                                        <ClipboardDocumentListIcon className="h-4 w-4" />
-                                                    </a>
-                                                )}
-                                                <button onClick={() => setTransactionToView(transaction)} className="text-primary hover:text-blue-700 p-1" title={t('view_receipt')}><PrinterIcon className="h-4 w-4" /></button>
-                                                {canDelete && <button onClick={() => setTransactionToDelete(transaction)} className="text-red-600 hover:text-red-800 p-1" title={t('delete_transaction')}><TrashIcon className="h-4 w-4" /></button>}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )})}
+                                        <tr key={transaction.id} className="bg-white border-b hover:bg-gray-50">
+                                            <td className="px-6 py-4 font-mono text-xs font-medium text-gray-900">{transaction.id}</td>
+                                            <td className="px-6 py-4">{new Date(transaction.date).toLocaleString()}</td>
+                                            <td className="px-6 py-4">{transaction.customerName}</td>
+                                            <td className="px-6 py-4 text-right font-semibold">฿{transaction.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                            <td className="px-6 py-4 text-right text-green-600">฿{transaction.paid_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                            <td className={`px-6 py-4 text-right font-bold ${balanceDue > 0 ? 'text-red-600' : 'text-text-primary'}`}>฿{balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                                                    {statusInfo.text}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex justify-center items-center gap-2">
+                                                    {balanceDue > 0 && transaction.payment_status !== PaymentStatus.CONSOLIDATED && canWrite && (
+                                                        <button
+                                                            onClick={() => onReceivePaymentClick(transaction)}
+                                                            className="text-xs p-1 px-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                                                        >
+                                                            {t('receive_payment')}
+                                                        </button>
+                                                    )}
+                                                    {isPastInvoice && canWrite && (
+                                                        <button onClick={() => onEditPastInvoiceClick(transaction)} className="text-primary hover:text-blue-700 p-1" title={t('edit')}><PencilIcon className="h-4 w-4" /></button>
+                                                    )}
+                                                    {isConsolidated && canWrite && (
+                                                        <button onClick={() => onUndoConsolidationClick(transaction)} className="text-yellow-600 hover:text-yellow-800 p-1" title={t('undo_consolidation')}><BackspaceIcon className="h-4 w-4" /></button>
+                                                    )}
+                                                    {transaction.file_url && (
+                                                        <a href={transaction.file_url} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary p-1" title={t('view_attached_invoice')}>
+                                                            <ClipboardDocumentListIcon className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                    <button onClick={() => setTransactionToView(transaction)} className="text-primary hover:text-blue-700 p-1" title={t('view_receipt')}><PrinterIcon className="h-4 w-4" /></button>
+                                                    {canDelete && <button onClick={() => setTransactionToDelete(transaction)} className="text-red-600 hover:text-red-800 p-1" title={t('delete_transaction')}><TrashIcon className="h-4 w-4" /></button>}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     ) : (
-                         <div className="text-center p-12 text-text-secondary">
+                        <div className="text-center p-12 text-text-secondary">
                             <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
                             <p className="font-semibold mt-4 text-lg text-text-primary">{t('no_transactions_found')}</p>
                             <p className="text-sm mt-1">{t('no_sales_matching_search')}</p>

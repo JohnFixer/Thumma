@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-// FIX: Corrected import path to ensure module resolution.
-import type { Product, NewProductData, ProductVariant, NewProductVariantData, ProductStatus, StockHistory } from '../types.ts';
-// FIX: Corrected import path to ensure module resolution.
-import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from './icons/HeroIcons.tsx';
-// FIX: Corrected import path to ensure module resolution.
-import type { TranslationKey } from '../translations.ts';
-// FIX: Corrected import path to ensure module resolution.
-import { CATEGORIES } from '../categories.ts';
+// FIX: Corrected import paths by removing file extensions.
+import type { Product, NewProductData, ProductVariant, NewProductVariantData, ProductStatus, StockHistory } from '../types';
+import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from './icons/HeroIcons';
+import type { TranslationKey } from '../translations';
+import { CATEGORIES } from '../categories';
 
 interface EditProductModalProps {
   isOpen: boolean;

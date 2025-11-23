@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// FIX: Corrected import paths by removing file extensions.
 import type { NewUserData } from '../types';
 import { Role } from '../types';
 import { XMarkIcon, PhotoIcon } from './icons/HeroIcons';

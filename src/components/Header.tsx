@@ -1,9 +1,7 @@
 import React from 'react';
-// FIX: Removed .ts extension for consistent module resolution.
+// FIX: Corrected import paths by removing file extensions.
 import type { User, Language } from '../types';
-// FIX: Removed .tsx extension for consistent module resolution.
 import { BellIcon, LanguageIcon, Bars3Icon, ArrowLeftIcon, ExclamationTriangleIcon } from './icons/HeroIcons';
-// FIX: Removed .ts extension for consistent module resolution.
 import type { TranslationKey } from '../translations';
 
 interface HeaderProps {

@@ -30,6 +30,7 @@ export default async (req: Request): Promise<Response> => {
             });
         }
 
+        // FIX: The GoogleGenAI constructor requires a named `apiKey` parameter.
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
         const response = await ai.models.generateContent({

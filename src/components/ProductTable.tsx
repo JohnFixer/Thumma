@@ -1,10 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-// FIX: Corrected import paths by removing file extensions.
-import type { Product, User, ProductVariant, Language } from '../types';
-import { ProductStatus, Role } from '../types';
-import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, QrCodeIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, BarcodeIcon, CubeIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
-import { getCategoryDisplay, getCategoryByKey } from '../categories';
+// FIX: Corrected import path to ensure module resolution.
+import type { Product, User, ProductVariant, Language } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { ProductStatus, Role } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, QrCodeIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, BarcodeIcon, CubeIcon } from './icons/HeroIcons.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { getCategoryDisplay, getCategoryByKey } from '../categories.ts';
 
 declare const XLSX: any;
 

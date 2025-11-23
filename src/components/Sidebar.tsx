@@ -1,8 +1,12 @@
 import React from 'react';
-import type { User, StoreSettings, Language, UserPermissions } from '../types';
-import { Role } from '../types';
-import { WrenchScrewdriverIcon, ArrowLeftOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, PuzzlePieceIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
+// FIX: Corrected import path to ensure module resolution.
+import type { User, StoreSettings, Language, UserPermissions } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { Role } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { WrenchScrewdriverIcon, ArrowLeftOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, PuzzlePieceIcon } from './icons/HeroIcons.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
 
 interface SidebarProps {
   currentUser: User;

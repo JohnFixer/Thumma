@@ -1,10 +1,14 @@
 import React from 'react';
-// FIX: Corrected import paths by removing file extensions.
-import type { Product, ProductVariant, Language } from '../types';
-import { ProductStatus } from '../types';
-import { XMarkIcon, ClockIcon, QrCodeIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
-import { getCategoryDisplay } from '../categories';
+// FIX: Corrected import path to ensure module resolution.
+import type { Product, ProductVariant, Language } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { ProductStatus } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { XMarkIcon, ClockIcon, QrCodeIcon } from './icons/HeroIcons.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { getCategoryDisplay } from '../categories.ts';
 
 interface ProductDetailModalProps {
   isOpen: boolean;

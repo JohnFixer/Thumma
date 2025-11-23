@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Corrected import paths by removing file extensions.
-import type { Supplier, NewSupplierData } from '../types';
-import { XMarkIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
+// FIX: Corrected import path to ensure module resolution.
+import type { Supplier, NewSupplierData } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { XMarkIcon } from './icons/HeroIcons.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
 
 interface EditSupplierModalProps {
   isOpen: boolean;
@@ -83,7 +85,7 @@ const EditSupplierModal: React.FC<EditSupplierModalProps> = ({ isOpen, onClose, 
             <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
               {t('save')}
             </button>
-            <button type="button" onClick={onClose} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+            <button type="button" onClick={onClose} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm">
               {t('cancel')}
             </button>
           </div>

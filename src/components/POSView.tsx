@@ -1,16 +1,23 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import ProductGrid from './ProductGrid';
-import CartPanel from './CartPanel';
-import PaymentModal from './PaymentModal';
-// FIX: Corrected import paths by removing file extensions.
-import ReceiptModal from './ReceiptModal';
-import VariantSelectionModal from './VariantSelectionModal';
-import CreateInvoiceModal from './CreateInvoiceModal';
-import OutsourcePurchaseModal from './OutsourcePurchaseModal';
-import AddMiscItemModal from './AddMiscItemModal';
-import type { Product, CartItem, Transaction, User, CustomerType, Customer, StoreCredit, Order, ProductVariant, Language, StoreSettings, PaymentMethod, NewCustomerData } from '../types';
-import { FulfillmentStatus, PaymentStatus } from '../types';
-import type { TranslationKey } from '../translations';
+import ProductGrid from './ProductGrid.tsx';
+import CartPanel from './CartPanel.tsx';
+import PaymentModal from './PaymentModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import ReceiptModal from './ReceiptModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import VariantSelectionModal from './VariantSelectionModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import CreateInvoiceModal from './CreateInvoiceModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import OutsourcePurchaseModal from './OutsourcePurchaseModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import AddMiscItemModal from './AddMiscItemModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { Product, CartItem, Transaction, User, CustomerType, Customer, StoreCredit, Order, ProductVariant, Language, StoreSettings, PaymentMethod, NewCustomerData } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { FulfillmentStatus, PaymentStatus } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
 
 interface POSViewProps {
   products: Product[];
@@ -567,11 +574,9 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 orderType={orderType}
                 onOrderTypeChange={setOrderType}
                 products={products}
-// FIX: Corrected typo 'handleNewUnpaidOrder' to 'handleCreateUnpaidOrder'
                 onNewUnpaidOrder={handleCreateUnpaidOrder}
                 customerOutstandingBalance={customerOutstandingBalance}
                 carriedForwardBalance={carriedForwardBalance}
-// FIX: Corrected typo 'setCarryForwardBalance' to 'setCarriedForwardBalance'
                 onCarryForwardBalance={setCarriedForwardBalance}
                 onAddMiscItemClick={() => setIsAddMiscItemModalOpen(true)}
                 transportationFee={transportationFee}

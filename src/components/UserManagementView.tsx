@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-// FIX: Corrected import paths by removing file extensions.
-import type { User, NewUserData } from '../types';
-import UserTable from './UserTable';
-import AddUserModal from './AddUserModal';
-import type { TranslationKey } from '../translations';
+// FIX: Corrected import path to ensure module resolution.
+import type { User, NewUserData } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import UserTable from './UserTable.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import AddUserModal from './AddUserModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
 
 interface UserManagementViewProps {
     users: User[];

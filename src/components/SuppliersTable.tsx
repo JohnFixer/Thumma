@@ -1,11 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import type { Supplier, User, NewSupplierData } from '../types';
-import { Role } from '../types';
-import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, TruckIcon } from './icons/HeroIcons';
-import ConfirmationModal from './ConfirmationModal';
-import EditSupplierModal from './EditSupplierModal';
-import SupplierDetailModal from './SupplierDetailModal';
-import type { TranslationKey } from '../translations';
+// FIX: Corrected import path to ensure module resolution.
+import type { Supplier, User, NewSupplierData } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { Role } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon, EyeIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, TruckIcon } from './icons/HeroIcons.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import ConfirmationModal from './ConfirmationModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import EditSupplierModal from './EditSupplierModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import SupplierDetailModal from './SupplierDetailModal.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
 
 declare const XLSX: any;
 

@@ -1,8 +1,10 @@
 import React from 'react';
-// FIX: Corrected import paths by removing file extensions.
-import type { User, Language } from '../types';
-import { BellIcon, LanguageIcon, Bars3Icon, ArrowLeftIcon, ExclamationTriangleIcon } from './icons/HeroIcons';
-import type { TranslationKey } from '../translations';
+// FIX: Corrected import path to ensure module resolution.
+import type { User, Language } from '../types.ts';
+// FIX: Corrected import path to ensure module resolution.
+import { BellIcon, LanguageIcon, Bars3Icon, ArrowLeftIcon, ExclamationTriangleIcon } from './icons/HeroIcons.tsx';
+// FIX: Corrected import path to ensure module resolution.
+import type { TranslationKey } from '../translations.ts';
 
 interface HeaderProps {
   currentUser: User;

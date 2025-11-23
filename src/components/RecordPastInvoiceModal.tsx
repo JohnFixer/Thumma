@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import type { PastInvoiceData, Customer } from '../types';

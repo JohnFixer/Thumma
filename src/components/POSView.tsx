@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
 import PaymentModal from './PaymentModal';
+// FIX: Corrected import paths by removing file extensions.
 import ReceiptModal from './ReceiptModal';
 import VariantSelectionModal from './VariantSelectionModal';
 import CreateInvoiceModal from './CreateInvoiceModal';
@@ -566,9 +567,11 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 orderType={orderType}
                 onOrderTypeChange={setOrderType}
                 products={products}
+// FIX: Corrected typo 'handleNewUnpaidOrder' to 'handleCreateUnpaidOrder'
                 onNewUnpaidOrder={handleCreateUnpaidOrder}
                 customerOutstandingBalance={customerOutstandingBalance}
                 carriedForwardBalance={carriedForwardBalance}
+// FIX: Corrected typo 'setCarryForwardBalance' to 'setCarriedForwardBalance'
                 onCarryForwardBalance={setCarriedForwardBalance}
                 onAddMiscItemClick={() => setIsAddMiscItemModalOpen(true)}
                 transportationFee={transportationFee}

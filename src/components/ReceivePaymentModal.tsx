@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon } from './icons/HeroIcons';
 import type { PaymentMethod, Transaction } from '../types';

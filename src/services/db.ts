@@ -263,11 +263,20 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
 
     return data.map((t: any) => ({
         ...t,
-        customerName: t.customer_name,
-        customerType: t.customer_type,
-        paymentMethod: t.payment_method,
+        // Map snake_case to camelCase, with fallbacks for legacy data
+        customerName: t.customer_name || t.customerName,
+        customerType: t.customer_type || t.customerType,
+        customerAddress: t.customer_address || t.customerAddress,
+        customerPhone: t.customer_phone || t.customerPhone,
+        customerId: t.customer_id || t.customerId,
+        paymentMethod: t.payment_method || t.paymentMethod,
         paid_amount: t.paid_amount,
-        customerId: t.customer_id
+        payment_status: t.payment_status,
+        due_date: t.due_date,
+        operator: t.operator_name || t.operator,
+        transportationFee: t.transportation_fee || t.transportationFee || 0,
+        vatIncluded: t.vat_included !== undefined ? t.vat_included : t.vatIncluded,
+        file_url: t.file_url
     }));
 };
 
@@ -296,7 +305,8 @@ export const createTransaction = async (transaction: Transaction): Promise<boole
     });
 
     if (error) {
-        console.error("Error creating transaction", error);
+        console.error("Error creating transaction:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
         return false;
     }
     return true;

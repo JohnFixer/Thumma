@@ -26,35 +26,60 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
   if (!isOpen || !transaction) return null;
 
   const handlePrint = () => {
+    // Hide all non-printable elements
+    const body = document.body;
+    const originalContents = body.innerHTML;
     const printContent = document.getElementById('receipt-to-print');
-    if (!printContent) return;
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow pop-ups to print the receipt.');
+    if (!printContent) {
+      alert('Receipt content not found.');
       return;
     }
 
-    const tailwindScript = document.querySelector('script[src="https://cdn.tailwindcss.com"]');
-    const tailwindConfig = Array.from(document.querySelectorAll('script')).find(s => s.textContent?.includes('tailwind.config'));
-    const styles = Array.from(document.querySelectorAll('style'));
+    // Clone the receipt content
+    const clonedContent = printContent.cloneNode(true) as HTMLElement;
 
-    printWindow.document.write('<html><head><title>Print Receipt</title>');
-    if (tailwindScript) printWindow.document.write(tailwindScript.outerHTML);
-    if (tailwindConfig) printWindow.document.write(`<script>${tailwindConfig.innerHTML}</script>`);
-    styles.forEach(style => printWindow.document.write(`<style>${style.innerHTML}</style>`));
-    printWindow.document.write('</head><body class="bg-white">');
-    printWindow.document.write(printContent.outerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
+    // Create a temporary container for printing
+    const printContainer = document.createElement('div');
+    printContainer.className = 'print-only-container';
+    printContainer.appendChild(clonedContent);
 
+    // Add print styles
+    const printStyles = document.createElement('style');
+    printStyles.textContent = `
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .print-only-container,
+        .print-only-container * {
+          visibility: visible;
+        }
+        .print-only-container {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(printStyles);
+    body.appendChild(printContainer);
+
+    // Trigger print
+    window.print();
+
+    // Clean up
     setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    }, 500);
+      body.removeChild(printContainer);
+      document.head.removeChild(printStyles);
+    }, 100);
   };
-  
+
   const getTranslatedPaymentMethod = (method: PaymentMethod) => {
     const key = `payment_${method.toLowerCase().replace(/\s/g, '_')}` as TranslationKey;
     return t_receipt(key);
@@ -72,13 +97,13 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
         <div className="p-4 border-b">
           <label className="block text-sm font-medium text-text-secondary mb-2">Receipt Language</label>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => setReceiptLanguage('en')}
               className={`px-4 py-1 text-sm rounded-md transition-colors ${receiptLanguage === 'en' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
             >
               English
             </button>
-            <button 
+            <button
               onClick={() => setReceiptLanguage('th')}
               className={`px-4 py-1 text-sm rounded-md transition-colors ${receiptLanguage === 'th' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
             >
@@ -98,8 +123,8 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
             <div className="border-t border-b border-dashed border-black my-2 py-1 text-xs font-sans">
               <p>{t_receipt('receipt_id')}: <span className="font-mono">{transaction.id}</span></p>
               <p>{t_receipt('date')}: {new Date(transaction.date).toLocaleString()}</p>
-              <p>{t_receipt('operator')}: {transaction.operator}</p>
-              <p>{t_receipt('customer')}: {transaction.customerName}</p>
+              <p>{t_receipt('operator')}: {transaction.operator || 'N/A'}</p>
+              <p>{t_receipt('customer')}: {transaction.customerName || 'Walk-in Customer'}</p>
             </div>
             <table className="w-full text-sm font-sans">
               <thead>
@@ -111,32 +136,37 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
                 </tr>
               </thead>
               <tbody>
-                {transaction.items.map(item => {
+                {transaction.items && transaction.items.length > 0 ? transaction.items.map(item => {
                   const price = transaction.customerType === 'government' ? item.price.government : transaction.customerType === 'contractor' ? item.price.contractor : item.price.walkIn;
                   return (
-                  <tr key={item.variantId}>
-                    <td className="align-top">{item.name[receiptLanguage]} ({item.size})</td>
-                    <td className="text-center align-top">{item.quantity}</td>
-                    <td className="text-right align-top">{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td className="text-right align-top">{(price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <tr key={item.variantId}>
+                      <td className="align-top">{typeof item.name === 'object' ? (item.name?.[receiptLanguage] || item.name?.en || 'Item') : (item.name || 'Item')} ({item.size || 'N/A'})</td>
+                      <td className="text-center align-top">{item.quantity}</td>
+                      <td className="text-right align-top">{price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</td>
+                      <td className="text-right align-top">{((price || 0) * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  )
+                }) : (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-gray-500">No items</td>
                   </tr>
-                )})}
+                )}
               </tbody>
             </table>
             <div className="border-t border-dashed border-black mt-2 pt-1 font-sans">
-              <div className="flex justify-between"><span>{t_receipt('subtotal')}:</span><span>{transaction.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-              <div className="flex justify-between"><span>{t_receipt('tax_7')}:</span><span>{transaction.tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between"><span>{t_receipt('subtotal')}:</span><span>{transaction.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span></div>
+              <div className="flex justify-between"><span>{t_receipt('tax_7')}:</span><span>{transaction.tax?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span></div>
               {transaction.appliedStoreCredit && (
                 <div className="flex justify-between"><span>{t_receipt('store_credit')}:</span><span>-{transaction.appliedStoreCredit.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
               )}
-              <div className="flex justify-between font-bold text-lg mt-1"><span>{t_receipt('total')}:</span><span>฿{transaction.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div className="flex justify-between font-bold text-lg mt-1"><span>{t_receipt('total')}:</span><span>฿{transaction.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span></div>
             </div>
             <div className="border-t border-dashed border-black mt-2 pt-1 text-xs font-sans">
-              <p>{t_receipt('payment_method')}: {getTranslatedPaymentMethod(transaction.paymentMethod)}</p>
+              <p>{t_receipt('payment_method')}: {transaction.paymentMethod ? getTranslatedPaymentMethod(transaction.paymentMethod) : 'Cash'}</p>
             </div>
             <div className="text-center text-xs mt-4 font-sans">
-                <p>{t_receipt('receipt_footer_line1')}</p>
-                <p>{t_receipt('receipt_footer_line2')}</p>
+              <p>{t_receipt('receipt_footer_line1')}</p>
+              <p>{t_receipt('receipt_footer_line2')}</p>
             </div>
           </div>
         </div>

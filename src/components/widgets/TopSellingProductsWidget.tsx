@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { Transaction, Product, Language } from '../../types';
 import type { TranslationKey } from '../../translations';
-import { ChartBarIcon } from '../icons/HeroIcons';
+import { ChartBarSquareIcon } from '../icons';
 
 interface TopSellingProductsWidgetProps {
     transactions: Transaction[];
@@ -40,15 +40,18 @@ const TopSellingProductsWidget: React.FC<TopSellingProductsWidgetProps> = ({
                     if (!product) return;
 
                     const existing = salesMap.get(item.productId);
+                    const priceKey = tx.customerType === 'organization' ? 'contractor' : tx.customerType;
+                    const itemPrice = item.price[priceKey as 'walkIn' | 'contractor' | 'government'];
+
                     if (existing) {
                         existing.totalQuantity += item.quantity;
-                        existing.totalRevenue += item.price[tx.customerType] * item.quantity;
+                        existing.totalRevenue += itemPrice * item.quantity;
                     } else {
                         salesMap.set(item.productId, {
                             productId: item.productId,
                             productName: product.name,
                             totalQuantity: item.quantity,
-                            totalRevenue: item.price[tx.customerType] * item.quantity,
+                            totalRevenue: itemPrice * item.quantity,
                         });
                     }
                 });

@@ -9,7 +9,7 @@ import type { TranslationKey } from '../translations';
 interface ProfileViewProps {
     currentUser: User;
     onUpdateUser: (userId: string, data: Partial<Omit<User, 'id' | 'password'>>) => void;
-    onUpdatePassword: (userId: string, currentPass: string, newPass: string) => Promise<{success: boolean, message: TranslationKey}>;
+    onUpdatePassword: (userId: string, currentPass: string, newPass: string) => Promise<{ success: boolean, message: TranslationKey }>;
     links: Record<string, React.ReactNode>;
     t: (key: TranslationKey) => string;
 }
@@ -49,11 +49,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
             reader.readAsDataURL(file);
         }
     };
-    
+
     const handleInfoSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onUpdateUser(currentUser.id, { name, avatar: avatarPreview, role: currentUser.role, settings });
-        setInfoFeedback({ type: 'success', message: 'Profile updated successfully!' });
+        setInfoFeedback({ type: 'success', message: t('profile_updated_success') });
         setTimeout(() => setInfoFeedback(null), 3000);
     };
 
@@ -96,8 +96,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
             <form onSubmit={handleInfoSubmit}>
                 <div className="bg-surface rounded-lg shadow">
                     <div className="p-6">
-                        <h2 className="text-xl font-bold text-text-primary">Profile Information</h2>
-                        <p className="text-sm text-text-secondary mt-1">Update your personal details here.</p>
+                        <h2 className="text-xl font-bold text-text-primary">{t('profile_information')}</h2>
+                        <p className="text-sm text-text-secondary mt-1">{t('update_personal_details')}</p>
                         <div className="mt-6 flex flex-col sm:flex-row items-center gap-6">
                             <div className="relative w-24 h-24 flex-shrink-0">
                                 <img src={avatarPreview} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-4 border-gray-200" />
@@ -107,7 +107,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
                                 </label>
                             </div>
                             <div className="w-full">
-                                <label htmlFor="profile-name" className="block text-sm font-medium text-text-secondary">Full Name</label>
+                                <label htmlFor="profile-name" className="block text-sm font-medium text-text-secondary">{t('full_name')}</label>
                                 <input
                                     id="profile-name"
                                     type="text"
@@ -122,17 +122,17 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
 
                 <div className="bg-surface rounded-lg shadow mt-8">
                     <div className="p-6">
-                        <h2 className="text-xl font-bold text-text-primary">Role-Specific Settings</h2>
-                        <p className="text-sm text-text-secondary mt-1">Quick actions and settings based on your role.</p>
-                        
+                        <h2 className="text-xl font-bold text-text-primary">{t('role_specific_settings')}</h2>
+                        <p className="text-sm text-text-secondary mt-1">{t('quick_actions_settings')}</p>
+
                         {hasAnySettings ? (
-                             <div className="mt-6 space-y-6">
+                            <div className="mt-6 space-y-6">
                                 {visibleSettingSections.pos && (
                                     <div>
-                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">POS Operator Settings</h3>
+                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">{t('pos_operator_settings')}</h3>
                                         <div className="space-y-4">
                                             <div>
-                                                <label htmlFor="default-payment" className="block text-sm font-medium text-text-secondary">Default Payment Method</label>
+                                                <label htmlFor="default-payment" className="block text-sm font-medium text-text-secondary">{t('default_payment_method')}</label>
                                                 <select id="default-payment" value={settings.defaultPaymentMethod || 'Card'} onChange={e => handleSettingChange('defaultPaymentMethod', e.target.value as PaymentMethod)} className="mt-1 block w-full max-w-xs rounded-md p-2 bg-background border-gray-300 shadow-sm">
                                                     <option value="Card">Card</option>
                                                     <option value="Cash">Cash</option>
@@ -141,28 +141,28 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
                                             </div>
                                             <div className="flex items-center">
                                                 <input type="checkbox" id="scan-sound" checked={!!settings.playScanSound} onChange={e => handleSettingChange('playScanSound', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                                                <label htmlFor="scan-sound" className="ml-2 block text-sm text-text-primary">Play sound on successful scan</label>
+                                                <label htmlFor="scan-sound" className="ml-2 block text-sm text-text-primary">{t('play_scan_sound')}</label>
                                             </div>
                                         </div>
                                     </div>
                                 )}
-                                 {visibleSettingSections.storeStaff && (
+                                {visibleSettingSections.storeStaff && (
                                     <div>
-                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">Store Staff Settings</h3>
+                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">{t('store_staff_settings')}</h3>
                                     </div>
                                 )}
-                                 {visibleSettingSections.manager && (
+                                {visibleSettingSections.manager && (
                                     <div>
-                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">Manager Settings</h3>
+                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">{t('manager_settings')}</h3>
                                         <div className="space-y-4">
                                             <div>
-                                                <label htmlFor="default-view" className="block text-sm font-medium text-text-secondary">Default View on Login</label>
+                                                <label htmlFor="default-view" className="block text-sm font-medium text-text-secondary">{t('default_view_on_login')}</label>
                                                 <select id="default-view" value={settings.defaultLoginView || 'dashboard'} onChange={e => handleSettingChange('defaultLoginView', e.target.value)} className="mt-1 block w-full max-w-xs rounded-md p-2 bg-background border-gray-300 shadow-sm">
                                                     {Object.keys(links).map(link => <option key={link} value={link}>{t(link as TranslationKey)}</option>)}
                                                 </select>
                                             </div>
-                                             <div>
-                                                <label htmlFor="low-stock" className="block text-sm font-medium text-text-secondary">"Low Stock" Alert Threshold</label>
+                                            <div>
+                                                <label htmlFor="low-stock" className="block text-sm font-medium text-text-secondary">{t('low_stock_alert_threshold')}</label>
                                                 <input type="number" id="low-stock" value={settings.lowStockThreshold || 10} onChange={e => handleSettingChange('lowStockThreshold', parseInt(e.target.value, 10) || 0)} className="mt-1 block w-24 rounded-md p-2 bg-background border-gray-300 shadow-sm" />
                                             </div>
                                         </div>
@@ -170,9 +170,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
                                 )}
                                 {visibleSettingSections.admin && (
                                     <div>
-                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">Admin Settings</h3>
+                                        <h3 className="font-semibold text-text-primary border-b pb-1 mb-3">{t('admin_settings')}</h3>
                                         <div>
-                                            <label htmlFor="default-customer-type" className="block text-sm font-medium text-text-secondary">Default Customer Type in POS</label>
+                                            <label htmlFor="default-customer-type" className="block text-sm font-medium text-text-secondary">{t('default_customer_type_pos')}</label>
                                             <select id="default-customer-type" value={settings.defaultCustomerType || 'walkIn'} onChange={e => handleSettingChange('defaultCustomerType', e.target.value as CustomerType)} className="mt-1 block w-full max-w-xs rounded-md p-2 bg-background border-gray-300 shadow-sm">
                                                 <option value="walkIn">Walk-in</option>
                                                 <option value="contractor">Contractor</option>
@@ -185,8 +185,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
                             </div>
                         ) : (
                             <div className="mt-4 p-4 bg-background rounded-md text-center text-text-secondary">
-                                <p>No specific settings for your role(s) yet.</p>
-                                <p className="text-xs">This area will contain shortcuts and options relevant to your daily tasks in the future.</p>
+                                <p>{t('no_role_settings')}</p>
+                                <p className="text-xs">{t('role_settings_future')}</p>
                             </div>
                         )}
                     </div>
@@ -194,38 +194,38 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
 
                 <div className="mt-6 flex justify-end items-center gap-4 p-6 border-t bg-background rounded-b-lg">
                     {infoFeedback && <p className={`text-sm font-medium ${infoFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{infoFeedback.message}</p>}
-                    <button type="submit" className="px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-800">Save All Changes</button>
+                    <button type="submit" className="px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-800">{t('save_all_changes')}</button>
                 </div>
             </form>
-            
+
             <div className="bg-surface rounded-lg shadow">
                 <form onSubmit={handlePasswordSubmit} className="p-6">
-                    <h2 className="text-xl font-bold text-text-primary flex items-center gap-2"><KeyIcon className="h-5 w-5"/> Security</h2>
-                    <p className="text-sm text-text-secondary mt-1">Change your password.</p>
+                    <h2 className="text-xl font-bold text-text-primary flex items-center gap-2"><KeyIcon className="h-5 w-5" /> {t('security')}</h2>
+                    <p className="text-sm text-text-secondary mt-1">{t('change_password')}</p>
                     <div className="mt-6 space-y-4 max-w-sm">
                         <div>
-                            <label htmlFor="current-password"  className="block text-sm font-medium text-text-secondary">Current Password</label>
+                            <label htmlFor="current-password" className="block text-sm font-medium text-text-secondary">{t('current_password')}</label>
                             <div className="relative mt-1">
                                 <input id="current-password" type={isCurrentPasswordVisible ? "text" : "password"} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background focus:ring-primary focus:border-primary" required />
-                                <button type="button" onClick={() => setIsCurrentPasswordVisible(p => !p)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-600" aria-label={isCurrentPasswordVisible ? "Hide password" : "Show password"}>
+                                <button type="button" onClick={() => setIsCurrentPasswordVisible(p => !p)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-600" aria-label={isCurrentPasswordVisible ? t('hide_password') : t('show_password')}>
                                     {isCurrentPasswordVisible ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                                 </button>
                             </div>
                         </div>
-                         <div>
-                            <label htmlFor="new-password"  className="block text-sm font-medium text-text-secondary">New Password</label>
-                             <div className="relative mt-1">
+                        <div>
+                            <label htmlFor="new-password" className="block text-sm font-medium text-text-secondary">{t('new_password')}</label>
+                            <div className="relative mt-1">
                                 <input id="new-password" type={isNewPasswordVisible ? "text" : "password"} value={newPassword} onChange={e => setNewPassword(e.target.value)} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background focus:ring-primary focus:border-primary" required />
-                                <button type="button" onClick={() => setIsNewPasswordVisible(p => !p)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-600" aria-label={isNewPasswordVisible ? "Hide password" : "Show password"}>
+                                <button type="button" onClick={() => setIsNewPasswordVisible(p => !p)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-600" aria-label={isNewPasswordVisible ? t('hide_password') : t('show_password')}>
                                     {isNewPasswordVisible ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                                 </button>
                             </div>
                         </div>
-                         <div>
-                            <label htmlFor="confirm-password"  className="block text-sm font-medium text-text-secondary">Confirm New Password</label>
+                        <div>
+                            <label htmlFor="confirm-password" className="block text-sm font-medium text-text-secondary">{t('confirm_new_password')}</label>
                             <div className="relative mt-1">
                                 <input id="confirm-password" type={isConfirmPasswordVisible ? "text" : "password"} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background focus:ring-primary focus:border-primary" required />
-                                <button type="button" onClick={() => setIsConfirmPasswordVisible(p => !p)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-600" aria-label={isConfirmPasswordVisible ? "Hide password" : "Show password"}>
+                                <button type="button" onClick={() => setIsConfirmPasswordVisible(p => !p)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-600" aria-label={isConfirmPasswordVisible ? t('hide_password') : t('show_password')}>
                                     {isConfirmPasswordVisible ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                                 </button>
                             </div>
@@ -233,7 +233,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
                     </div>
                     <div className="mt-6 flex justify-end items-center gap-4">
                         {passwordFeedback && <p className={`text-sm font-medium ${passwordFeedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{passwordFeedback.message}</p>}
-                        <button type="submit" className="px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-800">Update Password</button>
+                        <button type="submit" className="px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-800">{t('update_password')}</button>
                     </div>
                 </form>
             </div>

@@ -136,9 +136,9 @@ const CategoryManagementView: React.FC<CategoryManagementViewProps> = ({
                 <div className="bg-surface rounded-lg shadow">
                     <div className="p-6 border-b flex justify-between items-center">
                         <div>
-                            <h2 className="text-xl font-bold text-text-primary">Category Management</h2>
+                            <h2 className="text-xl font-bold text-text-primary">{t('category_management')}</h2>
                             <p className="text-sm text-text-secondary mt-1">
-                                Manage product categories and sub-categories
+                                {t('manage_categories_desc')}
                             </p>
                         </div>
                         <button
@@ -146,7 +146,7 @@ const CategoryManagementView: React.FC<CategoryManagementViewProps> = ({
                             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-800 transition-colors"
                         >
                             <PlusIcon className="h-5 w-5" />
-                            <span>Add Category</span>
+                            <span>{t('add_category')}</span>
                         </button>
                     </div>
 
@@ -155,8 +155,8 @@ const CategoryManagementView: React.FC<CategoryManagementViewProps> = ({
                             mainCategories.map(category => renderCategory(category))
                         ) : (
                             <div className="p-12 text-center text-text-secondary">
-                                <p className="font-semibold text-lg">No categories yet</p>
-                                <p className="text-sm mt-1">Click "Add Category" to create your first category</p>
+                                <p className="font-semibold text-lg">{t('no_categories_yet')}</p>
+                                <p className="text-sm mt-1">{t('no_categories_desc')}</p>
                             </div>
                         )}
                     </div>
@@ -167,8 +167,8 @@ const CategoryManagementView: React.FC<CategoryManagementViewProps> = ({
                 isOpen={!!categoryToDelete}
                 onClose={() => setCategoryToDelete(null)}
                 onConfirm={handleConfirmDelete}
-                title="Delete Category"
-                message={`Are you sure you want to delete "${categoryToDelete?.name[language]}"? This action cannot be undone.`}
+                title={t('delete_category')}
+                message={t('delete_category_confirm', { name: categoryToDelete?.name[language] || '' })}
                 t={t}
             />
         </>

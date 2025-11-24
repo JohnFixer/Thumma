@@ -543,6 +543,14 @@ const translations = {
     customer_type_contractor: 'Contractor',
     customer_type_government: 'Government',
     customer_type_organization: 'Organization',
+    // Category Management
+    category_management: 'Category Management',
+    manage_categories_desc: 'Manage product categories and sub-categories',
+    add_category: 'Add Category',
+    no_categories_yet: 'No categories yet',
+    no_categories_desc: 'Click "Add Category" to create your first category',
+    delete_category: 'Delete Category',
+    delete_category_confirm: 'Are you sure you want to delete "{name}"? This action cannot be undone.',
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -1084,6 +1092,13 @@ const translations = {
     customer_type_contractor: 'ผู้รับเหมา',
     customer_type_government: 'หน่วยงานราชการ',
     customer_type_organization: 'องค์กร',
+    // Category Management category_management: 'จัดการหมวดหมู่',
+    manage_categories_desc: 'จัดการหมวดหมู่และหมวดหมู่ย่อยของสินค้า',
+    add_category: 'เพิ่มหมวดหมู่',
+    no_categories_yet: 'ยังไม่มีหมวดหมู่',
+    no_categories_desc: 'คลิก "เพิ่มหมวดหมู่" เพื่อสร้างหมวดหมู่แรกของคุณ',
+    delete_category: 'ลบหมวดหมู่',
+    delete_category_confirm: 'คุณแน่ใจหรือไม่ว่าต้องการลบ "{name}"? การกระทำนี้ไม่สามารถย้อนกลับได้',
   }
 };
 

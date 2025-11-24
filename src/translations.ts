@@ -576,6 +576,8 @@ const translations = {
     no_due_date: 'No due date',
     view_all_receivables: 'View All Receivables',
     no_outstanding_invoices: 'No outstanding invoices',
+    return_process_failed: 'Failed to process return.',
+    credit_create_failed: 'Failed to create store credit.',
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -1149,6 +1151,8 @@ const translations = {
     no_due_date: 'ไม่มีกำหนดชำระ',
     view_all_receivables: 'ดูลูกหนี้ทั้งหมด',
     no_outstanding_invoices: 'ไม่มีใบแจ้งหนี้ค้างชำระ',
+    return_process_failed: 'ไม่สามารถดำเนินการคืนสินค้าได้',
+    credit_create_failed: 'ไม่สามารถสร้างเครดิตร้านค้าได้',
   }
 };
 

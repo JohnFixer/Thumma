@@ -7,7 +7,8 @@ import type {
     User, NewUserData,
     ShiftReport,
     Bill, NewBillData, StoreSettings,
-    Category, NewCategoryData
+    Category, NewCategoryData,
+    StoreCredit, ReturnedItem
 } from '../types';
 
 // --- Products ---
@@ -276,7 +277,8 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
         operator: t.operator_name || t.operator,
         transportationFee: t.transportation_fee || t.transportationFee || 0,
         vatIncluded: t.vat_included !== undefined ? t.vat_included : t.vatIncluded,
-        file_url: t.file_url
+        file_url: t.file_url,
+        returnedItems: t.returned_items || []
     }));
 };
 
@@ -596,4 +598,73 @@ export const getCategoryHierarchy = (categories: Category[]): { main: Category[]
     });
 
     return { main, subsByParent };
+};
+
+// --- Store Credits ---
+
+export const fetchStoreCredits = async (): Promise<StoreCredit[]> => {
+    const { data, error } = await supabase.from('store_credits').select('*').eq('is_used', false);
+    if (error) {
+        console.error('Error fetching store credits:', error);
+        return [];
+    }
+    return data.map((c: any) => ({
+        id: c.id,
+        amount: c.amount,
+        isUsed: c.is_used,
+        originalTransactionId: c.original_transaction_id,
+        dateIssued: c.date_issued
+    }));
+};
+
+export const createStoreCredit = async (creditData: { amount: number, originalTransactionId: string }): Promise<StoreCredit | null> => {
+    // Use RPC to bypass schema cache issues
+    const { data, error } = await supabase.rpc('create_store_credit_rpc', {
+        p_amount: creditData.amount,
+        p_original_transaction_id: creditData.originalTransactionId
+    });
+
+    if (error) {
+        console.error('Error creating store credit (RPC):', error);
+        throw new Error(`Database Error: ${error.message} (${error.code})`);
+    }
+
+    // RPC returns the row as JSON
+    return {
+        id: data.id,
+        amount: data.amount,
+        isUsed: data.is_used,
+        originalTransactionId: data.original_transaction_id,
+        dateIssued: data.date_issued
+    };
+};
+
+export const updateTransactionReturns = async (transactionId: string, returnedItems: ReturnedItem[]): Promise<boolean> => {
+    // First fetch existing returned items to merge if needed
+    const { data: transaction, error: fetchError } = await supabase
+        .from('transactions')
+        .select('returned_items')
+        .eq('id', transactionId)
+        .single();
+
+    if (fetchError) {
+        console.error('Error fetching transaction for return update:', fetchError);
+        return false;
+    }
+
+    const existingReturns: ReturnedItem[] = transaction.returned_items || [];
+    // Simple merge: just add new ones.
+    const updatedReturns = [...existingReturns, ...returnedItems];
+
+    const { error } = await supabase
+        .from('transactions')
+        .update({ returned_items: updatedReturns })
+        .eq('id', transactionId);
+
+    if (error) {
+        console.error('Error updating transaction returns:', error);
+        return false;
+    }
+
+    return true;
 };

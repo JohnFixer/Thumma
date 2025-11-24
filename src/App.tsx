@@ -219,7 +219,8 @@ const App: React.FC = () => {
                     fetchedBills,
                     fetchedUsers,
                     fetchedSettings,
-                    fetchedCategories
+                    fetchedCategories,
+                    fetchedStoreCredits
                 ] = await Promise.all([
                     db.fetchProducts(),
                     db.fetchCustomers(),
@@ -228,7 +229,8 @@ const App: React.FC = () => {
                     db.fetchBills(),
                     db.fetchUsers(),
                     db.fetchStoreSettings(),
-                    db.fetchCategories()
+                    db.fetchCategories(),
+                    db.fetchStoreCredits()
                 ]);
 
                 setProducts(fetchedProducts);
@@ -237,6 +239,7 @@ const App: React.FC = () => {
                 setTransactions(fetchedTransactions);
                 setBills(fetchedBills);
                 setCategories(fetchedCategories);
+                setStoreCredits(fetchedStoreCredits);
                 // Note: In a real app, users might be managed differently, but we fetch public profiles here
                 if (fetchedUsers.length > 0) setUsers(fetchedUsers);
                 if (fetchedSettings) setStoreSettings(fetchedSettings);
@@ -417,7 +420,38 @@ const App: React.FC = () => {
     const handleImportPastInvoices = (pastInvoices: PastInvoiceData[]) => { console.log("Import Past Invoices", pastInvoices); };
     const handleEditPastInvoice = (invoiceId: string, data: PastInvoiceData) => { console.log("Edit Past Invoice", invoiceId, data); };
     const handleUndoConsolidation = (transaction: Transaction) => { console.log("Undo Consolidation", transaction); };
-    const handleProcessReturn = async (transactionId: string, itemsToReturn: ReturnedItem[], totalValue: number): Promise<StoreCredit> => { console.log("Process Return"); return {} as StoreCredit; };
+    const handleProcessReturn = async (transactionId: string, itemsToReturn: ReturnedItem[], totalValue: number): Promise<StoreCredit> => {
+        // 1. Update transaction with returned items
+        const updateSuccess = await db.updateTransactionReturns(transactionId, itemsToReturn);
+        if (!updateSuccess) {
+            showAlert(t('alert_error'), t('return_process_failed'));
+            throw new Error('Failed to update transaction returns');
+        }
+
+        // 2. Create Store Credit
+        try {
+            const newCredit = await db.createStoreCredit({ amount: totalValue, originalTransactionId: transactionId });
+            if (!newCredit) {
+                showAlert(t('alert_error'), t('credit_create_failed'));
+                throw new Error('Failed to create store credit');
+            }
+
+            // 3. Update local state
+            setTransactions(prev => prev.map(t => {
+                if (t.id === transactionId) {
+                    const existingReturns = t.returnedItems || [];
+                    return { ...t, returnedItems: [...existingReturns, ...itemsToReturn] };
+                }
+                return t;
+            }));
+            setStoreCredits(prev => [...prev, newCredit]);
+
+            return newCredit;
+        } catch (error: any) {
+            showAlert(t('alert_error'), `Failed to create store credit: ${error.message}`);
+            throw error;
+        }
+    };
     const handleCloseShift = () => { console.log("Close Shift"); };
     const handleUpdateSettings = async (newSettings: Partial<StoreSettings>) => {
         const success = await db.updateStoreSettings(newSettings);

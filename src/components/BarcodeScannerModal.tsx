@@ -1,128 +1,100 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { XMarkIcon } from './icons/HeroIcons';
-
-declare global {
-    interface Window {
-        BarcodeDetector: any;
-    }
-}
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface BarcodeScannerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onScanSuccess: (scannedCode: string) => void;
+    isOpen: boolean;
+    onClose: () => void;
+    onScanSuccess: (scannedCode: string) => void;
 }
 
 const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({ isOpen, onClose, onScanSuccess }) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
-    const [status, setStatus] = useState<string>('Initializing...');
-    const streamRef = useRef<MediaStream | null>(null);
+    const scannerRef = useRef<Html5Qrcode | null>(null);
+    const scannerRegionId = "html5qr-code-full-region";
 
     useEffect(() => {
         if (!isOpen) {
-            stopStream();
+            if (scannerRef.current) {
+                scannerRef.current.stop().catch(err => console.error("Failed to stop scanner", err));
+                scannerRef.current = null;
+            }
             return;
         }
 
-        const startScan = async () => {
-            if (!('BarcodeDetector' in window)) {
-                setError('Barcode Detector is not supported by this browser.');
-                setStatus('Not supported');
-                return;
-            }
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                setError('Camera access is not supported by this browser.');
-                setStatus('Not supported');
-                return;
-            }
-
+        const startScanner = async () => {
             try {
-                setStatus('Requesting camera access...');
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' } 
-                });
-                streamRef.current = stream;
+                const html5QrCode = new Html5Qrcode(scannerRegionId);
+                scannerRef.current = html5QrCode;
 
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    await videoRef.current.play();
-                }
-                
-                setStatus('Scanning for codes...');
-                const barcodeDetector = new window.BarcodeDetector();
-                
-                const intervalId = setInterval(async () => {
-                    if (!videoRef.current || videoRef.current.readyState < 2) {
-                        return;
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    },
+                    (decodedText, decodedResult) => {
+                        // Handle success
+                        console.log(`Code matched = ${decodedText}`, decodedResult);
+                        onScanSuccess(decodedText);
+                        // Stop scanning after success if desired, or keep scanning
+                        // For this app, we probably want to close or at least stop triggering multiple times quickly
+                        // But the parent handles closing, so we just callback.
+                        // To prevent multiple rapid callbacks, we could pause here, but let's rely on parent closing it.
+                    },
+                    (errorMessage) => {
+                        // parse error, ignore it.
+                        // console.log(errorMessage);
                     }
-                    try {
-                        const barcodes = await barcodeDetector.detect(videoRef.current);
-                        if (barcodes.length > 0) {
-                            clearInterval(intervalId);
-                            stopStream();
-                            onScanSuccess(barcodes[0].rawValue);
-                        }
-                    } catch (e) {
-                         console.error('Detection error:', e);
-                    }
-                }, 200);
-
-                return () => {
-                    clearInterval(intervalId);
-                    stopStream();
-                };
-
+                );
             } catch (err) {
-                console.error('Error accessing camera:', err);
-                setError('Could not access the camera. Please check permissions.');
-                setStatus('Permission denied');
-                stopStream();
+                console.error("Error starting scanner", err);
+                setError("Could not start camera. Please ensure you have given permission.");
             }
         };
 
-        startScan();
+        // Small timeout to ensure DOM is ready
+        const timer = setTimeout(() => {
+            startScanner();
+        }, 100);
 
         return () => {
-           stopStream();
-        }
+            clearTimeout(timer);
+            if (scannerRef.current) {
+                scannerRef.current.stop().then(() => {
+                    scannerRef.current?.clear();
+                    scannerRef.current = null;
+                }).catch(err => {
+                    console.error("Failed to stop scanner cleanup", err);
+                });
+            }
+        };
     }, [isOpen, onScanSuccess]);
-
-    const stopStream = () => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-            streamRef.current = null;
-        }
-    }
-
 
     if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-[100] flex justify-center items-center" aria-modal="true" role="dialog">
-      <div className="bg-surface rounded-lg shadow-xl w-full max-w-lg m-4" onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-text-primary">Scan Barcode / QR Code</h3>
-          <button onClick={onClose} className="text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-gray-100">
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
-        <div className="p-4 relative bg-black aspect-video">
-            <video ref={videoRef} className="w-full h-full" playsInline />
-            <div className="absolute inset-0 flex items-center justify-center p-8">
-                <div className="w-full h-1/2 border-4 border-dashed border-white/50 rounded-lg"></div>
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-[100] flex justify-center items-center" aria-modal="true" role="dialog">
+            <div className="bg-surface rounded-lg shadow-xl w-full max-w-lg m-4" onClick={e => e.stopPropagation()}>
+                <div className="p-4 border-b flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-text-primary">Scan Barcode / QR Code</h3>
+                    <button onClick={onClose} className="text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-gray-100">
+                        <XMarkIcon className="h-6 w-6" />
+                    </button>
+                </div>
+                <div className="p-4 bg-black relative min-h-[300px] flex items-center justify-center">
+                    <div id={scannerRegionId} className="w-full"></div>
+                    {error && <div className="absolute inset-0 flex items-center justify-center text-white p-4 text-center">{error}</div>}
+                </div>
+                <div className="bg-background px-4 py-3 sm:px-6 flex justify-end items-center rounded-b-lg">
+                    <button type="button" onClick={onClose} className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
-        <div className="bg-background px-4 py-3 sm:px-6 flex justify-between items-center rounded-b-lg">
-           <p className="text-sm text-text-secondary italic">{status}</p>
-           {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
-           <button type="button" onClick={onClose} className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:text-sm">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default BarcodeScannerModal;

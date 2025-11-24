@@ -566,6 +566,20 @@ const translations = {
     select_parent_desc: 'Select a parent to create a sub-category',
     display_order: 'Display Order',
     display_order_helper: 'Lower numbers appear first',
+    // Dashboard Widgets
+    top_selling_products: 'Top Selling Products',
+    last_30_days: 'Last 30 Days',
+    quantity_sold: 'Quantity Sold',
+    no_sales_data: 'No sales data available',
+    accounts_receivable: 'Accounts Receivable',
+    total_outstanding: 'Total Outstanding',
+    overdue: 'Overdue',
+    invoice: 'Invoice',
+    paid: 'Paid',
+    due: 'Due',
+    no_due_date: 'No due date',
+    view_all_receivables: 'View All Receivables',
+    no_outstanding_invoices: 'No outstanding invoices',
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -1129,6 +1143,20 @@ const translations = {
     select_parent_desc: 'เลือกหมวดหมู่หลักเพื่อสร้างหมวดหมู่ย่อย',
     display_order: 'ลำดับการแสดงผล',
     display_order_helper: 'ตัวเลขที่น้อยกว่าจะแสดงก่อน',
+    // Dashboard Widgets
+    top_selling_products: 'สินค้าขายดี',
+    last_30_days: '30 วันที่ผ่านมา',
+    quantity_sold: 'จำนวนที่ขาย',
+    no_sales_data: 'ไม่มีข้อมูลการขาย',
+    accounts_receivable: 'ลูกหนี้การค้า',
+    total_outstanding: 'ยอดค้างรับทั้งหมด',
+    overdue: 'เกินกำหนด',
+    invoice: 'ใบแจ้งหนี้',
+    paid: 'จ่ายแล้ว',
+    due: 'ครบกำหนด',
+    no_due_date: 'ไม่มีกำหนดชำระ',
+    view_all_receivables: 'ดูลูกหนี้ทั้งหมด',
+    no_outstanding_invoices: 'ไม่มีใบแจ้งหนี้ค้างชำระ',
   }
 };
 

@@ -237,6 +237,35 @@ const CartPanel: React.FC<CartPanelProps> = ({
                 </div>
               </div>
 
+              <div>
+                <label htmlFor="customer-phone" className="block text-sm font-medium text-text-secondary mb-1">{t('customer_phone')}</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <PhoneIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="tel"
+                    id="customer-phone"
+                    value={customerPhone || ''}
+                    onChange={(e) => onCustomerPhoneChange(e.target.value)}
+                    placeholder={t('enter_phone_placeholder')}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-background text-text-primary placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="customer-address" className="block text-sm font-medium text-text-secondary mb-1">{t('customer_address')}</label>
+                <input
+                  type="text"
+                  id="customer-address"
+                  value={customerAddress || ''}
+                  onChange={(e) => onCustomerAddressChange(e.target.value)}
+                  placeholder={orderType === 'Delivery' ? t('enter_delivery_address_placeholder') : t('enter_tax_invoice_address_placeholder')}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-background text-text-primary placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                />
+              </div>
+
               {customerOutstandingBalance > 0 && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
                   <p className="font-semibold text-yellow-800">{t('outstanding_balance')}: ฿{customerOutstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>

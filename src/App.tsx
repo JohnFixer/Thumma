@@ -220,7 +220,8 @@ const App: React.FC = () => {
                     fetchedUsers,
                     fetchedSettings,
                     fetchedCategories,
-                    fetchedStoreCredits
+                    fetchedStoreCredits,
+                    fetchedOrders
                 ] = await Promise.all([
                     db.fetchProducts(),
                     db.fetchCustomers(),
@@ -230,7 +231,8 @@ const App: React.FC = () => {
                     db.fetchUsers(),
                     db.fetchStoreSettings(),
                     db.fetchCategories(),
-                    db.fetchStoreCredits()
+                    db.fetchStoreCredits(),
+                    db.fetchOrders()
                 ]);
 
                 setProducts(fetchedProducts);
@@ -238,8 +240,11 @@ const App: React.FC = () => {
                 setSuppliers(fetchedSuppliers);
                 setTransactions(fetchedTransactions);
                 setBills(fetchedBills);
+                setUsers(fetchedUsers);
+                setStoreSettings(fetchedSettings);
                 setCategories(fetchedCategories);
                 setStoreCredits(fetchedStoreCredits);
+                setOrders(fetchedOrders);
                 // Note: In a real app, users might be managed differently, but we fetch public profiles here
                 if (fetchedUsers.length > 0) setUsers(fetchedUsers);
                 if (fetchedSettings) setStoreSettings(fetchedSettings);
@@ -410,9 +415,26 @@ const App: React.FC = () => {
         }
     };
     const handleNewInvoice = (transaction: Omit<Transaction, 'payment_status' | 'paymentMethod' | 'paid_amount'>, cartItems: CartItem[]) => { console.log("New Invoice"); };
-    const handleNewOrder = (order: Order) => { console.log("New Order"); };
-    const handleUpdateOrderStatus = (orderId: string, status: FulfillmentStatus) => { console.log("Update Order Status", orderId, status); };
-    const handleUpdateOrderPaymentStatus = (orderId: string, status: PaymentStatus, method: PaymentMethod) => { console.log("Update Order Payment Status", orderId, status, method); };
+    const handleNewOrder = async (order: Order) => {
+        const success = await db.createOrder(order);
+        if (success) {
+            setOrders(prev => [order, ...prev]);
+        } else {
+            showAlert(t('alert_error'), 'Failed to create order');
+        }
+    };
+    const handleUpdateOrderStatus = async (orderId: string, status: FulfillmentStatus) => {
+        const success = await db.updateOrderFulfillmentStatus(orderId, status);
+        if (success) {
+            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+        }
+    };
+    const handleUpdateOrderPaymentStatus = async (orderId: string, status: PaymentStatus, method: PaymentMethod) => {
+        const success = await db.updateOrderPaymentStatus(orderId, status, method);
+        if (success) {
+            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, paymentStatus: status, paymentMethod: method } : o));
+        }
+    };
     const handleConvertOrderToInvoice = (order: Order) => { console.log("Convert Order to Invoice", order); };
     const handleReceivePayment = (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod) => { console.log("Receive Payment", transactionId, paymentAmount, paymentMethod); };
     const handleCreateConsolidatedInvoice = (customer: Customer, transactionsToConsolidate: Transaction[]) => { console.log("Create Consolidated Invoice", customer, transactionsToConsolidate); };

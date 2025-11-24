@@ -280,6 +280,103 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
         file_url: t.file_url,
         returnedItems: t.returned_items || []
     }));
+
+    return data || [];
+};
+
+// --- Orders ---
+
+export const fetchOrders = async (): Promise<any[]> => {
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('date', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching orders:', error);
+        return [];
+    }
+
+    // Map DB structure to frontend Order type
+    return (data || []).map((o: any) => ({
+        id: o.id,
+        date: o.date,
+        customer: {
+            id: o.customer_id,
+            name: o.customer_name,
+            type: o.customer_type,
+            phone: o.customer_phone,
+            address: o.customer_address
+        },
+        items: o.items,
+        total: o.total,
+        transportationFee: o.transportation_fee,
+        status: o.fulfillment_status,
+        type: o.order_type,
+        address: o.delivery_address,
+        notes: o.notes,
+        paymentStatus: o.payment_status,
+        paymentMethod: o.payment_method
+    }));
+};
+
+export const createOrder = async (order: any): Promise<boolean> => {
+    const { error } = await supabase.from('orders').insert({
+        id: order.id,
+        date: order.date,
+        customer_id: order.customer.id,
+        customer_name: order.customer.name,
+        customer_type: order.customer.type,
+        customer_phone: order.customer.phone,
+        customer_address: order.customer.address || order.address,
+        items: order.items,
+        total: order.total,
+        transportation_fee: order.transportationFee,
+        fulfillment_status: order.status,
+        order_type: order.type,
+        delivery_address: order.address,
+        notes: order.notes,
+        payment_status: order.paymentStatus,
+        payment_method: order.paymentMethod
+    });
+
+    if (error) {
+        console.error("Error creating order:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        return false;
+    }
+    return true;
+};
+
+export const updateOrderPaymentStatus = async (orderId: string, paymentStatus: string, paymentMethod?: string): Promise<boolean> => {
+    const updateData: any = { payment_status: paymentStatus };
+    if (paymentMethod) {
+        updateData.payment_method = paymentMethod;
+    }
+
+    const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', orderId);
+
+    if (error) {
+        console.error("Error updating order payment status:", error);
+        return false;
+    }
+    return true;
+};
+
+export const updateOrderFulfillmentStatus = async (orderId: string, fulfillmentStatus: string): Promise<boolean> => {
+    const { error } = await supabase
+        .from('orders')
+        .update({ fulfillment_status: fulfillmentStatus })
+        .eq('id', orderId);
+
+    if (error) {
+        console.error("Error updating order fulfillment status:", error);
+        return false;
+    }
+    return true;
 };
 
 export const createTransaction = async (transaction: Transaction): Promise<boolean> => {

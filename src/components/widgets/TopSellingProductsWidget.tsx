@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { Transaction, Product, Language } from '../../types';
 import type { TranslationKey } from '../../translations';
-import { ChartBarSquareIcon } from '../icons';
+import { ArrowTrendingUpIcon } from '../icons/HeroIcons';
 
 interface TopSellingProductsWidgetProps {
     transactions: Transaction[];
@@ -66,7 +66,7 @@ const TopSellingProductsWidget: React.FC<TopSellingProductsWidgetProps> = ({
         <div className="bg-surface rounded-lg shadow p-6 animate-fade-in">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                    <ChartBarIcon className="h-5 w-5 text-blue-500" />
+                    <ArrowTrendingUpIcon className="h-5 w-5 text-blue-500" />
                     {t('top_selling_products')}
                 </h3>
                 <span className="text-xs text-text-secondary">{t('last_30_days')}</span>

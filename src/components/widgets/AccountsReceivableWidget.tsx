@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import type { Transaction, Language } from '../../types';
 import type { TranslationKey } from '../../translations';
 import { PaymentStatus } from '../../types';
-import { DocumentDuplicateIcon, ExclamationTriangleIcon } from '../icons/HeroIcons';
+import { BanknotesIcon, ExclamationTriangleIcon } from '../icons/HeroIcons';
 
 interface AccountsReceivableWidgetProps {
     transactions: Transaction[];
@@ -85,7 +85,7 @@ const AccountsReceivableWidget: React.FC<AccountsReceivableWidgetProps> = ({
         <div className="bg-surface rounded-lg shadow p-6 animate-fade-in">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                    <DocumentDuplicateIcon className="h-5 w-5 text-orange-500" />
+                    <BanknotesIcon className="h-5 w-5 text-orange-500" />
                     {t('accounts_receivable')}
                 </h3>
                 {overdueCount > 0 && (

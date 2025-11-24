@@ -518,8 +518,15 @@ const App: React.FC = () => {
     const handleProductMouseEnter = (product: Product, event: React.MouseEvent) => { };
     const handleProductMouseLeave = () => { };
     const handleBack = () => { };
-    const openScanner = (onSuccess: (code: string) => void) => { };
-    const handleScanSuccess = (scannedCode: string) => { };
+    const openScanner = (onSuccess: (code: string) => void) => {
+        setScanCallback(() => onSuccess);
+        setIsScannerOpen(true);
+    };
+
+    const handleScanSuccess = (scannedCode: string) => {
+        scanCallback(scannedCode);
+        setIsScannerOpen(false);
+    };
     const handleAddProductByScan = () => {
         openScanner((scannedCode) => {
             const existingVariant = products.flatMap(p => p.variants).find(v => v.barcode === scannedCode);

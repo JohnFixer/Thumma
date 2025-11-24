@@ -535,7 +535,6 @@ const translations = {
     current_password: 'Current Password',
     new_password: 'New Password',
     confirm_new_password: 'Confirm New Password',
-    confirm_new_password: 'Confirm New Password',
     hide_password: 'Hide password',
     show_password: 'Show password',
     // Customer Types
@@ -571,8 +570,6 @@ const translations = {
     last_30_days: 'Last 30 Days',
     quantity_sold: 'Quantity Sold',
     no_sales_data: 'No sales data available',
-    no_sales_data: 'No sales data available',
-    total_outstanding: 'Total Outstanding',
     total_outstanding: 'Total Outstanding',
     invoice: 'Invoice',
     due: 'Due',
@@ -1112,7 +1109,6 @@ const translations = {
     current_password: 'รหัสผ่านปัจจุบัน',
     new_password: 'รหัสผ่านใหม่',
     confirm_new_password: 'ยืนยันรหัสผ่านใหม่',
-    confirm_new_password: 'ยืนยันรหัสผ่านใหม่',
     hide_password: 'ซ่อนรหัสผ่าน',
     show_password: 'แสดงรหัสผ่าน',
     // Customer Types
@@ -1147,8 +1143,6 @@ const translations = {
     last_30_days: '30 วันที่ผ่านมา',
     quantity_sold: 'จำนวนที่ขาย',
     no_sales_data: 'ไม่มีข้อมูลการขาย',
-    no_sales_data: 'ไม่มีข้อมูลการขาย',
-    total_outstanding: 'ยอดค้างรับทั้งหมด',
     total_outstanding: 'ยอดค้างรับทั้งหมด',
     invoice: 'ใบแจ้งหนี้',
     due: 'ครบกำหนด',

@@ -18,20 +18,20 @@ interface ImportProductsModalProps {
 }
 
 interface ImportSummary {
-    creations: number;
-    updates: number;
-    skipped: number;
-    errors: string[];
+  creations: number;
+  updates: number;
+  skipped: number;
+  errors: string[];
 }
 
 const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen, onClose, onApplyImport, products, t }) => {
   const [importPayload, setImportPayload] = useState<ProductImportPayload | null>(null);
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  
-  const existingSkuMap = useMemo(() => 
-      new Map(products.flatMap(p => p.variants).map(v => [v.sku, v])), 
-  [products]);
+
+  const existingSkuMap = useMemo(() =>
+    new Map(products.flatMap(p => p.variants).map(v => [v.sku, v])),
+    [products]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setImportPayload(null);
@@ -62,77 +62,77 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen, onClo
         const errors: string[] = [];
 
         for (const [index, row] of jsonData.entries()) {
-            const sku = row['SKU'] ? String(row['SKU']) : null;
-            if (!sku) {
-                skippedCount++;
-                errors.push(`Row ${index + 2}: Missing required 'SKU'. Row skipped.`);
-                continue;
+          const sku = row['SKU'] ? String(row['SKU']) : null;
+          if (!sku) {
+            skippedCount++;
+            errors.push(`Row ${index + 2}: Missing required 'SKU'. Row skipped.`);
+            continue;
+          }
+
+          const variantData: NewProductVariantData = {
+            sku: sku,
+            size: String(row['Variant Size'] || 'Standard'),
+            stock: Number(row['Stock'] || 0),
+            price: {
+              walkIn: Number(row['Walk-in Price'] || 0),
+              contractor: Number(row['Contractor Price'] || 0),
+              government: Number(row['Government Price'] || 0),
+              cost: Number(row['Cost Price'] || 0),
+            },
+            barcode: row['Barcode'] ? String(row['Barcode']) : undefined,
+          };
+
+          if (existingSkuMap.has(sku)) {
+            // This is an UPDATE
+            const existingVariant = existingSkuMap.get(sku)!;
+            variantsToUpdate.push({ ...existingVariant, ...variantData });
+          } else {
+            // This is a NEW variant/product
+            const productName = row['Product Name'] ? String(row['Product Name']) : null;
+            const mainCategoryName = row['Main Category'] ? String(row['Main Category']) : null;
+            const subCategoryName = row['Sub Category'] ? String(row['Sub Category']) : null;
+
+            if (!productName || !mainCategoryName || !subCategoryName) {
+              skippedCount++;
+              errors.push(`Row ${index + 2}: New SKU "${sku}" requires a 'Product Name', 'Main Category', and 'Sub Category'. Row skipped.`);
+              continue;
             }
 
-            const variantData: NewProductVariantData = {
-                sku: sku,
-                size: String(row['Variant Size'] || 'Standard'),
-                stock: Number(row['Stock'] || 0),
-                price: {
-                    walkIn: Number(row['Walk-in Price'] || 0),
-                    contractor: Number(row['Contractor Price'] || 0),
-                    government: Number(row['Government Price'] || 0),
-                    cost: Number(row['Cost Price'] || 0),
-                },
-                barcode: row['Barcode'] ? String(row['Barcode']) : undefined,
-            };
+            const categoryKey = findCategoryKeyByNames(mainCategoryName, subCategoryName);
+            if (!categoryKey) {
+              skippedCount++;
+              errors.push(`Row ${index + 2}: Category combination "${mainCategoryName} > ${subCategoryName}" not found. Row skipped.`);
+              continue;
+            }
 
-            if (existingSkuMap.has(sku)) {
-                // This is an UPDATE
-                const existingVariant = existingSkuMap.get(sku)!;
-                variantsToUpdate.push({ ...existingVariant, ...variantData });
+            if (newProductsMap.has(productName)) {
+              newProductsMap.get(productName)!.variants.push(variantData);
             } else {
-                // This is a NEW variant/product
-                const productName = row['Product Name'] ? String(row['Product Name']) : null;
-                const mainCategoryName = row['Main Category'] ? String(row['Main Category']) : null;
-                const subCategoryName = row['Sub Category'] ? String(row['Sub Category']) : null;
-                
-                if (!productName || !mainCategoryName || !subCategoryName) {
-                    skippedCount++;
-                    errors.push(`Row ${index + 2}: New SKU "${sku}" requires a 'Product Name', 'Main Category', and 'Sub Category'. Row skipped.`);
-                    continue;
-                }
-                
-                const categoryKey = findCategoryKeyByNames(mainCategoryName, subCategoryName);
-                if (!categoryKey) {
-                    skippedCount++;
-                    errors.push(`Row ${index + 2}: Category combination "${mainCategoryName} > ${subCategoryName}" not found. Row skipped.`);
-                    continue;
-                }
-
-                if (newProductsMap.has(productName)) {
-                    newProductsMap.get(productName)!.variants.push(variantData);
-                } else {
-                    newProductsMap.set(productName, {
-                        name: { en: productName, th: productName },
-                        description: { 
-                            en: row['Description (EN)'] || '',
-                            th: row['Description (TH)'] || '',
-                        },
-                        category: categoryKey,
-                        imageUrl: String(row['Image URL'] || `https://picsum.photos/seed/${productName.replace(/\s/g, '')}/400/400`),
-                        variants: [variantData],
-                    });
-                }
+              newProductsMap.set(productName, {
+                name: { en: productName, th: productName },
+                description: {
+                  en: row['Description (EN)'] || '',
+                  th: row['Description (TH)'] || '',
+                },
+                category: categoryKey,
+                imageUrl: row['Image URL'] ? String(row['Image URL']) : undefined,
+                variants: [variantData],
+              });
             }
+          }
         }
-        
+
         const payload: ProductImportPayload = {
-            productsToCreate: Array.from(newProductsMap.values()),
-            variantsToUpdate,
+          productsToCreate: Array.from(newProductsMap.values()),
+          variantsToUpdate,
         };
-        
+
         setImportPayload(payload);
         setSummary({
-            creations: payload.productsToCreate.length,
-            updates: payload.variantsToUpdate.length,
-            skipped: skippedCount,
-            errors,
+          creations: payload.productsToCreate.length,
+          updates: payload.variantsToUpdate.length,
+          skipped: skippedCount,
+          errors,
         });
 
       } catch (e: any) {
@@ -155,7 +155,7 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen, onClo
       onApplyImport(importPayload);
     }
   };
-  
+
   const handleClose = () => {
     setImportPayload(null);
     setSummary(null);
@@ -174,7 +174,7 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen, onClo
         'Sub Category': 'Steel & Metal',
         'Image URL': 'https://picsum.photos/seed/rebar/400/400',
         'Variant Size': '16mm',
-        'SKU': 'RB-16MM', 
+        'SKU': 'RB-16MM',
         'Stock': 30,
         'Cost Price': 295,
         'Walk-in Price': 385,
@@ -200,7 +200,7 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen, onClo
       },
     ];
     const worksheet = XLSX.utils.json_to_sheet(exampleData);
-    worksheet['!cols'] = [ { wch: 30 }, { wch: 50 }, { wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 } ];
+    worksheet['!cols'] = [{ wch: 30 }, { wch: 50 }, { wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
     XLSX.writeFile(workbook, 'ProductImportExample.xlsx');
@@ -216,38 +216,38 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen, onClo
           <button onClick={handleClose} className="text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-gray-100"><XMarkIcon className="h-6 w-6" /></button>
         </div>
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-            <div {...getRootProps()} className={`flex justify-center items-center w-full px-6 py-10 border-2 border-gray-300 border-dashed rounded-md cursor-pointer transition-colors ${isDragActive ? 'bg-blue-50 border-primary' : 'bg-background hover:bg-gray-100'}`}>
-                <input {...getInputProps()} />
-                <div className="text-center">
-                    <ArrowUpTrayIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-text-secondary"><span className="font-semibold text-primary">{t('click_to_upload')}</span> {t('or_drag_and_drop')}</p>
-                    <p className="text-xs text-gray-500">{t('xlsx_or_csv_file')} <button type="button" onClick={handleDownloadExample} className="font-semibold text-primary hover:underline">{t('download_example_file')}</button></p>
-                </div>
+          <div {...getRootProps()} className={`flex justify-center items-center w-full px-6 py-10 border-2 border-gray-300 border-dashed rounded-md cursor-pointer transition-colors ${isDragActive ? 'bg-blue-50 border-primary' : 'bg-background hover:bg-gray-100'}`}>
+            <input {...getInputProps()} />
+            <div className="text-center">
+              <ArrowUpTrayIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="mt-2 text-sm text-text-secondary"><span className="font-semibold text-primary">{t('click_to_upload')}</span> {t('or_drag_and_drop')}</p>
+              <p className="text-xs text-gray-500">{t('xlsx_or_csv_file')} <button type="button" onClick={handleDownloadExample} className="font-semibold text-primary hover:underline">{t('download_example_file')}</button></p>
             </div>
+          </div>
 
-            {summary && (
-                <div className="p-4 bg-background border rounded-md text-sm">
-                    <p className="font-semibold text-text-primary">{t('import_summary_for')} <span className="font-bold">{fileName}</span>:</p>
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                        <li className="text-green-700"><span className="font-bold">{summary.creations}</span> {t('new_products_will_be_created')}</li>
-                        <li className="text-blue-700"><span className="font-bold">{summary.updates}</span> {t('existing_variants_will_be_updated')}</li>
-                        {summary.skipped > 0 && <li className="text-yellow-700"><span className="font-bold">{summary.skipped}</span> {t('rows_will_be_skipped')}</li>}
-                    </ul>
-                    {summary.errors.length > 0 && (
-                        <div className="mt-2 pt-2 border-t max-h-24 overflow-y-auto">
-                            <p className="text-xs font-semibold text-red-700">{t('errors_found')}</p>
-                            <ul className="list-disc list-inside text-xs text-red-600">
-                                {summary.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
-                                {summary.errors.length > 5 && <li>...and {summary.errors.length - 5} more.</li>}
-                            </ul>
-                        </div>
-                    )}
+          {summary && (
+            <div className="p-4 bg-background border rounded-md text-sm">
+              <p className="font-semibold text-text-primary">{t('import_summary_for')} <span className="font-bold">{fileName}</span>:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li className="text-green-700"><span className="font-bold">{summary.creations}</span> {t('new_products_will_be_created')}</li>
+                <li className="text-blue-700"><span className="font-bold">{summary.updates}</span> {t('existing_variants_will_be_updated')}</li>
+                {summary.skipped > 0 && <li className="text-yellow-700"><span className="font-bold">{summary.skipped}</span> {t('rows_will_be_skipped')}</li>}
+              </ul>
+              {summary.errors.length > 0 && (
+                <div className="mt-2 pt-2 border-t max-h-24 overflow-y-auto">
+                  <p className="text-xs font-semibold text-red-700">{t('errors_found')}</p>
+                  <ul className="list-disc list-inside text-xs text-red-600">
+                    {summary.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
+                    {summary.errors.length > 5 && <li>...and {summary.errors.length - 5} more.</li>}
+                  </ul>
                 </div>
-            )}
+              )}
+            </div>
+          )}
         </div>
         <div className="bg-background px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleImportClick}
             disabled={!importPayload || (importPayload.productsToCreate.length === 0 && importPayload.variantsToUpdate.length === 0)}
             className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:bg-blue-300 disabled:cursor-not-allowed">

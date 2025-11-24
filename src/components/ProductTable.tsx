@@ -72,17 +72,17 @@ const ProductTable: React.FC<ProductTableProps> = ({
     const lowercasedQuery = searchQuery.toLowerCase();
     return products.filter(product => {
       const hasMatchingVariant = product.variants.some(variant => {
-          const matchesStatus = statusFilter === 'All' || variant.status === statusFilter;
-          const categoryNames = getCategoryByKey(product.category);
-          const categorySearchString = `${categoryNames.main?.name.en} ${categoryNames.main?.name.th} ${categoryNames.sub?.name.en} ${categoryNames.sub?.name.th}`.toLowerCase();
+        const matchesStatus = statusFilter === 'All' || variant.status === statusFilter;
+        const categoryNames = getCategoryByKey(product.category);
+        const categorySearchString = `${categoryNames.main?.name.en} ${categoryNames.main?.name.th} ${categoryNames.sub?.name.en} ${categoryNames.sub?.name.th}`.toLowerCase();
 
-          const matchesSearch =
-            !lowercasedQuery ||
-            Object.values(product.name).some(n => String(n).toLowerCase().includes(lowercasedQuery)) ||
-            variant.sku.toLowerCase().includes(lowercasedQuery) ||
-            (variant.barcode && variant.barcode.toLowerCase().includes(lowercasedQuery)) ||
-            categorySearchString.includes(lowercasedQuery);
-          return matchesStatus && matchesSearch;
+        const matchesSearch =
+          !lowercasedQuery ||
+          Object.values(product.name).some(n => String(n).toLowerCase().includes(lowercasedQuery)) ||
+          variant.sku.toLowerCase().includes(lowercasedQuery) ||
+          (variant.barcode && variant.barcode.toLowerCase().includes(lowercasedQuery)) ||
+          categorySearchString.includes(lowercasedQuery);
+        return matchesStatus && matchesSearch;
       });
       return hasMatchingVariant;
     });
@@ -102,25 +102,25 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
   const handleExport = () => {
     const dataForExport = filteredProducts.flatMap(p => {
-        const { main, sub } = getCategoryByKey(p.category);
-        return p.variants.map(v => ({
-            'Product Name': p.name.en,
-            'Product Name (TH)': p.name.th,
-            'Description (EN)': p.description?.en || '',
-            'Description (TH)': p.description?.th || '',
-            'Main Category': main?.name.en || '',
-            'Sub Category': sub?.name.en || '',
-            'Image URL': p.imageUrl,
-            'Variant Size': v.size,
-            'SKU': v.sku,
-            'Stock': v.stock,
-            'Cost Price': v.price.cost,
-            'Walk-in Price': v.price.walkIn,
-            'Contractor Price': v.price.contractor,
-            'Government Price': v.price.government,
-            'Barcode': v.barcode || '',
-            'Status': v.status,
-        }))
+      const { main, sub } = getCategoryByKey(p.category);
+      return p.variants.map(v => ({
+        'Product Name': p.name.en,
+        'Product Name (TH)': p.name.th,
+        'Description (EN)': p.description?.en || '',
+        'Description (TH)': p.description?.th || '',
+        'Main Category': main?.name.en || '',
+        'Sub Category': sub?.name.en || '',
+        'Image URL': p.imageUrl,
+        'Variant Size': v.size,
+        'SKU': v.sku,
+        'Stock': v.stock,
+        'Cost Price': v.price.cost,
+        'Walk-in Price': v.price.walkIn,
+        'Contractor Price': v.price.contractor,
+        'Government Price': v.price.government,
+        'Barcode': v.barcode || '',
+        'Status': v.status,
+      }))
     });
     const worksheet = XLSX.utils.json_to_sheet(dataForExport);
     worksheet['!cols'] = [
@@ -138,7 +138,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
       setSearchQuery(scannedCode);
     });
   };
-  
+
   const isInitialLoadAndEmpty = products.length === 0 && searchQuery === '' && statusFilter === 'All';
 
   return (
@@ -194,7 +194,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
             </button>
           )}
           {canWrite && (
-             <button
+            <button
               onClick={onAddProductByScan}
               className="flex items-center gap-2 bg-secondary text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-orange-700 transition-colors"
             >
@@ -230,40 +230,40 @@ const ProductTable: React.FC<ProductTableProps> = ({
               const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
               const isExpanded = expandedProductIds.has(product.id);
               return (
-              <React.Fragment key={product.id}>
-                <tr className="bg-white border-b hover:bg-gray-50">
-                  <td className="px-2 py-2 text-center">
-                    <button onClick={() => toggleExpand(product.id)} className="p-1 text-gray-500 hover:text-primary rounded-full hover:bg-gray-100">
-                      {isExpanded ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
-                    </button>
-                  </td>
-                  <td className="px-6 py-2 font-medium text-gray-900 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <img src={product.imageUrl} alt={product.name[language]} className="h-10 w-10 rounded-md object-cover" />
-                      <span>{product.name[language]}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-2 text-xs">{getCategoryDisplay(product.category, language)}</td>
-                  <td className="px-6 py-2 text-right font-medium">{totalStock.toLocaleString()}</td>
-                  <td className="px-6 py-2 text-center">{product.variants.length.toLocaleString()}</td>
-                  <td className="px-6 py-2 text-center">
-                    <div className="flex justify-center gap-1">
-                      <button onClick={() => onViewProduct(product)} className="text-gray-500 hover:text-primary p-1" title={t('view_details_tooltip')}><EyeIcon className="h-4 w-4" /></button>
-                      {canWrite && (
-                        <button onClick={() => onEditProduct(product)} className="text-primary hover:text-blue-700 p-1" title={t('edit_product_tooltip')}><PencilIcon className="h-4 w-4" /></button>
-                      )}
-                      {canDelete && (
-                        <button onClick={() => onDeleteProduct(product)} className="text-red-600 hover:text-red-800 p-1" title={t('delete_product_tooltip')}><TrashIcon className="h-4 w-4" /></button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-                {isExpanded && (
-                  <tr className="bg-background">
-                    <td colSpan={6} className="p-0">
-                      <div className="p-4">
-                        <table className="w-full text-xs bg-white rounded-md shadow-inner">
-                           <thead className="bg-gray-100">
+                <React.Fragment key={product.id}>
+                  <tr className="bg-white border-b hover:bg-gray-50">
+                    <td className="px-2 py-2 text-center">
+                      <button onClick={() => toggleExpand(product.id)} className="p-1 text-gray-500 hover:text-primary rounded-full hover:bg-gray-100">
+                        {isExpanded ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
+                      </button>
+                    </td>
+                    <td className="px-6 py-2 font-medium text-gray-900 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <img src={product.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={product.name[language]} className="h-10 w-10 rounded-md object-cover" />
+                        <span>{product.name[language]}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-2 text-xs">{getCategoryDisplay(product.category, language)}</td>
+                    <td className="px-6 py-2 text-right font-medium">{totalStock.toLocaleString()}</td>
+                    <td className="px-6 py-2 text-center">{product.variants.length.toLocaleString()}</td>
+                    <td className="px-6 py-2 text-center">
+                      <div className="flex justify-center gap-1">
+                        <button onClick={() => onViewProduct(product)} className="text-gray-500 hover:text-primary p-1" title={t('view_details_tooltip')}><EyeIcon className="h-4 w-4" /></button>
+                        {canWrite && (
+                          <button onClick={() => onEditProduct(product)} className="text-primary hover:text-blue-700 p-1" title={t('edit_product_tooltip')}><PencilIcon className="h-4 w-4" /></button>
+                        )}
+                        {canDelete && (
+                          <button onClick={() => onDeleteProduct(product)} className="text-red-600 hover:text-red-800 p-1" title={t('delete_product_tooltip')}><TrashIcon className="h-4 w-4" /></button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className="bg-background">
+                      <td colSpan={6} className="p-0">
+                        <div className="p-4">
+                          <table className="w-full text-xs bg-white rounded-md shadow-inner">
+                            <thead className="bg-gray-100">
                               <tr>
                                 <th className="p-2 text-left">{t('size')}</th>
                                 <th className="p-2 text-left">{t('sku')}</th>
@@ -272,42 +272,43 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                 <th className="p-2 text-center">{t('status')}</th>
                                 <th className="p-2 text-center">Barcode</th>
                               </tr>
-                           </thead>
-                           <tbody>
+                            </thead>
+                            <tbody>
                               {product.variants.map(variant => (
                                 <tr key={variant.id} className="border-t">
                                   <td className="p-2 font-semibold">{variant.size}</td>
                                   <td className="p-2 font-mono">{variant.sku}</td>
                                   <td className="p-2 text-right font-medium">{variant.stock.toLocaleString()}</td>
-                                  <td className="p-2 text-right">฿{variant.price.walkIn.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                  <td className="p-2 text-right">฿{variant.price.walkIn.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                   <td className="p-2 text-center">
                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(variant.status)}`}>{t(variant.status.toLowerCase().replace(' ', '_') as TranslationKey)}</span>
                                   </td>
                                   <td className="p-2 text-center">
-                                    {variant.barcode ? <button onClick={() => onShowBarcode(product, variant)} className="text-gray-500 hover:text-primary p-1"><QrCodeIcon className="h-4 w-4"/></button> : 'N/A'}
+                                    {variant.barcode ? <button onClick={() => onShowBarcode(product, variant)} className="text-gray-500 hover:text-primary p-1"><QrCodeIcon className="h-4 w-4" /></button> : 'N/A'}
                                   </td>
                                 </tr>
                               ))}
-                           </tbody>
-                        </table>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            )})}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              )
+            })}
           </tbody>
         </table>
         {filteredProducts.length === 0 && (
-            <div className="text-center p-12 text-text-secondary">
-                <CubeIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="font-semibold mt-4 text-lg text-text-primary">{t('no_products_found')}</p>
-                {isInitialLoadAndEmpty ? (
-                     <p className="text-sm mt-1" dangerouslySetInnerHTML={{ __html: t('inventory_empty_message') }} />
-                ) : (
-                    <p className="text-sm mt-1">{t('try_adjusting_search')}</p>
-                )}
-            </div>
+          <div className="text-center p-12 text-text-secondary">
+            <CubeIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <p className="font-semibold mt-4 text-lg text-text-primary">{t('no_products_found')}</p>
+            {isInitialLoadAndEmpty ? (
+              <p className="text-sm mt-1" dangerouslySetInnerHTML={{ __html: t('inventory_empty_message') }} />
+            ) : (
+              <p className="text-sm mt-1">{t('try_adjusting_search')}</p>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -7,15 +7,15 @@ import ReturnSuccessModal from './ReturnSuccessModal';
 import type { TranslationKey } from '../translations';
 
 interface ReturnsViewProps {
-  transactions: Transaction[];
-  products: Product[];
-  onProcessReturn: (
-      transactionId: string, 
-      itemsToReturn: ReturnedItem[],
-      totalValue: number
-  ) => Promise<StoreCredit>;
-  t: (key: TranslationKey) => string;
-  language: Language;
+    transactions: Transaction[];
+    products: Product[];
+    onProcessReturn: (
+        transactionId: string,
+        itemsToReturn: ReturnedItem[],
+        totalValue: number
+    ) => Promise<StoreCredit>;
+    t: (key: TranslationKey) => string;
+    language: Language;
 }
 
 const getPriceForCustomer = (item: CartItem, customerType: CustomerType) => {
@@ -42,7 +42,7 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
         setItemsToReturn(prev => {
             const newMap = new Map<string, { quantity: number; reason: ReturnReason }>(prev);
             const currentItem = newMap.get(variantId);
-            
+
             let determinedReason: ReturnReason;
             if (newReason) {
                 determinedReason = newReason;
@@ -51,7 +51,7 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
             } else {
                 determinedReason = ReturnReason.CUSTOMER_CHOICE;
             }
-    
+
             const updatedItem = {
                 quantity: newQuantity,
                 reason: determinedReason,
@@ -68,13 +68,13 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
 
     const totalReturnValue = useMemo(() => {
         if (!foundTransaction || foundTransaction === 'not_found') return 0;
-        
+
         return Array.from(itemsToReturn.entries()).reduce((acc: number, [variantId, { quantity }]) => {
             const originalItem = foundTransaction.items.find(i => i.variantId === variantId);
             if (!originalItem) return acc;
-            
+
             const originalPricePerUnit = getPriceForCustomer(originalItem, foundTransaction.customerType);
-            
+
             // This logic assumes total = subtotal + tax, and tries to refund a proportional amount of tax.
             // A simpler approach could just refund the original item price if tax rules are complex.
             const itemSubtotal = originalItem.quantity * originalPricePerUnit;
@@ -111,7 +111,7 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
         });
 
         const newCredit = await onProcessReturn(foundTransaction.id, returnPayload, totalReturnValue);
-        
+
         setLastCreatedCredit(newCredit);
 
         setFoundTransaction(null);
@@ -155,7 +155,7 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
                             if (availableToReturn <= 0) {
                                 return (
                                     <div key={item.variantId} className="flex items-center gap-4 p-3 bg-gray-100 rounded-md opacity-70">
-                                        <img src={item.imageUrl} alt={item.name[language]} className="h-12 w-12 rounded object-cover"/>
+                                        <img src={item.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={item.name[language]} className="h-12 w-12 rounded object-cover" />
                                         <div className="flex-grow">
                                             <p className="font-medium text-text-primary">{item.name[language]} - {item.size}</p>
                                             <p className="text-sm text-green-600 font-semibold">All items returned</p>
@@ -166,7 +166,7 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
 
                             return (
                                 <div key={item.variantId} className="flex flex-wrap items-center gap-4 p-3 bg-background rounded-md border">
-                                    <img src={item.imageUrl} alt={item.name[language]} className="h-12 w-12 rounded object-cover"/>
+                                    <img src={item.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={item.name[language]} className="h-12 w-12 rounded object-cover" />
                                     <div className="flex-grow">
                                         <p className="font-medium text-text-primary">{item.name[language]} - {item.size}</p>
                                         <p className="text-xs text-text-secondary">Purchased: {item.quantity} | Returned: {previouslyReturned}</p>
@@ -236,10 +236,10 @@ const ReturnsView: React.FC<ReturnsViewProps> = ({ transactions, products, onPro
                     </button>
                 </form>
             </div>
-            
+
             {renderTransactionDetails()}
 
-            <ReturnSuccessModal 
+            <ReturnSuccessModal
                 isOpen={!!lastCreatedCredit}
                 onClose={() => setLastCreatedCredit(null)}
                 credit={lastCreatedCredit}

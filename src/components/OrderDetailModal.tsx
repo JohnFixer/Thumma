@@ -5,11 +5,11 @@ import { XMarkIcon } from './icons/HeroIcons';
 import type { TranslationKey } from '../translations';
 
 interface OrderDetailModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  order: Order | null;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
-  language: Language;
+    isOpen: boolean;
+    onClose: () => void;
+    order: Order | null;
+    t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+    language: Language;
 }
 
 const getFulfillmentStatusColor = (status: FulfillmentStatus) => {
@@ -40,7 +40,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ isOpen, onClose, or
         const key = `fulfillment_status_${status.toLowerCase().replace(/\s/g, '_')}` as TranslationKey;
         return t(key);
     };
-    
+
     const getTranslatedPaymentStatus = (status: string) => {
         const key = `payment_status_${status.toLowerCase().replace(/\s/g, '_')}` as TranslationKey;
         return t(key);
@@ -69,7 +69,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ isOpen, onClose, or
                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFulfillmentStatusColor(order.status)}`}>
                                     {getTranslatedFulfillmentStatus(order.status)}
                                 </span>
-                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
                                     {getTranslatedPaymentStatus(order.paymentStatus)}
                                 </span>
                             </div>
@@ -87,7 +87,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ isOpen, onClose, or
                         <ul className="divide-y divide-gray-200">
                             {order.items.map(item => (
                                 <li key={item.variantId} className="py-3 flex items-center gap-4">
-                                    <img src={item.imageUrl} alt={item.name[language]} className="h-14 w-14 rounded-md object-cover flex-shrink-0" />
+                                    <img src={item.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={item.name[language]} className="h-14 w-14 rounded-md object-cover flex-shrink-0" />
                                     <div className="flex-grow">
                                         <p className="font-medium text-text-primary">{item.name[language]}</p>
                                         <p className="text-xs text-text-secondary">{t('sku')}: {item.sku} | {item.size}</p>
@@ -101,7 +101,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ isOpen, onClose, or
                     </div>
 
                     <div className="mt-4 border-t pt-4 text-right space-y-1 text-sm">
-                         <div className="flex justify-between">
+                        <div className="flex justify-between">
                             <span className="text-text-secondary">{t('subtotal')}:</span>
                             <span>฿{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
@@ -111,14 +111,14 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ isOpen, onClose, or
                                 <span>฿{order.transportationFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
                         )}
-                         <div className="flex justify-between items-baseline pt-2">
+                        <div className="flex justify-between items-baseline pt-2">
                             <p className="text-base font-bold text-text-primary">{t('total')}</p>
                             <p className="text-2xl font-bold text-primary">฿{order.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                     </div>
 
                 </div>
-                 <div className="bg-background px-4 py-3 sm:px-6 flex justify-end rounded-b-lg">
+                <div className="bg-background px-4 py-3 sm:px-6 flex justify-end rounded-b-lg">
                     <button type="button" onClick={onClose} className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:w-auto sm:text-sm">
                         {t('close')}
                     </button>

@@ -21,9 +21,9 @@ const OutsourcePurchaseModal: React.FC<OutsourcePurchaseModalProps> = ({ isOpen,
 
   useEffect(() => {
     if (isOpen) {
-        setCost('');
-        setMarkup(storeSettings?.default_outsource_markup ?? 20);
-        setSellingPrice('');
+      setCost('');
+      setMarkup(storeSettings?.default_outsource_markup ?? 20);
+      setSellingPrice('');
     }
   }, [isOpen, storeSettings]);
 
@@ -35,7 +35,7 @@ const OutsourcePurchaseModal: React.FC<OutsourcePurchaseModalProps> = ({ isOpen,
       setSellingPrice('');
     }
   }, [cost, markup]);
-  
+
   const handleConfirm = () => {
     if (!product || !variant) return;
     if (typeof cost !== 'number' || cost <= 0 || typeof sellingPrice !== 'number' || sellingPrice <= 0) {
@@ -63,7 +63,7 @@ const OutsourcePurchaseModal: React.FC<OutsourcePurchaseModalProps> = ({ isOpen,
     };
     onConfirm(newItem);
   };
-  
+
   if (!isOpen || !product || !variant) return null;
 
   return (
@@ -77,7 +77,7 @@ const OutsourcePurchaseModal: React.FC<OutsourcePurchaseModalProps> = ({ isOpen,
         </div>
         <div className="p-6 space-y-4">
           <div className="flex items-center gap-4 p-3 bg-background rounded-lg">
-            <img src={product.imageUrl} alt={product.name[language]} className="h-16 w-16 rounded-md object-cover"/>
+            <img src={product.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={product.name[language]} className="h-16 w-16 rounded-md object-cover" />
             <div>
               <p className="font-bold">{product.name[language]}</p>
               <p className="text-sm text-text-secondary">{variant.size} (SKU: {variant.sku})</p>

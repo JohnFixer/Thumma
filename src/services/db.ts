@@ -31,7 +31,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
         name: p.name,
         description: p.description,
         category: p.category,
-        imageUrl: p.image_url,
+        imageUrl: p.image_url || undefined,
         variants: p.variants.map((v: any) => ({
             id: v.id,
             sku: v.sku,
@@ -115,7 +115,7 @@ export const fetchProductById = async (id: string): Promise<Product | null> => {
         name: p.name,
         description: p.description,
         category: p.category,
-        imageUrl: p.image_url,
+        imageUrl: p.image_url || undefined,
         variants: p.variants.map((v: any) => ({
             id: v.id,
             sku: v.sku,

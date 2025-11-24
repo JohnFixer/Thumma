@@ -58,7 +58,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
             return newSet;
         });
     };
-    
+
     const handleConfirmPayment = (method: PaymentMethod) => {
         if (orderToPay) {
             onUpdateOrderPaymentStatus(orderToPay.id, PaymentStatus.PAID, method);
@@ -93,7 +93,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
         const key = `fulfillment_status_${status.toLowerCase().replace(/\s/g, '_')}` as TranslationKey;
         return t(key);
     };
-    
+
     const getTranslatedPaymentStatus = (status: string) => {
         if (status === 'All') return t('all');
         const key = `payment_status_${status.toLowerCase().replace(/\s/g, '_')}` as TranslationKey;
@@ -125,7 +125,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
                         >
                             {fulfillmentStatusOptions.map(status => <option key={status} value={status}>{t('fulfillment')}: {getTranslatedFulfillmentStatus(status)}</option>)}
                         </select>
-                         <select
+                        <select
                             value={paymentStatusFilter}
                             onChange={(e) => setPaymentStatusFilter(e.target.value)}
                             className="block w-full sm:w-auto pl-3 pr-8 py-2 border border-gray-300 rounded-md bg-background text-text-primary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
@@ -166,7 +166,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
                                                 {getTranslatedPaymentStatus(order.paymentStatus)}
                                             </span>
                                         </td>
-                                         <td className="px-6 py-4 text-center">
+                                        <td className="px-6 py-4 text-center">
                                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFulfillmentStatusColor(order.status)}`}>
                                                 {getTranslatedFulfillmentStatus(order.status)}
                                             </span>
@@ -212,7 +212,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
                                                         <ul className="divide-y divide-gray-200 max-h-48 overflow-y-auto">
                                                             {order.items.map(item => (
                                                                 <li key={item.variantId} className="py-2 flex items-center gap-4">
-                                                                    <img src={item.imageUrl} alt={item.name[language]} className="h-12 w-12 rounded-md object-cover flex-shrink-0" />
+                                                                    <img src={item.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={item.name[language]} className="h-12 w-12 rounded-md object-cover flex-shrink-0" />
                                                                     <div className="flex-grow">
                                                                         <p className="font-medium text-text-primary">{item.name[language]}</p>
                                                                         <p className="text-xs text-text-secondary">{t('sku')}: {item.sku}</p>

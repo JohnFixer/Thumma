@@ -95,7 +95,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                     variantId: variant.id,
                     name: product.name,
                     size: variant.size,
-                    imageUrl: product.imageUrl,
+                    imageUrl: product.imageUrl || 'https://placehold.co/400x400?text=No+Image',
                     sku: variant.sku,
                     quantity: 1,
                     stock: variant.stock,

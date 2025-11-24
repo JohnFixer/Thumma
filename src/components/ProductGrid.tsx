@@ -5,13 +5,13 @@ import type { TranslationKey } from '../translations';
 import { CATEGORIES } from '../categories';
 
 interface ProductGridProps {
-  products: Product[];
-  onProductSelect: (product: Product) => void;
-  onScanClick: () => void;
-  onProductMouseEnter: (product: Product, event: React.MouseEvent) => void;
-  onProductMouseLeave: () => void;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
-  language: Language;
+    products: Product[];
+    onProductSelect: (product: Product) => void;
+    onScanClick: () => void;
+    onProductMouseEnter: (product: Product, event: React.MouseEvent) => void;
+    onProductMouseLeave: () => void;
+    t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+    language: Language;
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, onScanClick, onProductMouseEnter, onProductMouseLeave, t, language }) => {
@@ -27,9 +27,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, on
         return products.filter(product => {
             const mainCatKey = product.category.split('.')[0];
             const matchesCategory = categoryFilter === 'All' || mainCatKey === categoryFilter;
-            const matchesSearch = !lowercasedQuery || 
-                                  Object.values(product.name).some(n => String(n).toLowerCase().includes(lowercasedQuery)) ||
-                                  product.variants.some(v => v.sku.toLowerCase().includes(lowercasedQuery) || (v.barcode && v.barcode.toLowerCase().includes(lowercasedQuery)));
+            const matchesSearch = !lowercasedQuery ||
+                Object.values(product.name).some(n => String(n).toLowerCase().includes(lowercasedQuery)) ||
+                product.variants.some(v => v.sku.toLowerCase().includes(lowercasedQuery) || (v.barcode && v.barcode.toLowerCase().includes(lowercasedQuery)));
             return matchesCategory && matchesSearch;
         });
     }, [products, searchQuery, categoryFilter]);
@@ -93,7 +93,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, on
                                     className={`text-left p-2 rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${hasAnyStock ? 'bg-white hover:shadow-md' : 'bg-gray-100 opacity-70 hover:shadow-md'}`}
                                 >
                                     <div className="relative">
-                                        <img src={product.imageUrl} alt={product.name[language]} className="h-28 w-full object-cover rounded-md" />
+                                        <img src={product.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={product.name[language]} className="h-28 w-full object-cover rounded-md" />
                                         {!hasAnyStock && (
                                             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center rounded-md">
                                                 <span className="text-white font-bold text-sm bg-red-600 px-2 py-1 rounded">{t('out_of_stock')}</span>

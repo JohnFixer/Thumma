@@ -125,7 +125,7 @@ export interface Product {
   name: LocalizedString;
   description?: LocalizedString;
   category: string; // e.g., 'building_materials.cement_aggregates'
-  imageUrl: string;
+  imageUrl?: string;
   variants: ProductVariant[];
 }
 
@@ -196,7 +196,7 @@ export interface CartItem {
   variantId: string;
   name: LocalizedString;
   size: string;
-  imageUrl: string;
+  imageUrl?: string;
   sku: string;
   quantity: number;
   stock: number;

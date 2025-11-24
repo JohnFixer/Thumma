@@ -43,7 +43,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
   const [description, setDescription] = useState({ en: '', th: '' });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [variants, setVariants] = useState<VariantFormState[]>([]);
-  
+
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
 
@@ -62,21 +62,21 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
     if (product) {
       setName(product.name);
       setDescription(product.description || { en: '', th: '' });
-      setImagePreview(product.imageUrl);
-      
+      setImagePreview(product.imageUrl || 'https://placehold.co/400x400?text=No+Image');
+
       const formVariants = product.variants.map(v => ({
-          ...v,
-          stock: String(v.stock),
-          price: {
-              walkIn: String(v.price.walkIn),
-              contractor: String(v.price.contractor),
-              government: String(v.price.government),
-              cost: String(v.price.cost),
-          },
-          barcode: v.barcode || '',
+        ...v,
+        stock: String(v.stock),
+        price: {
+          walkIn: String(v.price.walkIn),
+          contractor: String(v.price.contractor),
+          government: String(v.price.government),
+          cost: String(v.price.cost),
+        },
+        barcode: v.barcode || '',
       }));
       setVariants(formVariants);
-      
+
       const [mainKey, subKey] = product.category.split('.');
       setSelectedMainCategory(mainKey || '');
       setSelectedSubCategory(subKey || '');
@@ -98,7 +98,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
       reader.readAsDataURL(file);
     }
   };
-  
+
   const handleVariantChange = (index: number, field: keyof VariantFormState | 'walkIn' | 'contractor' | 'government' | 'cost', value: string) => {
     const newVariants = [...variants];
     const variant = { ...newVariants[index] };
@@ -107,15 +107,15 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
 
     let sanitizedValue = value;
     if (isPriceField) {
-        if (!/^\d*\.?\d*$/.test(sanitizedValue)) return;
+      if (!/^\d*\.?\d*$/.test(sanitizedValue)) return;
     } else if (isStockField) {
-        if (!/^\d*$/.test(sanitizedValue)) return;
+      if (!/^\d*$/.test(sanitizedValue)) return;
     }
 
     if (isPriceField) {
-        variant.price = { ...variant.price, [field]: sanitizedValue };
+      variant.price = { ...variant.price, [field]: sanitizedValue };
     } else {
-        (variant as any)[field] = sanitizedValue;
+      (variant as any)[field] = sanitizedValue;
     }
     newVariants[index] = variant;
     setVariants(newVariants);
@@ -136,35 +136,35 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!product || !name.en || !name.th || !selectedMainCategory || !selectedSubCategory || !imagePreview) {
-        showAlert(t('missing_information'), t('add_product_validation1'));
-        return;
+      showAlert(t('missing_information'), t('add_product_validation1'));
+      return;
     }
-    
+
     const variantsForPayload: (ProductVariant | NewProductVariantData)[] = variants.map(v => ({
-        ...v,
-        id: v.id,
-        status: v.status,
-        history: v.history,
-        stock: parseInt(v.stock, 10) || 0,
-        price: {
-            walkIn: parseFloat(v.price.walkIn) || 0,
-            contractor: parseFloat(v.price.contractor) || 0,
-            government: parseFloat(v.price.government) || 0,
-            cost: parseFloat(v.price.cost) || 0,
-        },
-        barcode: v.barcode || undefined,
+      ...v,
+      id: v.id,
+      status: v.status,
+      history: v.history,
+      stock: parseInt(v.stock, 10) || 0,
+      price: {
+        walkIn: parseFloat(v.price.walkIn) || 0,
+        contractor: parseFloat(v.price.contractor) || 0,
+        government: parseFloat(v.price.government) || 0,
+        cost: parseFloat(v.price.cost) || 0,
+      },
+      barcode: v.barcode || undefined,
     }));
 
     if (variantsForPayload.some(v => !v.sku || !v.size || v.price.walkIn <= 0 || v.price.cost < 0)) {
-        showAlert(t('invalid_variant'), t('add_product_validation2'));
-        return;
+      showAlert(t('invalid_variant'), t('add_product_validation2'));
+      return;
     }
     const productData: NewProductData = {
-        name,
-        description,
-        category: `${selectedMainCategory}.${selectedSubCategory}`,
-        imageUrl: imagePreview,
-        variants: variantsForPayload,
+      name,
+      description,
+      category: `${selectedMainCategory}.${selectedSubCategory}`,
+      imageUrl: imagePreview,
+      variants: variantsForPayload,
     };
     onEditProduct(product.id, productData);
   };
@@ -183,115 +183,115 @@ const EditProductModal: React.FC<EditProductModalProps> = ({ isOpen, onClose, on
         <form onSubmit={handleSubmit}>
           <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary">Product Image</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                    <div className="space-y-1 text-center">
-                      {imagePreview ? (
-                        <img src={imagePreview} alt="Product preview" className="mx-auto h-24 w-24 object-cover rounded-md" />
-                      ) : (
-                        <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                      )}
-                      <div className="flex text-sm text-gray-600 justify-center">
-                        <label htmlFor="edit-file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-blue-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
-                          <span>Change image</span>
-                          <input id="edit-file-upload" name="edit-file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
-                        </label>
-                      </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary">Product Image</label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Product preview" className="mx-auto h-24 w-24 object-cover rounded-md" />
+                    ) : (
+                      <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    )}
+                    <div className="flex text-sm text-gray-600 justify-center">
+                      <label htmlFor="edit-file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-blue-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
+                        <span>Change image</span>
+                        <input id="edit-file-upload" name="edit-file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
+                      </label>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-4">
-                    <div>
-                        <label htmlFor="edit-name_en" className="block text-sm font-medium text-text-secondary">Product Name (EN)</label>
-                        <input type="text" id="edit-name_en" value={name.en} onChange={(e) => setName(p => ({...p, en: e.target.value}))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
-                    </div>
-                    <div>
-                        <label htmlFor="edit-name_th" className="block text-sm font-medium text-text-secondary">Product Name (TH)</label>
-                        <input type="text" id="edit-name_th" value={name.th} onChange={(e) => setName(p => ({...p, th: e.target.value}))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
-                    </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="main_category" className="block text-sm font-medium text-text-secondary">{t('main_category')}</label>
-                            <select id="main_category" value={selectedMainCategory} onChange={handleMainCategoryChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required>
-                                <option value="">{t('select_main_category')}</option>
-                                {CATEGORIES.map(cat => <option key={cat.key} value={cat.key}>{cat.name['en']} / {cat.name['th']}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label htmlFor="sub_category" className="block text-sm font-medium text-text-secondary">{t('sub_category')}</label>
-                            <select id="sub_category" value={selectedSubCategory} onChange={e => setSelectedSubCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required disabled={!selectedMainCategory}>
-                                <option value="">{t('select_sub_category')}</option>
-                                {subCategoryOptions.map(sub => <option key={sub.key} value={sub.key}>{sub.name['en']} / {sub.name['th']}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                    {selectedSubCategoryDetails && (
-                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs">
-                            <p className="font-bold text-blue-800">{t('category_helper_title')}</p>
-                            <p className="mt-1"><strong className="text-blue-700">{t('description')}:</strong> {selectedSubCategoryDetails.description['en']} / {selectedSubCategoryDetails.description['th']}</p>
-                            <p className="mt-1"><strong className="text-blue-700">{t('example_products')}:</strong> {selectedSubCategoryDetails.examples['en']} / {selectedSubCategoryDetails.examples['th']}</p>
-                        </div>
-                    )}
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="edit-name_en" className="block text-sm font-medium text-text-secondary">Product Name (EN)</label>
+                  <input type="text" id="edit-name_en" value={name.en} onChange={(e) => setName(p => ({ ...p, en: e.target.value }))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
                 </div>
+                <div>
+                  <label htmlFor="edit-name_th" className="block text-sm font-medium text-text-secondary">Product Name (TH)</label>
+                  <input type="text" id="edit-name_th" value={name.th} onChange={(e) => setName(p => ({ ...p, th: e.target.value }))} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="main_category" className="block text-sm font-medium text-text-secondary">{t('main_category')}</label>
+                    <select id="main_category" value={selectedMainCategory} onChange={handleMainCategoryChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required>
+                      <option value="">{t('select_main_category')}</option>
+                      {CATEGORIES.map(cat => <option key={cat.key} value={cat.key}>{cat.name['en']} / {cat.name['th']}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="sub_category" className="block text-sm font-medium text-text-secondary">{t('sub_category')}</label>
+                    <select id="sub_category" value={selectedSubCategory} onChange={e => setSelectedSubCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required disabled={!selectedMainCategory}>
+                      <option value="">{t('select_sub_category')}</option>
+                      {subCategoryOptions.map(sub => <option key={sub.key} value={sub.key}>{sub.name['en']} / {sub.name['th']}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {selectedSubCategoryDetails && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs">
+                    <p className="font-bold text-blue-800">{t('category_helper_title')}</p>
+                    <p className="mt-1"><strong className="text-blue-700">{t('description')}:</strong> {selectedSubCategoryDetails.description['en']} / {selectedSubCategoryDetails.description['th']}</p>
+                    <p className="mt-1"><strong className="text-blue-700">{t('example_products')}:</strong> {selectedSubCategoryDetails.examples['en']} / {selectedSubCategoryDetails.examples['th']}</p>
+                  </div>
+                )}
+              </div>
             </div>
-            
+
             <div>
-                <label className="block text-sm font-medium text-text-secondary">Product Description (Optional)</label>
-                <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <textarea value={description.en} onChange={(e) => setDescription(p => ({...p, en: e.target.value}))} rows={3} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background" placeholder="Description in English"></textarea>
-                    <textarea value={description.th} onChange={(e) => setDescription(p => ({...p, th: e.target.value}))} rows={3} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background" placeholder="คำอธิบายสินค้า (ภาษาไทย)"></textarea>
-                </div>
+              <label className="block text-sm font-medium text-text-secondary">Product Description (Optional)</label>
+              <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <textarea value={description.en} onChange={(e) => setDescription(p => ({ ...p, en: e.target.value }))} rows={3} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background" placeholder="Description in English"></textarea>
+                <textarea value={description.th} onChange={(e) => setDescription(p => ({ ...p, th: e.target.value }))} rows={3} className="block w-full rounded-md border-gray-300 shadow-sm p-2 bg-background" placeholder="คำอธิบายสินค้า (ภาษาไทย)"></textarea>
+              </div>
             </div>
 
             <div className="border-t pt-4">
-                <h4 className="text-md font-semibold text-text-primary mb-2">Product Variants</h4>
-                <div className="space-y-4">
-                    {variants.map((variant, index) => (
-                        <div key={variant.id || index} className="grid grid-cols-12 gap-x-4 gap-y-2 items-end p-3 bg-background rounded-lg border">
-                            <div className="col-span-6 sm:col-span-2">
-                                <label className="block text-xs font-medium text-text-secondary">{t('size')}</label>
-                                <input type="text" placeholder="e.g., 12mm" value={variant.size} onChange={e => handleVariantChange(index, 'size', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
-                            </div>
-                            <div className="col-span-6 sm:col-span-2">
-                                <label className="block text-xs font-medium text-text-secondary">{t('sku')}</label>
-                                <input type="text" placeholder="SKU" value={variant.sku} onChange={e => handleVariantChange(index, 'sku', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
-                            </div>
-                            <div className="col-span-6 sm:col-span-2">
-                                <label className="block text-xs font-medium text-text-secondary">{t('stock')}</label>
-                                <input type="text" inputMode="numeric" value={variant.stock} onChange={e => handleVariantChange(index, 'stock', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
-                            </div>
-                             <div className="col-span-6 sm:col-span-2">
-                                <label className="block text-xs font-medium text-text-secondary">{t('cost_price')}</label>
-                                <input type="text" inputMode="decimal" value={variant.price.cost} onChange={e => handleVariantChange(index, 'cost', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
-                            </div>
-                            <div className="col-span-12 sm:col-span-4">
-                                <label className="block text-xs font-medium text-text-secondary">{t('walk_in_price')}</label>
-                                <input type="text" inputMode="decimal" value={variant.price.walkIn} onChange={e => handleVariantChange(index, 'walkIn', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
-                            </div>
-                            <div className="col-span-12 sm:col-span-4">
-                                <label className="block text-xs font-medium text-text-secondary">{t('contractor_price')}</label>
-                                <input type="text" inputMode="decimal" value={variant.price.contractor} onChange={e => handleVariantChange(index, 'contractor', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
-                            </div>
-                             <div className="col-span-12 sm:col-span-4">
-                                <label className="block text-xs font-medium text-text-secondary">{t('government')} Price</label>
-                                <input type="text" inputMode="decimal" value={variant.price.government} onChange={e => handleVariantChange(index, 'government', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
-                            </div>
-                            <div className="col-span-11">
-                                <label className="block text-xs font-medium text-text-secondary">Barcode (Optional)</label>
-                                <input type="text" value={variant.barcode || ''} onChange={e => handleVariantChange(index, 'barcode', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
-                            </div>
-                            <div className="col-span-1 flex items-center justify-end">
-                                <button type="button" onClick={() => removeVariant(index)} disabled={variants.length <= 1} className="text-red-500 hover:text-red-700 disabled:text-gray-300 p-1">
-                                    <TrashIcon className="h-5 w-5"/>
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                    <button type="button" onClick={addVariant} className="flex items-center gap-2 text-sm font-medium text-primary hover:text-blue-700 mt-2">
-                        <PlusIcon className="h-4 w-4" /> Add Another Variant
-                    </button>
-                </div>
+              <h4 className="text-md font-semibold text-text-primary mb-2">Product Variants</h4>
+              <div className="space-y-4">
+                {variants.map((variant, index) => (
+                  <div key={variant.id || index} className="grid grid-cols-12 gap-x-4 gap-y-2 items-end p-3 bg-background rounded-lg border">
+                    <div className="col-span-6 sm:col-span-2">
+                      <label className="block text-xs font-medium text-text-secondary">{t('size')}</label>
+                      <input type="text" placeholder="e.g., 12mm" value={variant.size} onChange={e => handleVariantChange(index, 'size', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
+                    </div>
+                    <div className="col-span-6 sm:col-span-2">
+                      <label className="block text-xs font-medium text-text-secondary">{t('sku')}</label>
+                      <input type="text" placeholder="SKU" value={variant.sku} onChange={e => handleVariantChange(index, 'sku', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
+                    </div>
+                    <div className="col-span-6 sm:col-span-2">
+                      <label className="block text-xs font-medium text-text-secondary">{t('stock')}</label>
+                      <input type="text" inputMode="numeric" value={variant.stock} onChange={e => handleVariantChange(index, 'stock', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
+                    </div>
+                    <div className="col-span-6 sm:col-span-2">
+                      <label className="block text-xs font-medium text-text-secondary">{t('cost_price')}</label>
+                      <input type="text" inputMode="decimal" value={variant.price.cost} onChange={e => handleVariantChange(index, 'cost', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
+                    </div>
+                    <div className="col-span-12 sm:col-span-4">
+                      <label className="block text-xs font-medium text-text-secondary">{t('walk_in_price')}</label>
+                      <input type="text" inputMode="decimal" value={variant.price.walkIn} onChange={e => handleVariantChange(index, 'walkIn', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" required />
+                    </div>
+                    <div className="col-span-12 sm:col-span-4">
+                      <label className="block text-xs font-medium text-text-secondary">{t('contractor_price')}</label>
+                      <input type="text" inputMode="decimal" value={variant.price.contractor} onChange={e => handleVariantChange(index, 'contractor', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
+                    </div>
+                    <div className="col-span-12 sm:col-span-4">
+                      <label className="block text-xs font-medium text-text-secondary">{t('government')} Price</label>
+                      <input type="text" inputMode="decimal" value={variant.price.government} onChange={e => handleVariantChange(index, 'government', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
+                    </div>
+                    <div className="col-span-11">
+                      <label className="block text-xs font-medium text-text-secondary">Barcode (Optional)</label>
+                      <input type="text" value={variant.barcode || ''} onChange={e => handleVariantChange(index, 'barcode', e.target.value)} className="mt-1 block w-full rounded-md text-sm p-2" />
+                    </div>
+                    <div className="col-span-1 flex items-center justify-end">
+                      <button type="button" onClick={() => removeVariant(index)} disabled={variants.length <= 1} className="text-red-500 hover:text-red-700 disabled:text-gray-300 p-1">
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button type="button" onClick={addVariant} className="flex items-center gap-2 text-sm font-medium text-primary hover:text-blue-700 mt-2">
+                  <PlusIcon className="h-4 w-4" /> Add Another Variant
+                </button>
+              </div>
             </div>
           </div>
           <div className="bg-background px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">

@@ -80,42 +80,42 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6 border-b">
-                    <h2 className="text-xl font-bold text-text-primary">Add New Category</h2>
-                    <p className="text-sm text-text-secondary mt-1">Create a new category or sub-category</p>
+                    <h2 className="text-xl font-bold text-text-primary">{t('add_new_category')}</h2>
+                    <p className="text-sm text-text-secondary mt-1">{t('create_category_desc')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            Category Name (English) *
+                            {t('category_name_english')} *
                         </label>
                         <input
                             type="text"
                             value={nameEn}
                             onChange={(e) => setNameEn(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                            placeholder="e.g., Building Materials"
+                            placeholder={t('category_name_en_placeholder')}
                             required
                         />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            Category Name (Thai) *
+                            {t('category_name_thai')} *
                         </label>
                         <input
                             type="text"
                             value={nameTh}
                             onChange={(e) => setNameTh(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                            placeholder="e.g., วัสดุก่อสร้าง"
+                            placeholder={t('category_name_th_placeholder')}
                             required
                         />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            Slug (URL-friendly identifier) *
+                            {t('slug_label')} *
                         </label>
                         <input
                             type="text"
@@ -125,24 +125,24 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                                 setAutoGenerateSlug(false);
                             }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
-                            placeholder="e.g., building_materials"
+                            placeholder={t('slug_placeholder')}
                             required
                         />
                         <p className="text-xs text-text-secondary mt-1">
-                            Auto-generated from English name. Edit to customize.
+                            {t('slug_helper')}
                         </p>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            Parent Category (Optional)
+                            {t('parent_category_optional')}
                         </label>
                         <select
                             value={parentId}
                             onChange={(e) => setParentId(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         >
-                            <option value="">None (Main Category)</option>
+                            <option value="">{t('none_main_category')}</option>
                             {mainCategories.map(cat => (
                                 <option key={cat.id} value={cat.id}>
                                     {cat.name[language]}
@@ -150,13 +150,13 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                             ))}
                         </select>
                         <p className="text-xs text-text-secondary mt-1">
-                            Select a parent to create a sub-category
+                            {t('select_parent_desc')}
                         </p>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            Display Order
+                            {t('display_order')}
                         </label>
                         <input
                             type="number"
@@ -166,7 +166,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                             min="0"
                         />
                         <p className="text-xs text-text-secondary mt-1">
-                            Lower numbers appear first
+                            {t('display_order_helper')}
                         </p>
                     </div>
 
@@ -176,13 +176,13 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                             onClick={onClose}
                             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                         >
-                            Cancel
+                            {t('cancel')}
                         </button>
                         <button
                             type="submit"
                             className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-800"
                         >
-                            Add Category
+                            {t('add_category')}
                         </button>
                     </div>
                 </form>

@@ -9,7 +9,7 @@ interface StoreSettingsViewProps {
     storeSettings: StoreSettings | null;
     onUpdateSettings: (newSettings: Partial<StoreSettings>) => void;
     showAlert: (title: string, message: string) => void;
-    t: (key: TranslationKey) => string;
+    t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
 }
 
 const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, onUpdateSettings, showAlert, t }) => {
@@ -36,7 +36,7 @@ const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, on
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onUpdateSettings({ 
+        onUpdateSettings({
             store_name: name,
             address,
             phone,
@@ -58,7 +58,7 @@ const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, on
             .upload(fileName, file);
 
         if (error) {
-            showAlert('Upload Error', `Failed to upload logo: ${error.message}. Please ensure you have created a public 'store-assets' bucket with insert permissions.`);
+            showAlert(t('upload_error'), t('upload_error_desc', { error: error.message }));
             console.error('Logo upload error:', error);
             setIsUploading(false);
             return;
@@ -67,7 +67,7 @@ const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, on
         const { data: { publicUrl } } = supabase.storage
             .from('store-assets')
             .getPublicUrl(fileName);
-        
+
         setLogoUrl(publicUrl);
         setIsUploading(false);
     }, [showAlert]);
@@ -91,7 +91,7 @@ const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, on
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className="p-6 space-y-8">
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-1">
                                 <h3 className="font-semibold text-text-primary">Store Logo</h3>
@@ -127,31 +127,31 @@ const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, on
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary">Store Name (EN)</label>
-                                        <input type="text" value={name.en} onChange={(e) => setName(p => ({...p, en: e.target.value}))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"/>
+                                        <input type="text" value={name.en} onChange={(e) => setName(p => ({ ...p, en: e.target.value }))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary">Store Name (TH)</label>
-                                        <input type="text" value={name.th} onChange={(e) => setName(p => ({...p, th: e.target.value}))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"/>
+                                        <input type="text" value={name.th} onChange={(e) => setName(p => ({ ...p, th: e.target.value }))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-text-secondary">Tax ID</label>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <input type="text" placeholder="English (Optional)" value={taxId.en} onChange={(e) => setTaxId(p => ({...p, en: e.target.value}))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"/>
-                                        <input type="text" placeholder="Thai" value={taxId.th} onChange={(e) => setTaxId(p => ({...p, th: e.target.value}))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"/>
+                                        <input type="text" placeholder="English (Optional)" value={taxId.en} onChange={(e) => setTaxId(p => ({ ...p, en: e.target.value }))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
+                                        <input type="text" placeholder="Thai" value={taxId.th} onChange={(e) => setTaxId(p => ({ ...p, th: e.target.value }))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
                                     </div>
                                 </div>
-                                 <div>
+                                <div>
                                     <label className="block text-sm font-medium text-text-secondary">Phone Number</label>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <input type="tel" placeholder="English (Optional)" value={phone.en} onChange={(e) => setPhone(p => ({...p, en: e.target.value}))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"/>
-                                        <input type="tel" placeholder="Thai" value={phone.th} onChange={(e) => setPhone(p => ({...p, th: e.target.value}))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"/>
+                                        <input type="tel" placeholder="English (Optional)" value={phone.en} onChange={(e) => setPhone(p => ({ ...p, en: e.target.value }))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
+                                        <input type="tel" placeholder="Thai" value={phone.th} onChange={(e) => setPhone(p => ({ ...p, th: e.target.value }))} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-text-secondary">Address</label>
-                                    <textarea placeholder="English Address" value={address.en} onChange={(e) => setAddress(p => ({...p, en: e.target.value}))} rows={2} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
-                                    <textarea placeholder="Thai Address" value={address.th} onChange={(e) => setAddress(p => ({...p, th: e.target.value}))} rows={2} className="mt-2 block w-full rounded-md p-2 bg-background border-gray-300" />
+                                    <textarea placeholder="English Address" value={address.en} onChange={(e) => setAddress(p => ({ ...p, en: e.target.value }))} rows={2} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" />
+                                    <textarea placeholder="Thai Address" value={address.th} onChange={(e) => setAddress(p => ({ ...p, th: e.target.value }))} rows={2} className="mt-2 block w-full rounded-md p-2 bg-background border-gray-300" />
                                 </div>
                             </div>
                         </div>
@@ -165,17 +165,17 @@ const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, on
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-text-secondary">Default Markup Percentage (%)</label>
-                                <input 
-                                    type="number" 
-                                    value={defaultOutsourceMarkup} 
-                                    onChange={(e) => setDefaultOutsourceMarkup(e.target.value === '' ? '' : Number(e.target.value))} 
+                                <input
+                                    type="number"
+                                    value={defaultOutsourceMarkup}
+                                    onChange={(e) => setDefaultOutsourceMarkup(e.target.value === '' ? '' : Number(e.target.value))}
                                     className="mt-1 block w-full max-w-xs rounded-md p-2 bg-background border-gray-300"
                                 />
                             </div>
                         </div>
 
                         <div className="border-t"></div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-1">
                                 <h3 className="font-semibold text-text-primary">Delivery Settings</h3>
@@ -183,10 +183,10 @@ const StoreSettingsView: React.FC<StoreSettingsViewProps> = ({ storeSettings, on
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-text-secondary">{t('default_delivery_rate')} (฿)</label>
-                                <input 
-                                    type="number" 
-                                    value={deliveryRatePerKm} 
-                                    onChange={(e) => setDeliveryRatePerKm(e.target.value === '' ? '' : Number(e.target.value))} 
+                                <input
+                                    type="number"
+                                    value={deliveryRatePerKm}
+                                    onChange={(e) => setDeliveryRatePerKm(e.target.value === '' ? '' : Number(e.target.value))}
                                     className="mt-1 block w-full max-w-xs rounded-md p-2 bg-background border-gray-300"
                                 />
                             </div>

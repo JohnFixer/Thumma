@@ -53,7 +53,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         e.preventDefault();
 
         if (!nameEn.trim() || !nameTh.trim() || !slug.trim()) {
-            alert(t('fill_required_fields'));
+            alert('Please fill in all required fields');
             return;
         }
 
@@ -80,14 +80,14 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6 border-b">
-                    <h2 className="text-xl font-bold text-text-primary">{t('add_new_category')}</h2>
-                    <p className="text-sm text-text-secondary mt-1">{t('create_category_or_subcategory')}</p>
+                    <h2 className="text-xl font-bold text-text-primary">Add New Category</h2>
+                    <p className="text-sm text-text-secondary mt-1">Create a new category or sub-category</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            {t('category_name_english')} *
+                            Category Name (English) *
                         </label>
                         <input
                             type="text"
@@ -101,7 +101,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            {t('category_name_thai')} *
+                            Category Name (Thai) *
                         </label>
                         <input
                             type="text"
@@ -115,7 +115,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            {t('slug_url_identifier')} *
+                            Slug (URL-friendly identifier) *
                         </label>
                         <input
                             type="text"
@@ -129,20 +129,20 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                             required
                         />
                         <p className="text-xs text-text-secondary mt-1">
-                            {t('auto_generated_slug_hint')}
+                            Auto-generated from English name. Edit to customize.
                         </p>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            {t('parent_category_optional')}
+                            Parent Category (Optional)
                         </label>
                         <select
                             value={parentId}
                             onChange={(e) => setParentId(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         >
-                            <option value="">{t('none_main_category')}</option>
+                            <option value="">None (Main Category)</option>
                             {mainCategories.map(cat => (
                                 <option key={cat.id} value={cat.id}>
                                     {cat.name[language]}
@@ -150,13 +150,13 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                             ))}
                         </select>
                         <p className="text-xs text-text-secondary mt-1">
-                            {t('select_parent_for_subcategory')}
+                            Select a parent to create a sub-category
                         </p>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">
-                            {t('display_order')}
+                            Display Order
                         </label>
                         <input
                             type="number"
@@ -166,7 +166,7 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                             min="0"
                         />
                         <p className="text-xs text-text-secondary mt-1">
-                            {t('lower_numbers_first')}
+                            Lower numbers appear first
                         </p>
                     </div>
 
@@ -176,13 +176,13 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
                             onClick={onClose}
                             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                         >
-                            {t('cancel')}
+                            Cancel
                         </button>
                         <button
                             type="submit"
                             className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-800"
                         >
-                            {t('add_category')}
+                            Add Category
                         </button>
                     </div>
                 </form>

@@ -243,7 +243,7 @@ const App: React.FC = () => {
 
             } catch (error) {
                 console.error("Error fetching initial data:", error);
-                showAlert('Error', 'Failed to load data from database.');
+                showAlert(t('alert_error'), t('database_load_failed'));
             } finally {
                 setIsLoading(false);
             }
@@ -265,10 +265,10 @@ const App: React.FC = () => {
             if (newProduct) {
                 setProducts(prev => [...prev, newProduct]);
                 setIsAddProductModalOpen(false);
-                showAlert('Success', 'Product added successfully.');
+                showAlert(t('alert_success'), t('product_added_success'));
             }
         } catch (error: any) {
-            showAlert('Error', `Failed to add product: ${error.message}`);
+            showAlert(t('alert_error'), t('product_add_failed', { error: error.message }));
         }
     };
 
@@ -279,9 +279,9 @@ const App: React.FC = () => {
             const updatedProducts = await db.fetchProducts();
             setProducts(updatedProducts);
             setIsEditProductModalOpen(false);
-            showAlert('Success', 'Product updated successfully.');
+            showAlert(t('alert_success'), t('product_updated_success'));
         } else {
-            showAlert('Error', 'Failed to update product.');
+            showAlert(t('alert_error'), t('product_update_failed'));
         }
     };
 
@@ -292,9 +292,9 @@ const App: React.FC = () => {
             setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
             setIsDeleteModalOpen(false);
             setProductToDelete(null);
-            showAlert('Success', 'Product deleted successfully.');
+            showAlert(t('alert_success'), t('product_deleted_success'));
         } else {
-            showAlert('Error', 'Failed to delete product.');
+            showAlert(t('alert_error'), t('product_delete_failed'));
         }
     };
     const handleAddUser = (userData: NewUserData) => { console.log("Add User", userData); }; // Requires Auth Admin API
@@ -302,9 +302,9 @@ const App: React.FC = () => {
         const success = await db.updateUser(userId, userData);
         if (success) {
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...userData } : u));
-            showAlert('Success', 'User updated successfully.');
+            showAlert(t('alert_success'), t('user_updated_success'));
         } else {
-            showAlert('Error', 'Failed to update user.');
+            showAlert(t('alert_error'), t('user_update_failed'));
         }
     };
     const handleDeleteUser = (userId: string) => { console.log("Delete User", userId); }; // Requires Auth Admin API
@@ -313,9 +313,9 @@ const App: React.FC = () => {
         const newCustomer = await db.createCustomer(customerData);
         if (newCustomer) {
             setCustomers(prev => [...prev, newCustomer]);
-            showAlert('Success', 'Customer added successfully.');
+            showAlert(t('alert_success'), t('customer_added_success'));
         } else {
-            showAlert('Error', 'Failed to add customer.');
+            showAlert(t('alert_error'), t('customer_add_failed'));
         }
     };
 
@@ -332,9 +332,9 @@ const App: React.FC = () => {
         const success = await db.updateCustomer(customerId, customerData);
         if (success) {
             setCustomers(prev => prev.map(c => c.id === customerId ? { ...c, ...customerData } : c));
-            showAlert('Success', 'Customer updated successfully.');
+            showAlert(t('alert_success'), t('customer_updated_success'));
         } else {
-            showAlert('Error', 'Failed to update customer.');
+            showAlert(t('alert_error'), t('customer_update_failed'));
         }
     };
 
@@ -342,9 +342,9 @@ const App: React.FC = () => {
         const success = await db.deleteCustomer(customerId);
         if (success) {
             setCustomers(prev => prev.filter(c => c.id !== customerId));
-            showAlert('Success', 'Customer deleted successfully.');
+            showAlert(t('alert_success'), t('customer_deleted_success'));
         } else {
-            showAlert('Error', 'Failed to delete customer.');
+            showAlert(t('alert_error'), t('customer_delete_failed'));
         }
     };
     const handleAddSupplier = async (supplierData: NewSupplierData) => {
@@ -352,9 +352,9 @@ const App: React.FC = () => {
         if (newSupplier) {
             setSuppliers(prev => [...prev, newSupplier]);
             setIsAddSupplierModalOpen(false);
-            showAlert('Success', 'Supplier added successfully.');
+            showAlert(t('alert_success'), t('supplier_added_success'));
         } else {
-            showAlert('Error', 'Failed to add supplier.');
+            showAlert(t('alert_error'), t('supplier_add_failed'));
         }
     };
 
@@ -364,9 +364,9 @@ const App: React.FC = () => {
         const success = await db.deleteSupplier(supplierId);
         if (success) {
             setSuppliers(prev => prev.filter(s => s.id !== supplierId));
-            showAlert('Success', 'Supplier deleted successfully.');
+            showAlert(t('alert_success'), t('supplier_deleted_success'));
         } else {
-            showAlert('Error', 'Failed to delete supplier.');
+            showAlert(t('alert_error'), t('supplier_delete_failed'));
         }
     };
     const handleAddBill = async (billData: NewBillData) => {
@@ -374,9 +374,9 @@ const App: React.FC = () => {
         if (newBill) {
             setBills(prev => [...prev, newBill]);
             setIsAddBillModalOpen(false);
-            showAlert('Success', 'Bill added successfully.');
+            showAlert(t('alert_success'), t('bill_added_success'));
         } else {
-            showAlert('Error', 'Failed to add bill.');
+            showAlert(t('alert_error'), t('bill_add_failed'));
         }
     };
     const handleRecordBillPayment = (billId: string, paymentData: any) => { console.log("Record Bill Payment", billId, paymentData); };
@@ -402,7 +402,7 @@ const App: React.FC = () => {
             setProducts(updatedProducts);
             return newTransaction;
         } else {
-            showAlert('Error', 'Failed to create transaction.');
+            showAlert(t('alert_error'), t('transaction_create_failed'));
             return undefined;
         }
     };
@@ -423,18 +423,18 @@ const App: React.FC = () => {
         const success = await db.updateStoreSettings(newSettings);
         if (success) {
             setStoreSettings(prev => prev ? { ...prev, ...newSettings } : newSettings as StoreSettings);
-            showAlert('Success', 'Settings updated successfully.');
+            showAlert(t('alert_success'), t('settings_updated_success'));
         } else {
-            showAlert('Error', 'Failed to update settings.');
+            showAlert(t('alert_error'), t('settings_update_failed'));
         }
     };
     const handleUpdateUser = async (userId: string, data: Partial<Omit<User, 'id' | 'password'>>) => {
         const success = await db.updateUser(userId, data);
         if (success) {
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...data } : u));
-            showAlert('Success', 'User updated successfully.');
+            showAlert(t('alert_success'), t('user_updated_success'));
         } else {
-            showAlert('Error', 'Failed to update user.');
+            showAlert(t('alert_error'), t('user_update_failed'));
         }
     };
     const handleUpdatePassword = async (userId: string, currentPass: string, newPass: string): Promise<{ success: boolean, message: TranslationKey }> => { console.log("Update Password"); return { success: true, message: 'password_update_success' }; };
@@ -445,9 +445,9 @@ const App: React.FC = () => {
         if (newCategory) {
             setCategories(prev => [...prev, newCategory]);
             setIsAddCategoryModalOpen(false);
-            showAlert('Success', 'Category added successfully.');
+            showAlert(t('alert_success'), t('category_added_success'));
         } else {
-            showAlert('Error', 'Failed to add category.');
+            showAlert(t('alert_error'), t('category_add_failed'));
         }
     };
 
@@ -458,9 +458,9 @@ const App: React.FC = () => {
             setCategories(updatedCategories);
             setIsEditCategoryModalOpen(false);
             setCategoryToEdit(null);
-            showAlert('Success', 'Category updated successfully.');
+            showAlert(t('alert_success'), t('category_updated_success'));
         } else {
-            showAlert('Error', 'Failed to update category.');
+            showAlert(t('alert_error'), t('category_update_failed'));
         }
     };
 
@@ -468,9 +468,9 @@ const App: React.FC = () => {
         const result = await db.deleteCategory(categoryId);
         if (result.success) {
             setCategories(prev => prev.filter(c => c.id !== categoryId));
-            showAlert('Success', 'Category deleted successfully.');
+            showAlert(t('alert_success'), t('category_deleted_success'));
         } else {
-            showAlert('Error', result.error || 'Failed to delete category.');
+            showAlert(t('alert_error'), result.error || t('category_delete_failed'));
         }
     };
 
@@ -505,14 +505,14 @@ const App: React.FC = () => {
         };
 
         setCurrentUser(simulatedUser);
-        showAlert('Simulation Started', `You are now simulating the ${role} role. Click "Stop Simulation" to return to your original role.`);
+        showAlert(t('simulation_started'), t('simulation_started_desc', { role }));
     };
 
     const handleStopSimulation = () => {
         if (originalUser) {
             setCurrentUser(originalUser);
             setOriginalUser(null);
-            showAlert('Simulation Stopped', 'You have returned to your original role.');
+            showAlert(t('simulation_stopped'), t('simulation_stopped_desc'));
         }
     };
     const handleProductMouseEnter = (product: Product, event: React.MouseEvent) => { };
@@ -524,7 +524,7 @@ const App: React.FC = () => {
         openScanner((scannedCode) => {
             const existingVariant = products.flatMap(p => p.variants).find(v => v.barcode === scannedCode);
             if (existingVariant) {
-                showAlert('Barcode Exists', `A product variant with this barcode already exists (SKU: ${existingVariant.sku}).`);
+                showAlert(t('barcode_exists'), t('barcode_exists_desc', { sku: existingVariant.sku }));
             } else {
                 setInitialBarcodeForAdd(scannedCode);
                 setIsAddProductModalOpen(true);
@@ -537,9 +537,9 @@ const App: React.FC = () => {
             const success = await db.deleteTransaction(transactionId);
             if (success) {
                 setTransactions(prev => prev.filter(t => t.id !== transactionId));
-                showAlert('Success', 'Transaction deleted successfully.');
+                showAlert(t('alert_success'), t('transaction_deleted_success'));
             } else {
-                showAlert('Error', 'Failed to delete transaction.');
+                showAlert(t('alert_error'), t('transaction_delete_failed'));
             }
         }
     };

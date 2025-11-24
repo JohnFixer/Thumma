@@ -66,7 +66,7 @@ const EditPastInvoiceModal: React.FC<EditPastInvoiceModalProps> = ({ isOpen, onC
     const numericPaid = parseFloat(amountAlreadyPaid);
 
     if (!invoice || !customerInput || !originalInvoiceId || !invoiceDate || isNaN(numericTotal) || numericTotal <= 0 || isNaN(numericPaid)) {
-      showAlert(t('missing_information'), 'Please fill in all required fields with valid numbers.');
+      showAlert(t('missing_information'), t('validation_required_fields'));
       return;
     }
 
@@ -79,9 +79,9 @@ const EditPastInvoiceModal: React.FC<EditPastInvoiceModalProps> = ({ isOpen, onC
     };
 
     if (isNewCustomer) {
-        payload.newCustomerName = customerInput;
+      payload.newCustomerName = customerInput;
     } else {
-        payload.customerId = customerMap.get(customerInput);
+      payload.customerId = customerMap.get(customerInput);
     }
 
     onEdit(invoice.id, payload);
@@ -102,7 +102,7 @@ const EditPastInvoiceModal: React.FC<EditPastInvoiceModalProps> = ({ isOpen, onC
           <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
             <div>
               <label htmlFor="edit-past-customer-input" className="block text-sm font-medium text-text-secondary">{t('customer')}</label>
-              <input 
+              <input
                 id="edit-past-customer-input"
                 type="text"
                 list="customer-list-edit"
@@ -110,46 +110,46 @@ const EditPastInvoiceModal: React.FC<EditPastInvoiceModalProps> = ({ isOpen, onC
                 onChange={(e) => setCustomerInput(e.target.value)}
                 className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"
                 placeholder="Select or type a new customer name"
-                required 
+                required
               />
               <datalist id="customer-list-edit">
                 {customers.map(c => <option key={c.id} value={c.name} />)}
               </datalist>
-               {customerInput && (
-                    <p className={`text-xs mt-1 ${isNewCustomer ? 'text-green-600' : 'text-blue-600'}`}>
-                        {isNewCustomer ? `A new customer named "${customerInput}" will be created.` : 'Existing customer selected.'}
-                    </p>
-                )}
+              {customerInput && (
+                <p className={`text-xs mt-1 ${isNewCustomer ? 'text-green-600' : 'text-blue-600'}`}>
+                  {isNewCustomer ? `A new customer named "${customerInput}" will be created.` : 'Existing customer selected.'}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="edit-original-id" className="block text-sm font-medium text-text-secondary">{t('original_invoice_id')}</label>
-                    <input type="text" id="edit-original-id" value={originalInvoiceId} onChange={(e) => setOriginalInvoiceId(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
-                </div>
-                <div>
-                    <label htmlFor="edit-invoice-date" className="block text-sm font-medium text-text-secondary">{t('original_invoice_date')}</label>
-                    <input type="date" id="edit-invoice-date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
-                </div>
+              <div>
+                <label htmlFor="edit-original-id" className="block text-sm font-medium text-text-secondary">{t('original_invoice_id')}</label>
+                <input type="text" id="edit-original-id" value={originalInvoiceId} onChange={(e) => setOriginalInvoiceId(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
+              </div>
+              <div>
+                <label htmlFor="edit-invoice-date" className="block text-sm font-medium text-text-secondary">{t('original_invoice_date')}</label>
+                <input type="date" id="edit-invoice-date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="edit-total-amount" className="block text-sm font-medium text-text-secondary">{t('total_invoice_amount')}</label>
-                <input 
-                  type="text" 
-                  id="edit-total-amount" 
-                  value={totalAmount} 
+                <input
+                  type="text"
+                  id="edit-total-amount"
+                  value={totalAmount}
                   onChange={handleAmountChange(setTotalAmount)}
                   inputMode="decimal"
-                  placeholder="0.00" 
+                  placeholder="0.00"
                   className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
               </div>
-               <div>
+              <div>
                 <label htmlFor="edit-paid-amount" className="block text-sm font-medium text-text-secondary">{t('amount_already_paid')}</label>
-                <input 
-                  type="text" 
-                  id="edit-paid-amount" 
-                  value={amountAlreadyPaid} 
-                  onChange={handleAmountChange(setAmountAlreadyPaid)} 
+                <input
+                  type="text"
+                  id="edit-paid-amount"
+                  value={amountAlreadyPaid}
+                  onChange={handleAmountChange(setAmountAlreadyPaid)}
                   inputMode="decimal"
                   placeholder="0.00"
                   className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
@@ -159,10 +159,10 @@ const EditPastInvoiceModal: React.FC<EditPastInvoiceModalProps> = ({ isOpen, onC
               <label className="block text-sm font-medium text-text-secondary">Attach Invoice PDF</label>
               {existingFileUrl && !file && (
                 <div className="my-2 text-sm">
-                    <a href={existingFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline">
-                        <ClipboardDocumentListIcon className="h-4 w-4" />
-                        View current invoice PDF
-                    </a>
+                  <a href={existingFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline">
+                    <ClipboardDocumentListIcon className="h-4 w-4" />
+                    View current invoice PDF
+                  </a>
                 </div>
               )}
               <div {...getRootProps()} className={`mt-1 flex justify-center items-center w-full px-6 py-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer transition-colors ${isDragActive ? 'bg-blue-50 border-primary' : 'bg-background hover:bg-gray-100'}`}>

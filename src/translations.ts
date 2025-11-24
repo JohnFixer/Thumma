@@ -538,6 +538,11 @@ const translations = {
     update_password: 'Update Password',
     hide_password: 'Hide password',
     show_password: 'Show password',
+    // Customer Types
+    customer_type_walk_in: 'Walk-in',
+    customer_type_contractor: 'Contractor',
+    customer_type_government: 'Government',
+    customer_type_organization: 'Organization',
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -1074,6 +1079,11 @@ const translations = {
     update_password: 'อัปเดตรหัสผ่าน',
     hide_password: 'ซ่อนรหัสผ่าน',
     show_password: 'แสดงรหัสผ่าน',
+    // Customer Types
+    customer_type_walk_in: 'ลูกค้าทั่วไป',
+    customer_type_contractor: 'ผู้รับเหมา',
+    customer_type_government: 'หน่วยงานราชการ',
+    customer_type_organization: 'องค์กร',
   }
 };
 

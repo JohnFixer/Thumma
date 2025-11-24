@@ -174,10 +174,10 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onUpdateUser, on
                                         <div>
                                             <label htmlFor="default-customer-type" className="block text-sm font-medium text-text-secondary">{t('default_customer_type_pos')}</label>
                                             <select id="default-customer-type" value={settings.defaultCustomerType || 'walkIn'} onChange={e => handleSettingChange('defaultCustomerType', e.target.value as CustomerType)} className="mt-1 block w-full max-w-xs rounded-md p-2 bg-background border-gray-300 shadow-sm">
-                                                <option value="walkIn">Walk-in</option>
-                                                <option value="contractor">Contractor</option>
-                                                <option value="government">Government</option>
-                                                <option value="organization">Organization</option>
+                                                <option value="walkIn">{t('customer_type_walk_in')}</option>
+                                                <option value="contractor">{t('customer_type_contractor')}</option>
+                                                <option value="government">{t('customer_type_government')}</option>
+                                                <option value="organization">{t('customer_type_organization')}</option>
                                             </select>
                                         </div>
                                     </div>

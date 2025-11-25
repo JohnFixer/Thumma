@@ -554,7 +554,7 @@ const App: React.FC = () => {
 
     // NAVIGATION & UI LOGIC
     const handleNavigate = (view: string, state?: any) => {
-        if (view === 'dashboard' && currentUser && (currentUser.role[0] === 'CEO' || currentUser.role[0] === 'Admin')) {
+        if (view === 'dashboard' && currentUser && currentUser.role[0] === 'CEO') {
             setActiveView('ceo_dashboard');
         } else {
             setActiveView(view);
@@ -564,7 +564,7 @@ const App: React.FC = () => {
     const handleLogin = (username: string, password: string) => {
         const permissions = getPermissionsFromRoles([Role.ADMIN]);
         setCurrentUser({ id: '1', name: 'Admin', role: [Role.ADMIN], avatar: '', permissions });
-        setActiveView('ceo_dashboard');
+        setActiveView('dashboard');
     };
     const handleLogout = () => { setCurrentUser(null); };
 

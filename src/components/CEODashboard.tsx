@@ -29,6 +29,38 @@ interface CEODashboardProps {
 
 const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, transactions, bills, users, products, suppliers, storeSettings, t, language, setLanguage, onBillUpdated, showAlert }) => {
 
+    // Widget visibility based on role settings
+    const getVisibleWidgets = (): string[] => {
+        const userRole = currentUser.role[0]; // Get primary role
+        const roleSettings = storeSettings?.dashboard_widget_visibility?.[userRole];
+
+        const CEO_WIDGETS = [
+            'ceo_sales_performance',
+            'ceo_daily_overview',
+            'ceo_daily_expenses',
+            'ceo_accounts_summary',
+            'ceo_inventory',
+            'ceo_todo_list'
+        ];
+
+        // Default to all widgets if no settings
+        if (!roleSettings) return CEO_WIDGETS;
+
+        // Filter to only include CEO widgets that are in the settings
+        const relevantSettings = roleSettings.filter(w => CEO_WIDGETS.includes(w));
+
+        // If the user has settings (e.g. for regular dashboard) but NONE are CEO widgets,
+        // assume this is a first-time load for CEO dashboard and show defaults.
+        if (relevantSettings.length === 0 && roleSettings.length > 0) {
+            return CEO_WIDGETS;
+        }
+
+        return relevantSettings;
+    };
+
+    const visibleWidgets = getVisibleWidgets();
+    const isWidgetVisible = (widgetId: string) => visibleWidgets.includes(widgetId);
+
     // State
     const [todos, setTodos] = useState<ToDoItem[]>([]);
     const [newTodo, setNewTodo] = useState('');
@@ -187,11 +219,11 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
 
     return (
         <>
-            <div className="bg-gray-900 min-h-screen text-white font-sans">
+            <div className="bg-gray-900 text-white font-sans h-full">
                 <header className="p-4 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         {storeSettings?.logo_url ? <img src={storeSettings.logo_url} alt="Logo" className="h-12" /> : <CubeIcon className="h-12 w-12 text-secondary" />}
-                        <h1 className="text-xl font-bold">{storeSettings?.store_name[language]}</h1>
+                        <h1 className="text-xl font-bold">{storeSettings?.store_name?.[language] || 'Thumma Concrete'}</h1>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="relative">
@@ -207,84 +239,102 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                 </header>
 
                 <main className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {visibleWidgets.length === 0 && (
+                        <div className="col-span-3 text-center py-12 text-gray-400">
+                            <p className="text-lg">{t('no_widgets_visible') || 'No widgets are visible.'}</p>
+                            <p className="text-sm mt-2">{t('check_dashboard_settings') || 'Please check your Dashboard Management settings.'}</p>
+                        </div>
+                    )}
                     {/* Column 1 */}
                     <div className="space-y-6">
                         {/* Sales Performance */}
-                        <div className="bg-gray-800 p-4 rounded-lg">
-                            <h2 className="text-lg font-semibold mb-4">{t('sales_performance')}</h2>
-                            <StatsCard title={t('sales_today')} value={`฿${metrics.salesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CurrencyDollarIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" />
-                            <StatsCard title={t('sales_month')} value={`฿${metrics.salesMonth.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" />
-                            <StatsCard title={t('sales_year')} value={`฿${metrics.salesYear.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-purple-400" className="bg-gray-700/50 mt-4" />
-                        </div>
+                        {isWidgetVisible('ceo_sales_performance') && (
+                            <div className="bg-gray-800 p-4 rounded-lg">
+                                <h2 className="text-lg font-semibold mb-4">{t('sales_performance')}</h2>
+                                <StatsCard title={t('sales_today')} value={`฿${metrics.salesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CurrencyDollarIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" />
+                                <StatsCard title={t('sales_month')} value={`฿${metrics.salesMonth.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" />
+                                <StatsCard title={t('sales_year')} value={`฿${metrics.salesYear.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-purple-400" className="bg-gray-700/50 mt-4" />
+                            </div>
+                        )}
                         {/* Daily Breakdown */}
-                        <div className="bg-gray-800 p-4 rounded-lg">
-                            <h2 className="text-lg font-semibold mb-4">{t('daily_sales_overview')}</h2>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('cash_sales')}</span><span className="font-bold">฿{metrics.salesTodayCash.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
-                                <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('card_sales')}</span><span className="font-bold">฿{metrics.salesTodayCard.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
-                                <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('bank_transfer_sales')}</span><span className="font-bold">฿{metrics.salesTodayBank.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
-                                <div className="flex justify-between items-center p-2 bg-yellow-900/50 rounded cursor-pointer" onClick={() => openTransactionModal('ar_new', transactions.filter(tx => new Date(tx.date).toDateString() === new Date().toDateString() && tx.payment_status === PaymentStatus.UNPAID))}>
-                                    <span>{t('ar_new')}</span><span className="font-bold">฿{metrics.salesTodayAR.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+                        {isWidgetVisible('ceo_daily_overview') && (
+                            <div className="bg-gray-800 p-4 rounded-lg">
+                                <h2 className="text-lg font-semibold mb-4">{t('daily_sales_overview')}</h2>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('cash_sales')}</span><span className="font-bold">฿{metrics.salesTodayCash.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
+                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('card_sales')}</span><span className="font-bold">฿{metrics.salesTodayCard.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
+                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('bank_transfer_sales')}</span><span className="font-bold">฿{metrics.salesTodayBank.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
+                                    <div className="flex justify-between items-center p-2 bg-yellow-900/50 rounded cursor-pointer" onClick={() => openTransactionModal('ar_new', transactions.filter(tx => new Date(tx.date).toDateString() === new Date().toDateString() && tx.payment_status === PaymentStatus.UNPAID))}>
+                                        <span>{t('ar_new')}</span><span className="font-bold">฿{metrics.salesTodayAR.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                     {/* Column 2 */}
                     <div className="space-y-6">
                         {/* Daily Expenses */}
-                        <div className="bg-gray-800 p-4 rounded-lg">
-                            <h2 className="text-lg font-semibold mb-4">{t('daily_expenses')}</h2>
-                            <StatsCard title={t('wages_today')} value={`฿${metrics.wagesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50" />
-                            <StatsCard title={t('due_today')} value={`฿${metrics.dueTodayAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ExclamationTriangleIcon className="h-6 w-6" />} color="text-yellow-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openBillModal('due_today', metrics.dueTodayBills)} />
-                        </div>
+                        {isWidgetVisible('ceo_daily_expenses') && (
+                            <div className="bg-gray-800 p-4 rounded-lg">
+                                <h2 className="text-lg font-semibold mb-4">{t('daily_expenses')}</h2>
+                                <StatsCard title={t('wages_today')} value={`฿${metrics.wagesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50" />
+                                <StatsCard title={t('due_today')} value={`฿${metrics.dueTodayAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ExclamationTriangleIcon className="h-6 w-6" />} color="text-yellow-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openBillModal('due_today', metrics.dueTodayBills)} />
+                            </div>
+                        )}
                         {/* Accounts Summary */}
-                        <div className="bg-gray-800 p-4 rounded-lg">
-                            <h2 className="text-lg font-semibold mb-4">Accounts Summary</h2>
-                            <StatsCard title={t('total_receivables')} value={`฿${metrics.totalReceivables.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" />
-                            <StatsCard title={t('overdue_amount')} value={`฿${metrics.overdueARAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ExclamationTriangleIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openTransactionModal('overdue_amount', metrics.overdueAR)} />
-                            <StatsCard title={t('total_owed')} value={`฿${metrics.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-orange-400" className="bg-gray-700/50 mt-4" />
-                            <StatsCard title={t('due_in_days', { days: 7 })} value={`฿${metrics.dueNext7DaysBillsAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ClockIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openBillModal('due_in_days', metrics.dueNext7DaysBills)} />
-                        </div>
+                        {isWidgetVisible('ceo_accounts_summary') && (
+                            <div className="bg-gray-800 p-4 rounded-lg">
+                                <h2 className="text-lg font-semibold mb-4">Accounts Summary</h2>
+                                <StatsCard title={t('total_receivables')} value={`฿${metrics.totalReceivables.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" />
+                                <StatsCard title={t('overdue_amount')} value={`฿${metrics.overdueARAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ExclamationTriangleIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openTransactionModal('overdue_amount', metrics.overdueAR)} />
+                                <StatsCard title={t('total_owed')} value={`฿${metrics.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-orange-400" className="bg-gray-700/50 mt-4" />
+                                <StatsCard title={t('due_in_days', { days: 7 })} value={`฿${metrics.dueNext7DaysBillsAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ClockIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openBillModal('due_in_days', metrics.dueNext7DaysBills)} />
+                            </div>
+                        )}
                         {/* Inventory Alert */}
-                        <div className="bg-gray-800 p-4 rounded-lg">
-                            <h2 className="text-lg font-semibold mb-4">{t('inventory_overview')}</h2>
-                            <StatsCard title={t('low_stock_items')} value={metrics.lowStockVariants.length} icon={<CubeIcon className="h-6 w-6" />} color="text-yellow-400" className="bg-gray-700/50" isClickable onClick={() => setIsLowStockModalOpen(true)} />
-                        </div>
+                        {isWidgetVisible('ceo_inventory') && (
+                            <div className="bg-gray-800 p-4 rounded-lg">
+                                <h2 className="text-lg font-semibold mb-4">{t('inventory_overview')}</h2>
+                                <StatsCard title={t('low_stock_items')} value={metrics.lowStockVariants.length} icon={<CubeIcon className="h-6 w-6" />} color="text-yellow-400" className="bg-gray-700/50" isClickable onClick={() => setIsLowStockModalOpen(true)} />
+                            </div>
+                        )}
                     </div>
                     {/* Column 3 */}
-                    <div className="bg-gray-800 p-4 rounded-lg">
-                        <h2 className="text-lg font-semibold mb-4">{t('ceo_todo_list')}</h2>
-                        <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
-                            <input type="text" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} placeholder={t('add_task')} className="flex-grow bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary" />
-                            <button type="submit" className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-orange-600"><PlusIcon className="h-5 w-5" /></button>
-                        </form>
-                        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
-                            {todos.length > 0 ? todos.sort((a, b) => (a.completed ? 1 : -1) - (b.completed ? 1 : -1)).map(todo => (
-                                <div key={todo.id} className={`flex items-center gap-3 p-3 rounded-md transition-colors ${todo.completed ? 'bg-green-900/50 text-gray-500' : 'bg-gray-700/50'}`}>
-                                    <button onClick={() => handleToggleTodo(todo.id)} className="flex-shrink-0">
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${todo.completed ? 'border-green-500 bg-green-500' : 'border-gray-400'}`}>
-                                            {todo.completed && <CheckIcon className="h-3 w-3 text-white" />}
+                    {isWidgetVisible('ceo_todo_list') && (
+                        <div className="bg-gray-800 p-4 rounded-lg">
+                            <h2 className="text-lg font-semibold mb-4">{t('ceo_todo_list')}</h2>
+                            <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
+                                <input type="text" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} placeholder={t('add_task')} className="flex-grow bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary" />
+                                <button type="submit" className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-orange-600"><PlusIcon className="h-5 w-5" /></button>
+                            </form>
+                            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+                                {todos.length > 0 ? todos.sort((a, b) => (a.completed ? 1 : -1) - (b.completed ? 1 : -1)).map(todo => (
+                                    <div key={todo.id} className={`flex items-center gap-3 p-3 rounded-md transition-colors ${todo.completed ? 'bg-green-900/50 text-gray-500' : 'bg-gray-700/50'}`}>
+                                        <button onClick={() => handleToggleTodo(todo.id)} className="flex-shrink-0">
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${todo.completed ? 'border-green-500 bg-green-500' : 'border-gray-400'}`}>
+                                                {todo.completed && <CheckIcon className="h-3 w-3 text-white" />}
+                                            </div>
+                                        </button>
+                                        <div className="flex-grow">
+                                            <p className={`text-sm ${todo.completed ? 'line-through' : ''}`}>{todo.text}</p>
+                                            {todo.dueDate && <p className="text-xs text-gray-400">Due: {new Date(todo.dueDate).toLocaleDateString()}</p>}
                                         </div>
-                                    </button>
-                                    <div className="flex-grow">
-                                        <p className={`text-sm ${todo.completed ? 'line-through' : ''}`}>{todo.text}</p>
-                                        {todo.dueDate && <p className="text-xs text-gray-400">Due: {new Date(todo.dueDate).toLocaleDateString()}</p>}
+                                        {!todo.completed && (
+                                            <div className="relative">
+                                                <button onClick={() => setPostponingTodoId(todo.id === postponingTodoId ? null : todo.id)} className="text-gray-400 hover:text-white p-1"><ClockIcon className="h-4 w-4" /></button>
+                                                {postponingTodoId === todo.id && (
+                                                    <input type="date" onChange={(e) => handlePostponeTodo(todo.id, e.target.value)} className="absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 p-1 text-xs rounded-md z-10" />
+                                                )}
+                                            </div>
+                                        )}
+                                        <button onClick={() => handleDeleteTodo(todo.id)} className="text-gray-400 hover:text-red-500 p-1"><TrashIcon className="h-4 w-4" /></button>
                                     </div>
-                                    {!todo.completed && (
-                                        <div className="relative">
-                                            <button onClick={() => setPostponingTodoId(todo.id === postponingTodoId ? null : todo.id)} className="text-gray-400 hover:text-white p-1"><ClockIcon className="h-4 w-4" /></button>
-                                            {postponingTodoId === todo.id && (
-                                                <input type="date" onChange={(e) => handlePostponeTodo(todo.id, e.target.value)} className="absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 p-1 text-xs rounded-md z-10" />
-                                            )}
-                                        </div>
-                                    )}
-                                    <button onClick={() => handleDeleteTodo(todo.id)} className="text-gray-400 hover:text-red-500 p-1"><TrashIcon className="h-4 w-4" /></button>
-                                </div>
-                            )) : (
-                                <p className="text-center text-gray-500 text-sm py-8">{t('no_tasks')}</p>
-                            )}
+                                )) : (
+                                    <p className="text-center text-gray-500 text-sm py-8">{t('no_tasks')}</p>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </main>
             </div>
 

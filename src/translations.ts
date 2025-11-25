@@ -1112,7 +1112,6 @@ const translations = {
     new_password: 'รหัสผ่านใหม่',
     confirm_new_password: 'ยืนยันรหัสผ่านใหม่',
     hide_password: 'ซ่อนรหัสผ่าน',
-    show_password: 'แสดงรหัสผ่าน',
     // Customer Types
     customer_type_walk_in: 'ลูกค้าทั่วไป',
     customer_type_contractor: 'ผู้รับเหมา',

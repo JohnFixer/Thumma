@@ -10,19 +10,28 @@ interface DashboardManagementViewProps {
 }
 
 const ALL_WIDGETS = [
-    { key: 'sales_overview', name: 'Sales Overview' },
-    { key: 'accounts_payable', name: 'Accounts Payable' },
-    { key: 'inventory_overview', name: 'Inventory Overview' },
-    { key: 'low_stock_list', name: 'Low Stock List' },
+    // Regular Dashboard widgets
+    { key: 'sales_overview', name: 'Sales Overview', dashboard: 'regular' },
+    { key: 'accounts_payable', name: 'Accounts Payable', dashboard: 'regular' },
+    { key: 'inventory_overview', name: 'Inventory Overview', dashboard: 'regular' },
+    { key: 'low_stock_list', name: 'Low Stock List', dashboard: 'regular' },
+
+    // CEO Dashboard widgets
+    { key: 'ceo_sales_performance', name: 'Sales Performance', dashboard: 'ceo' },
+    { key: 'ceo_daily_overview', name: 'Daily Sales Overview', dashboard: 'ceo' },
+    { key: 'ceo_daily_expenses', name: 'Daily Expenses', dashboard: 'ceo' },
+    { key: 'ceo_accounts_summary', name: 'Accounts Summary', dashboard: 'ceo' },
+    { key: 'ceo_inventory', name: 'Inventory Overview', dashboard: 'ceo' },
+    { key: 'ceo_todo_list', name: 'CEO To-Do List', dashboard: 'ceo' },
 ];
 
 const DEFAULT_WIDGETS_VISIBILITY: Record<Role, string[]> = {
-    [RoleEnum.CEO]: ['daily_sales_overview', 'sales_overview', 'accounts_payable', 'inventory_overview', 'low_stock_list'],
-    [RoleEnum.ADMIN]: ['daily_sales_overview', 'sales_overview', 'accounts_payable', 'inventory_overview', 'low_stock_list'],
-    [RoleEnum.ACCOUNT_MANAGER]: ['daily_sales_overview', 'sales_overview', 'accounts_payable'],
-    [RoleEnum.STORE_MANAGER]: ['daily_sales_overview', 'sales_overview', 'inventory_overview', 'low_stock_list'],
+    [RoleEnum.CEO]: ['ceo_sales_performance', 'ceo_daily_overview', 'ceo_daily_expenses', 'ceo_accounts_summary', 'ceo_inventory', 'ceo_todo_list'],
+    [RoleEnum.ADMIN]: ['ceo_sales_performance', 'ceo_daily_overview', 'ceo_daily_expenses', 'ceo_accounts_summary', 'ceo_inventory', 'ceo_todo_list'],
+    [RoleEnum.ACCOUNT_MANAGER]: ['sales_overview', 'accounts_payable'],
+    [RoleEnum.STORE_MANAGER]: ['sales_overview', 'inventory_overview', 'low_stock_list'],
     [RoleEnum.STORE_STAFF]: ['inventory_overview', 'low_stock_list'],
-    [RoleEnum.POS_OPERATOR]: ['daily_sales_overview'],
+    [RoleEnum.POS_OPERATOR]: [],
 };
 
 
@@ -42,13 +51,13 @@ const DashboardManagementView: React.FC<DashboardManagementViewProps> = ({ store
             setWidgetVisibility(DEFAULT_WIDGETS_VISIBILITY);
         }
     }, [storeSettings]);
-    
+
     const handleToggleWidget = (role: Role, widgetKey: string) => {
         setWidgetVisibility(prev => {
             const newState = { ...prev };
             const visibleForRole = [...(newState[role] || [])];
             const isVisible = visibleForRole.includes(widgetKey);
-    
+
             let newVisibleList: string[];
             if (isVisible) {
                 // Unchecking: remove it
@@ -72,7 +81,7 @@ const DashboardManagementView: React.FC<DashboardManagementViewProps> = ({ store
         const key = `role_${role.toLowerCase().replace(/\s/g, '_')}` as TranslationKey;
         return t(key);
     }
-    
+
     const getTranslatedWidgetName = (key: string): string => {
         const transKey = `widget_${key}` as TranslationKey;
         const defaultName = ALL_WIDGETS.find(w => w.key === key)?.name || key;
@@ -89,32 +98,42 @@ const DashboardManagementView: React.FC<DashboardManagementViewProps> = ({ store
                 </div>
 
                 <div className="p-6 space-y-8">
-                    {(Object.values(RoleEnum) as Role[]).map(role => (
-                        <div key={role} className="p-4 border rounded-lg">
-                            <h3 className="font-semibold text-xl text-text-primary mb-4">{getTranslatedRole(role)}</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                {ALL_WIDGETS.map(widget => {
-                                    const isChecked = widgetVisibility[role]?.includes(widget.key) || false;
-                                    return (
-                                        <label key={widget.key} className="flex items-center gap-3 p-3 bg-background rounded-md border hover:border-primary transition-colors cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={() => handleToggleWidget(role, widget.key)}
-                                                className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <span className="text-sm font-medium text-text-primary flex-grow">
-                                                {getTranslatedWidgetName(widget.key)}
-                                            </span>
-                                        </label>
-                                    );
-                                })}
+                    {(Object.values(RoleEnum) as Role[]).map(role => {
+                        const isCEOOrAdmin = role === RoleEnum.CEO || role === RoleEnum.ADMIN;
+                        const widgetsToShow = ALL_WIDGETS.filter(w =>
+                            isCEOOrAdmin ? w.dashboard === 'ceo' : w.dashboard === 'regular'
+                        );
+
+                        return (
+                            <div key={role} className="p-4 border rounded-lg">
+                                <h3 className="font-semibold text-xl text-text-primary mb-2">{getTranslatedRole(role)}</h3>
+                                <p className="text-sm text-text-secondary mb-4">
+                                    {isCEOOrAdmin ? 'CEO Dashboard widgets' : 'Regular Dashboard widgets'}
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {widgetsToShow.map(widget => {
+                                        const isChecked = widgetVisibility[role]?.includes(widget.key) || false;
+                                        return (
+                                            <label key={widget.key} className="flex items-center gap-3 p-3 bg-background rounded-md border hover:border-primary transition-colors cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={() => handleToggleWidget(role, widget.key)}
+                                                    className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                                                />
+                                                <span className="text-sm font-medium text-text-primary flex-grow">
+                                                    {getTranslatedWidgetName(widget.key)}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
-                 <div className="bg-background px-6 py-4 flex justify-end rounded-b-lg">
+                <div className="bg-background px-6 py-4 flex justify-end rounded-b-lg">
                     <button onClick={handleSave} className="px-6 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-800">
                         {t('save_changes')}
                     </button>

@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
     const isPrivilegedUser = realUser.role.includes(Role.ADMIN) || realUser.role.includes(Role.CEO);
 
     return (
-        <aside className={`bg-primary text-white flex flex-col p-4 no-print w-64 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <aside className={`bg-primary text-white flex flex-col p-4 no-print w-64 fixed inset-y-0 left-0 z-[100] transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex items-center gap-3 mb-8 px-2 flex-shrink-0">
                 {storeSettings?.logo_url ? (
                     <img src={storeSettings.logo_url} alt="Store Logo" className="h-[4.5rem] w-auto" />
@@ -114,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                         <button
                             key={name}
                             onClick={() => handleNavigation(name)}
-                            className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${activeView === name
+                            className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer ${activeView === name
                                 ? 'bg-secondary text-white'
                                 : 'text-blue-100 hover:bg-blue-800'
                                 }`}

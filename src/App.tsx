@@ -113,7 +113,18 @@ const App: React.FC = () => {
             return null;
         }
     });
-    const [activeView, setActiveView] = useState('dashboard');
+    const [activeView, setActiveView] = useState(() => {
+        try {
+            const savedUserJSON = localStorage.getItem('currentUser');
+            if (savedUserJSON) {
+                const user = JSON.parse(savedUserJSON);
+                if (user.role && user.role[0] === 'CEO') {
+                    return 'ceo_dashboard';
+                }
+            }
+        } catch (e) { }
+        return 'dashboard';
+    });
     const [viewState, setViewState] = useState<any>(null);
     const [language, setLanguage] = useState<Language>('th');
     const [navigationHistory, setNavigationHistory] = useState<string[]>(['dashboard']);
@@ -201,6 +212,15 @@ const App: React.FC = () => {
             console.error("Failed to save user to localStorage", error);
         }
     }, [currentUser, originalUser]);
+
+    useEffect(() => {
+        if (currentUser && activeView === 'dashboard') {
+            const role = currentUser.role[0];
+            if (role === 'CEO') {
+                setActiveView('ceo_dashboard');
+            }
+        }
+    }, [currentUser, activeView]);
 
     const showAlert = useCallback((title: string, message: string) => {
         setAlertConfig({ title, message: message.replace(/\n/g, '<br />') });
@@ -534,12 +554,17 @@ const App: React.FC = () => {
 
     // NAVIGATION & UI LOGIC
     const handleNavigate = (view: string, state?: any) => {
-        setActiveView(view);
+        if (view === 'dashboard' && currentUser && (currentUser.role[0] === 'CEO' || currentUser.role[0] === 'Admin')) {
+            setActiveView('ceo_dashboard');
+        } else {
+            setActiveView(view);
+        }
         setViewState(state || null);
     };
     const handleLogin = (username: string, password: string) => {
         const permissions = getPermissionsFromRoles([Role.ADMIN]);
         setCurrentUser({ id: '1', name: 'Admin', role: [Role.ADMIN], avatar: '', permissions });
+        setActiveView('ceo_dashboard');
     };
     const handleLogout = () => { setCurrentUser(null); };
 
@@ -630,7 +655,11 @@ const App: React.FC = () => {
         if (activeView === 'ceo_dashboard') return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} />;
 
         switch (activeView) {
-            case 'dashboard': return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
+            case 'dashboard':
+                if (currentUser && currentUser.role[0] === 'CEO') {
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} />;
+                }
+                return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
             case 'pos': return <POSView products={products} currentUser={currentUser} customers={customers} storeCredits={storeCredits} transactions={transactions} onNewTransaction={handleNewTransaction} onNewInvoice={handleNewInvoice} onNewOrder={handleNewOrder} onAddNewCustomerFromPOS={handleAddNewCustomerFromPOS} openScanner={openScanner} posScannedCode={posScannedCode} setPosScannedCode={setPosScannedCode} showAlert={showAlert} storeSettings={storeSettings} onProductMouseEnter={handleProductMouseEnter} onProductMouseLeave={handleProductMouseLeave} t={t} language={language} />;
             case 'inventory': return <ProductTable products={products} currentUser={currentUser} onAddProductClick={() => setIsAddProductModalOpen(true)} onAddProductByScan={handleAddProductByScan} onImportProductsClick={() => setIsImportModalOpen(true)} onEditProduct={(p) => { setProductToEdit(p); setIsEditProductModalOpen(true); }} onDeleteProduct={(p) => { setProductToDelete(p); setIsDeleteModalOpen(true); }} onViewProduct={(p) => { setProductToView(p); setIsViewProductModalOpen(true); }} onShowBarcode={(p, v) => { setProductToView(p); setVariantToShowBarcode(v); setIsBarcodeDisplayOpen(true); }} openScanner={openScanner} inventorySearchCode={inventorySearchCode} setInventorySearchCode={setInventorySearchCode} t={t} language={language} />;
             case 'returns': return <ReturnsView transactions={transactions} products={products} onProcessReturn={handleProcessReturn} t={t} language={language} />;
@@ -649,7 +678,11 @@ const App: React.FC = () => {
             case 'my_profile': return <ProfileView currentUser={currentUser} onUpdateUser={handleUpdateUser} onUpdatePassword={handleUpdatePassword} links={navLinks} t={t} />;
             case 'category_management': return <CategoryManagementView categories={categories} currentUser={currentUser} onAddCategory={() => setIsAddCategoryModalOpen(true)} onEditCategory={(cat) => { setCategoryToEdit(cat); setIsEditCategoryModalOpen(true); }} onDeleteCategory={handleDeleteCategory} t={t} language={language} />;
             case 'dashboard_management': return <DashboardManagementView storeSettings={storeSettings} onUpdateSettings={handleUpdateSettings} t={t} />;
-            default: return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
+            default:
+                if (currentUser && (currentUser.role[0] === 'CEO' || currentUser.role[0] === 'Admin')) {
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} />;
+                }
+                return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
         }
     };
 

@@ -71,6 +71,8 @@ export interface UserSettings {
   defaultLoginView?: string;
   lowStockThreshold?: number;
   defaultCustomerType?: CustomerType;
+  dashboardWidgetOrder?: string[]; // Array of widget IDs in display order
+  dashboardVisibleWidgets?: string[]; // Array of visible widget IDs
 }
 
 export interface User {

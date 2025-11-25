@@ -407,7 +407,30 @@ const App: React.FC = () => {
             showAlert(t('alert_error'), t('bill_add_failed'));
         }
     };
-    const handleRecordBillPayment = (billId: string, paymentData: any) => { console.log("Record Bill Payment", billId, paymentData); };
+    const handleRecordBillPayment = async (billId: string, paymentData: { paymentAmount: number; paymentDate: string; paymentMethod: PaymentMethod; referenceNote: string; }) => {
+        const success = await db.recordBillPayment(billId, {
+            amount: paymentData.paymentAmount,
+            date: paymentData.paymentDate,
+            method: paymentData.paymentMethod,
+            reference: paymentData.referenceNote
+        });
+
+        if (success) {
+            setBills(prev => prev.map(b => {
+                if (b.id === billId) {
+                    const newPaid = (b.paidAmount || 0) + paymentData.paymentAmount;
+                    const newStatus = newPaid >= b.amount ? BillStatus.PAID : (b.status === BillStatus.OVERDUE ? BillStatus.OVERDUE : BillStatus.DUE);
+                    return { ...b, paidAmount: newPaid, status: newStatus };
+                }
+                return b;
+            }));
+            setIsRecordPaymentModalOpen(false);
+            setBillToRecordPaymentFor(null);
+            showAlert(t('alert_success'), t('payment_recorded_successfully'));
+        } else {
+            showAlert(t('alert_error'), t('failed_to_record_payment'));
+        }
+    };
     const handleBillUpdate = (updatedBill: Bill) => { console.log("Update Bill", updatedBill); };
     const handleDeleteBill = (billId: string) => { console.log("Delete Bill", billId); };
     const handleImportCustomers = (newCustomers: NewCustomerData[]) => { console.log("Import Customers", newCustomers); };
@@ -520,9 +543,274 @@ const App: React.FC = () => {
     const handleConvertOrderToInvoice = (order: Order) => { console.log("Convert Order to Invoice", order); };
     const handleReceivePayment = (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod) => { console.log("Receive Payment", transactionId, paymentAmount, paymentMethod); };
     const handleCreateConsolidatedInvoice = (customer: Customer, transactionsToConsolidate: Transaction[]) => { console.log("Create Consolidated Invoice", customer, transactionsToConsolidate); };
-    const handleRecordPastInvoice = (data: PastInvoiceData) => { console.log("Record Past Invoice", data); };
-    const handleImportPastInvoices = (pastInvoices: PastInvoiceData[]) => { console.log("Import Past Invoices", pastInvoices); };
-    const handleEditPastInvoice = (invoiceId: string, data: PastInvoiceData) => { console.log("Edit Past Invoice", invoiceId, data); };
+    const handleRecordPastInvoice = async (data: PastInvoiceData) => {
+        // 1. Determine Customer
+        let customerId = data.customerId;
+        let customerName = data.newCustomerName || 'Unknown Customer';
+        let customerType: CustomerType = 'contractor'; // Default or infer?
+
+        if (customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            if (customer) {
+                customerName = customer.name;
+                customerType = customer.type;
+            }
+        } else if (data.newCustomerName) {
+            // Create new customer on the fly? Or just use name?
+            // For now, let's try to find by name or create a simple one if needed.
+            // But db.createTransaction expects a customerId usually for linking.
+            // If we don't have an ID, we might need to create one.
+            // Let's assume for now we just pass the name if ID is missing, but Transaction type requires customerId usually.
+            // Looking at Transaction type: customerId is string.
+            // If we don't have a customer ID, we should probably create the customer first.
+            const newCustomerData: NewCustomerData = {
+                name: data.newCustomerName,
+                type: 'contractor', // Default
+                phone: '',
+                address: ''
+            };
+            const newCustomer = await db.createCustomer(newCustomerData);
+            if (newCustomer) {
+                setCustomers(prev => [...prev, newCustomer]);
+                customerId = newCustomer.id;
+                customerType = newCustomer.type;
+            }
+        }
+
+        if (!customerId) {
+            showAlert(t('alert_error'), t('customer_creation_failed'));
+            return;
+        }
+
+        // 2. Create Transaction
+        const paymentStatus = data.amountAlreadyPaid >= data.totalAmount ? PaymentStatus.PAID : (data.amountAlreadyPaid > 0 ? PaymentStatus.PARTIALLY_PAID : PaymentStatus.UNPAID);
+
+        const transactionData: Transaction = {
+            id: data.originalInvoiceId || `INV-${Date.now()}`, // Use provided ID or generate
+            date: data.invoiceDate,
+            items: [{
+                productId: 'past-invoice',
+                variantId: 'default',
+                name: { en: 'Past Invoice Record', th: 'บันทึกใบแจ้งหนี้ย้อนหลัง' },
+                size: '-',
+                sku: 'PAST-INV',
+                quantity: 1,
+                stock: 0,
+                price: { walkIn: data.totalAmount, contractor: data.totalAmount, government: data.totalAmount, cost: 0 }
+            }],
+            subtotal: data.totalAmount,
+            tax: 0,
+            total: data.totalAmount,
+            customerId: customerId,
+            customerName: customerName,
+            customerType: customerType,
+            operator: currentUser?.name || 'System',
+            paymentMethod: 'Cash', // Default, or maybe 'Credit' since it's an invoice?
+            payment_status: paymentStatus,
+            paid_amount: data.amountAlreadyPaid,
+            vatIncluded: true,
+            due_date: new Date(new Date(data.invoiceDate).setDate(new Date(data.invoiceDate).getDate() + 30)).toISOString() // Default 30 days due?
+        } as Transaction;
+
+        const result = await db.createTransaction(transactionData);
+        if (result.success) {
+            setTransactions(prev => [transactionData, ...prev]);
+            setIsRecordPastInvoiceModalOpen(false);
+            showAlert(t('alert_success'), t('invoice_created'));
+        } else {
+            showAlert(t('alert_error'), `${t('transaction_create_failed')}: ${result.error}`);
+        }
+    };
+    const handleImportPastInvoices = async (pastInvoices: PastInvoiceData[]) => {
+        let importedCount = 0;
+        let errorCount = 0;
+        const newTransactions: Transaction[] = [];
+        // We need a local cache of customers to avoid creating duplicates during the import loop
+        // Initialize with current customers
+        const localCustomers = [...customers];
+        const newCustomersToAdd: Customer[] = [];
+
+        for (const data of pastInvoices) {
+            try {
+                // 1. Determine Customer
+                let customerId = data.customerId;
+                let customerName = data.newCustomerName || 'Unknown Customer';
+                let customerType: CustomerType = 'contractor';
+
+                if (customerId) {
+                    const customer = localCustomers.find(c => c.id === customerId);
+                    if (customer) {
+                        customerName = customer.name;
+                        customerType = customer.type;
+                    }
+                } else if (data.newCustomerName) {
+                    // Check if we already have this customer in our local list (including newly added ones)
+                    const existingCustomer = localCustomers.find(c => c.name.toLowerCase() === data.newCustomerName!.toLowerCase());
+                    if (existingCustomer) {
+                        customerId = existingCustomer.id;
+                        customerName = existingCustomer.name;
+                        customerType = existingCustomer.type;
+                    } else {
+                        // Create new customer
+                        const newCustomerData: NewCustomerData = {
+                            name: data.newCustomerName,
+                            type: 'contractor',
+                            phone: '',
+                            address: ''
+                        };
+                        const newCustomer = await db.createCustomer(newCustomerData);
+                        if (newCustomer) {
+                            localCustomers.push(newCustomer);
+                            newCustomersToAdd.push(newCustomer);
+                            customerId = newCustomer.id;
+                            customerType = newCustomer.type;
+                        }
+                    }
+                }
+
+                if (!customerId) {
+                    console.error(`Could not determine customer for invoice ${data.originalInvoiceId}`);
+                    errorCount++;
+                    continue;
+                }
+
+                // 2. Create Transaction
+                const paymentStatus = data.amountAlreadyPaid >= data.totalAmount ? PaymentStatus.PAID : (data.amountAlreadyPaid > 0 ? PaymentStatus.PARTIALLY_PAID : PaymentStatus.UNPAID);
+
+                const transactionData: Transaction = {
+                    id: data.originalInvoiceId || `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    date: data.invoiceDate,
+                    items: [{
+                        productId: 'past-invoice',
+                        variantId: 'default',
+                        name: { en: 'Past Invoice Record', th: 'บันทึกใบแจ้งหนี้ย้อนหลัง' },
+                        size: '-',
+                        sku: 'PAST-INV',
+                        quantity: 1,
+                        stock: 0,
+                        price: { walkIn: data.totalAmount, contractor: data.totalAmount, government: data.totalAmount, cost: 0 }
+                    }],
+                    subtotal: data.totalAmount,
+                    tax: 0,
+                    total: data.totalAmount,
+                    customerId: customerId,
+                    customerName: customerName,
+                    customerType: customerType,
+                    operator: currentUser?.name || 'System',
+                    paymentMethod: 'Cash',
+                    payment_status: paymentStatus,
+                    paid_amount: data.amountAlreadyPaid,
+                    vatIncluded: true,
+                    due_date: new Date(new Date(data.invoiceDate).setDate(new Date(data.invoiceDate).getDate() + 30)).toISOString()
+                } as Transaction;
+
+                const result = await db.createTransaction(transactionData);
+                if (result.success) {
+                    newTransactions.push(transactionData);
+                    importedCount++;
+                } else {
+                    console.error(`Failed to import invoice ${data.originalInvoiceId}: ${result.error}`);
+                    errorCount++;
+                }
+            } catch (error) {
+                console.error(`Exception importing invoice ${data.originalInvoiceId}:`, error);
+                errorCount++;
+            }
+        }
+
+        // Update state once
+        if (newCustomersToAdd.length > 0) {
+            setCustomers(prev => [...prev, ...newCustomersToAdd]);
+        }
+        if (newTransactions.length > 0) {
+            setTransactions(prev => [...newTransactions, ...prev]);
+        }
+
+        setIsImportPastInvoicesModalOpen(false);
+        showAlert(t('alert_success'), t('past_invoice_import_success', { count: importedCount }));
+        if (errorCount > 0) {
+            // Optional: show a warning about errors?
+            console.warn(`Import completed with ${errorCount} errors.`);
+        }
+    };
+    const handleEditPastInvoice = async (invoiceId: string, data: PastInvoiceData) => {
+        try {
+            let customerId = data.customerId;
+            let customerName = '';
+
+            // 1. Handle Customer (Create if new)
+            if (data.newCustomerName) {
+                const newCustomer = await db.createCustomer({
+                    name: data.newCustomerName,
+                    type: 'Contractor', // Default type for new customers from import
+                    phone: '',
+                    address: ''
+                });
+                if (newCustomer) {
+                    setCustomers(prev => [...prev, newCustomer]);
+                    customerId = newCustomer.id;
+                    customerName = newCustomer.name;
+                } else {
+                    showAlert(t('alert_error'), t('customer_creation_failed'));
+                    return;
+                }
+            } else if (customerId) {
+                const existingCustomer = customers.find(c => c.id === customerId);
+                customerName = existingCustomer?.name || '';
+            }
+
+            // 2. Prepare Update Data
+            const paymentStatus = data.amountAlreadyPaid >= data.totalAmount ? PaymentStatus.PAID : (data.amountAlreadyPaid > 0 ? PaymentStatus.PARTIALLY_PAID : PaymentStatus.UNPAID);
+
+            // For past invoices, we might want to update the item price too if the total changed
+            // But for simplicity, we'll just update the top-level fields for now, or update the single item if it's a past invoice
+            // If it's a regular transaction, editing "Total Amount" via this modal might be tricky if we don't update items.
+            // However, the user accepted this limitation.
+
+            // We need to fetch the current transaction to check its items
+            const currentTransaction = transactions.find(t => t.id === invoiceId);
+            let updatedItems = currentTransaction?.items || [];
+
+            if (currentTransaction && currentTransaction.items.length === 1 && currentTransaction.items[0].productId === 'past-invoice') {
+                // It's a past invoice, update the item price
+                updatedItems = [{
+                    ...currentTransaction.items[0],
+                    price: { ...currentTransaction.items[0].price, walkIn: data.totalAmount, contractor: data.totalAmount, government: data.totalAmount }
+                }];
+            }
+            // If it's a regular transaction, we DO NOT update items, just the total (which might cause discrepancy, but user accepted it)
+            // Actually, if we update total but not items, it's weird.
+            // But let's stick to updating the main fields.
+
+            const updates: Partial<Transaction> = {
+                date: data.invoiceDate,
+                total: data.totalAmount,
+                paid_amount: data.amountAlreadyPaid,
+                payment_status: paymentStatus,
+                customerId: customerId,
+                customerName: customerName,
+                items: updatedItems,
+                // If file is uploaded, we would handle it here (upload to storage, get URL)
+                // For now, we skip file upload implementation as it requires storage setup
+            };
+
+            // 3. Update in DB
+            const result = await db.updateTransaction(invoiceId, updates);
+
+            if (result.success) {
+                // 4. Update Local State
+                setTransactions(prev => prev.map(t => t.id === invoiceId ? { ...t, ...updates } : t));
+                setIsEditPastInvoiceModalOpen(false);
+                setInvoiceToEdit(null);
+                showAlert(t('alert_success'), t('transaction_updated_success') || 'Transaction updated successfully');
+            } else {
+                showAlert(t('alert_error'), t('transaction_update_failed') || 'Failed to update transaction');
+            }
+        } catch (error) {
+            console.error("Error editing transaction:", error);
+            showAlert(t('alert_error'), 'An error occurred while updating.');
+        }
+    };
     const handleUndoConsolidation = (transaction: Transaction) => { console.log("Undo Consolidation", transaction); };
     const handleProcessReturn = async (transactionId: string, itemsToReturn: ReturnedItem[], totalValue: number): Promise<StoreCredit> => {
         // 1. Update transaction with returned items
@@ -728,7 +1016,7 @@ const App: React.FC = () => {
             case 'customers': return <CustomersView customers={customers} onAddCustomer={handleAddCustomer} onEditCustomer={handleEditCustomer} onDeleteCustomer={handleDeleteCustomer} onImportCustomersClick={() => setIsImportCustomersModalOpen(true)} t={t} currentUser={currentUser} showAlert={showAlert} />;
             case 'suppliers': return <SuppliersView suppliers={suppliers} onAddSupplier={() => setIsAddSupplierModalOpen(true)} onEditSupplier={handleEditSupplier} onDeleteSupplier={handleDeleteSupplier} onImportSuppliersClick={() => setIsImportSuppliersModalOpen(true)} t={t} currentUser={currentUser} showAlert={showAlert} />;
             case 'accounts_payable': return <AccountsPayableView bills={bills} suppliers={suppliers} onAddBillClick={() => setIsAddBillModalOpen(true)} onPayBillClick={(b) => { setBillToRecordPaymentFor(b); setIsRecordPaymentModalOpen(true); }} onDeleteBill={handleDeleteBill} onImportBillsClick={() => setIsImportBillsModalOpen(true)} t={t} language={language} currentUser={currentUser} />;
-            case 'accounts_receivable': return <AccountsReceivableView transactions={transactions} customers={customers} onReceivePaymentClick={(t) => { setTransactionToReceivePayment(t); setIsReceivePaymentModalOpen(true); }} onCreateConsolidatedInvoice={(c, txs) => { setConsolidationData({ customer: c, transactions: txs }); setIsConsolidatedInvoiceModalOpen(true); }} onRecordPastInvoiceClick={() => setIsRecordPastInvoiceModalOpen(true)} onImportPastInvoicesClick={() => setIsImportPastInvoicesModalOpen(true)} onEditPastInvoiceClick={(t) => { setInvoiceToEdit(t); setIsEditPastInvoiceModalOpen(true); }} onUndoConsolidationClick={(t) => { setTransactionToUndo(t); setIsUndoConfirmationModalOpen(true); }} t={t} language={language} currentUser={currentUser} viewState={viewState} onNavigate={handleNavigate} />;
+            case 'accounts_receivable': return <AccountsReceivableView transactions={transactions} customers={customers} onReceivePaymentClick={(t) => { setTransactionToReceivePayment(t); setIsReceivePaymentModalOpen(true); }} onCreateConsolidatedInvoice={(c, txs) => { setConsolidationData({ customer: c, transactions: txs }); setIsConsolidatedInvoiceModalOpen(true); }} onRecordPastInvoiceClick={() => setIsRecordPastInvoiceModalOpen(true)} onImportPastInvoicesClick={() => setIsImportPastInvoicesModalOpen(true)} onEditPastInvoiceClick={(t) => { setInvoiceToEdit(t); setIsEditPastInvoiceModalOpen(true); }} onDeleteTransaction={handleDeleteTransaction} onUndoConsolidationClick={(t) => { setTransactionToUndo(t); setIsUndoConfirmationModalOpen(true); }} t={t} language={language} currentUser={currentUser} viewState={viewState} onNavigate={handleNavigate} />;
             case 'sales_history': return <SalesHistoryView transactions={transactions} onDeleteTransaction={handleDeleteTransaction} onReceivePaymentClick={(t) => { setTransactionToReceivePayment(t); setIsReceivePaymentModalOpen(true); }} onEditPastInvoiceClick={(t) => { setInvoiceToEdit(t); setIsEditPastInvoiceModalOpen(true); }} onUndoConsolidationClick={(t) => { setTransactionToUndo(t); setIsUndoConfirmationModalOpen(true); }} storeSettings={storeSettings} t={t} language={language} currentUser={currentUser} />;
             case 'order_fulfillment': return <OrderFulfillmentView orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} onUpdateOrderPaymentStatus={handleUpdateOrderPaymentStatus} onConvertOrderToInvoice={handleConvertOrderToInvoice} storeSettings={storeSettings} t={t} language={language} />;
             case 'customer_assist': return <CustomerAssistView products={products} t={t} language={language} onProductMouseEnter={handleProductMouseEnter} onProductMouseLeave={handleProductMouseLeave} />;
@@ -798,6 +1086,17 @@ const App: React.FC = () => {
             <BarcodeScannerModal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} onScanSuccess={handleScanSuccess} />
             <BarcodeDisplayModal isOpen={isBarcodeDisplayOpen} onClose={() => setIsBarcodeDisplayOpen(false)} product={productToView} variant={variantToShowBarcode} t={t} language={language} />
             <ImportProductsModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onApplyImport={handleImportProducts} products={products} t={t} />
+            <AddBillModal isOpen={isAddBillModalOpen} onClose={() => setIsAddBillModalOpen(false)} onAddBill={handleAddBill} suppliers={suppliers} t={t} showAlert={showAlert} />
+            <ImportBillsModal isOpen={isImportBillsModalOpen} onClose={() => setIsImportBillsModalOpen(false)} onApplyImport={handleImportBills} suppliers={suppliers} t={t} />
+            <RecordPaymentModal isOpen={isRecordPaymentModalOpen} onClose={() => setIsRecordPaymentModalOpen(false)} onConfirm={handleRecordBillPayment} bill={billToRecordPaymentFor} t={t} />
+
+            {/* Accounts Receivable Modals */}
+            {/* Accounts Receivable Modals */}
+            <ReceivePaymentModal isOpen={isReceivePaymentModalOpen} onClose={() => setIsReceivePaymentModalOpen(false)} onConfirm={handleReceivePayment} transaction={transactionToReceivePayment} t={t} />
+            {/* <ConsolidatedInvoiceModal isOpen={isConsolidatedInvoiceModalOpen} onClose={() => setIsConsolidatedInvoiceModalOpen(false)} invoice={null} storeSettings={storeSettings} t={t} language={language} /> */}
+            <RecordPastInvoiceModal isOpen={isRecordPastInvoiceModalOpen} onClose={() => setIsRecordPastInvoiceModalOpen(false)} onRecord={handleRecordPastInvoice} customers={customers} showAlert={showAlert} t={t} />
+            <ImportPastInvoicesModal isOpen={isImportPastInvoicesModalOpen} onClose={() => setIsImportPastInvoicesModalOpen(false)} onApplyImport={handleImportPastInvoices} t={t} />
+            <EditPastInvoiceModal isOpen={isEditPastInvoiceModalOpen} onClose={() => setIsEditPastInvoiceModalOpen(false)} onEdit={(id, data) => handleEditPastInvoice(id, data)} invoice={invoiceToEdit} customers={customers} showAlert={showAlert} t={t} />
 
             {/* Category Management Modals */}
             <AddCategoryModal isOpen={isAddCategoryModalOpen} onClose={() => setIsAddCategoryModalOpen(false)} onAddCategory={handleAddCategory} categories={categories} t={t} language={language} />

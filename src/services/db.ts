@@ -415,6 +415,30 @@ export const createTransaction = async (transaction: Transaction): Promise<{ suc
     return { success: true };
 };
 
+export const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<{ success: boolean; error?: string }> => {
+    // Map frontend Transaction fields to DB columns
+    const dbUpdates: any = {};
+    if (updates.date) dbUpdates.date = updates.date;
+    if (updates.total !== undefined) dbUpdates.total = updates.total;
+    if (updates.paid_amount !== undefined) dbUpdates.paid_amount = updates.paid_amount;
+    if (updates.payment_status) dbUpdates.payment_status = updates.payment_status;
+    if (updates.customerId) dbUpdates.customer_id = updates.customerId;
+    if (updates.customerName) dbUpdates.customer_name = updates.customerName;
+    if (updates.items) dbUpdates.items = updates.items;
+    if (updates.file_url) dbUpdates.file_url = updates.file_url;
+
+    const { error } = await supabase
+        .from('transactions')
+        .update(dbUpdates)
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error updating transaction:", error);
+        return { success: false, error: error.message };
+    }
+    return { success: true };
+};
+
 export const deleteTransaction = async (id: string): Promise<boolean> => {
     const { error } = await supabase.from('transactions').delete().eq('id', id);
     if (error) {
@@ -487,6 +511,48 @@ export const createBill = async (bill: NewBillData): Promise<Bill | null> => {
         notes: data.notes,
         fileUrl: data.file_url
     };
+};
+
+export const recordBillPayment = async (billId: string, payment: { amount: number, date: string, method: string, reference: string }): Promise<boolean> => {
+    // 1. Fetch current bill
+    const { data: bill, error: fetchError } = await supabase.from('bills').select('*').eq('id', billId).single();
+    if (fetchError || !bill) {
+        console.error("Error fetching bill for payment:", fetchError);
+        return false;
+    }
+
+    // 2. Calculate new values
+    const newPaidAmount = (bill.paid_amount || 0) + payment.amount;
+    const newStatus = newPaidAmount >= bill.amount ? 'Paid' : 'Due'; // Or keep as Overdue if it was overdue? Usually if partially paid it remains Due/Overdue. If fully paid, it becomes Paid.
+    // Let's simplify: if fully paid, Paid. Else, if it was Overdue, it stays Overdue (unless we re-evaluate date, but let's just leave it as is or set to Due if not paid).
+    // Actually, status logic is usually: if paid >= amount -> Paid. Else -> Due (or Overdue if date passed).
+    // For now, let's just check if fully paid.
+    const finalStatus = newPaidAmount >= bill.amount ? 'Paid' : (bill.status === 'Overdue' ? 'Overdue' : 'Due');
+
+    const newPaymentRecord = {
+        id: Date.now().toString(), // Simple ID
+        amount: payment.amount,
+        date: payment.date,
+        method: payment.method,
+        reference: payment.reference
+    };
+
+    const currentPayments = bill.payments || [];
+    const updatedPayments = [...currentPayments, newPaymentRecord];
+
+    // 3. Update bill
+    const { error: updateError } = await supabase.from('bills').update({
+        paid_amount: newPaidAmount,
+        status: finalStatus,
+        payments: updatedPayments
+    }).eq('id', billId);
+
+    if (updateError) {
+        console.error("Error recording bill payment:", updateError);
+        return false;
+    }
+
+    return true;
 };
 
 export const updateUser = async (id: string, userData: Partial<User>): Promise<boolean> => {

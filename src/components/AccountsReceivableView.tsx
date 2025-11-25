@@ -14,6 +14,7 @@ interface AccountsReceivableViewProps {
     onRecordPastInvoiceClick: () => void;
     onImportPastInvoicesClick: () => void;
     onEditPastInvoiceClick: (transaction: Transaction) => void;
+    onDeleteTransaction: (transactionId: string) => void;
     onUndoConsolidationClick: (transaction: Transaction) => void;
     t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
     language: Language;
@@ -23,7 +24,7 @@ interface AccountsReceivableViewProps {
 
 const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
     transactions, customers, currentUser, onReceivePaymentClick, onCreateConsolidatedInvoice,
-    onRecordPastInvoiceClick, onImportPastInvoicesClick, onEditPastInvoiceClick, onUndoConsolidationClick, t, language,
+    onRecordPastInvoiceClick, onImportPastInvoicesClick, onEditPastInvoiceClick, onDeleteTransaction, onUndoConsolidationClick, t, language,
     viewState, onNavigate
 }) => {
     const [groupByCustomer, setGroupByCustomer] = useState(false);
@@ -240,7 +241,7 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
                                 <tbody>
                                     {unpaidTransactions.map(tx => {
                                         const statusInfo = getStatusInfo(tx);
-                                        const isPastInvoice = tx.id.startsWith('PAST-');
+                                        const isPastInvoice = tx.items.some(item => item.productId === 'past-invoice');
                                         const isConsolidated = tx.id.startsWith('C-INV-');
                                         return (
                                             <tr key={tx.id} className="bg-white border-b hover:bg-gray-50">
@@ -254,8 +255,11 @@ const AccountsReceivableView: React.FC<AccountsReceivableViewProps> = ({
                                                 <td className="px-6 py-4 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         {canManage && <button onClick={() => onReceivePaymentClick(tx)} className="text-xs px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700">{t('receive_payment')}</button>}
-                                                        {isPastInvoice && canManage && (
-                                                            <button onClick={() => onEditPastInvoiceClick(tx)} className="text-primary hover:text-blue-700 p-1" title="Edit Past Invoice"><PencilIcon className="h-4 w-4" /></button>
+                                                        {canManage && (
+                                                            <>
+                                                                <button onClick={() => onEditPastInvoiceClick(tx)} className="text-primary hover:text-blue-700 p-1" title="Edit Transaction"><PencilIcon className="h-4 w-4" /></button>
+                                                                <button onClick={() => onDeleteTransaction(tx.id)} className="text-red-500 hover:text-red-700 p-1" title={t('delete')}><TrashIcon className="h-4 w-4" /></button>
+                                                            </>
                                                         )}
                                                         {isConsolidated && canManage && (
                                                             <button onClick={() => onUndoConsolidationClick(tx)} className="text-yellow-600 hover:text-yellow-800 p-1" title={t('undo_consolidation')}><BackspaceIcon className="h-4 w-4" /></button>

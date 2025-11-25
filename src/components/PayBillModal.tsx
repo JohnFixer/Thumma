@@ -12,34 +12,49 @@ interface RecordPaymentModalProps {
 }
 
 const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({ isOpen, onClose, onConfirm, bill, t }) => {
-  const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [paymentDate, setPaymentDate] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Bank Transfer');
   const [referenceNote, setReferenceNote] = useState('');
 
-  const balanceDue = bill ? bill.amount - bill.paidAmount : 0;
+  const balanceDue = bill ? (bill.amount || 0) - (bill.paidAmount || 0) : 0;
 
   useEffect(() => {
     if (isOpen && bill) {
-      setPaymentAmount(balanceDue);
+      const initialAmount = balanceDue > 0 ? balanceDue : 0;
+      setPaymentAmount(initialAmount.toFixed(2));
       setPaymentDate(new Date().toISOString().split('T')[0]);
       setPaymentMethod('Bank Transfer');
       setReferenceNote('');
     }
   }, [isOpen, bill, balanceDue]);
 
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    // Allow empty string, or a valid decimal number pattern
+    if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+      setPaymentAmount(value);
+    }
+  };
+
   const handleConfirm = () => {
-    if (bill && typeof paymentAmount === 'number' && paymentAmount > 0) {
+    const numericAmount = parseFloat(paymentAmount);
+    if (bill && !isNaN(numericAmount) && numericAmount > 0) {
       onConfirm(bill.id, {
-        paymentAmount,
+        paymentAmount: numericAmount,
         paymentDate,
         paymentMethod,
         referenceNote,
       });
+    } else {
+      alert("Please enter a valid payment amount greater than 0.");
     }
   };
 
   if (!isOpen || !bill) return null;
+
+  const numericAmount = parseFloat(paymentAmount);
+  const isAmountValid = !isNaN(numericAmount) && numericAmount > 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center" aria-modal="true" role="dialog" onClick={onClose}>
@@ -51,55 +66,53 @@ const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({ isOpen, onClose
           </button>
         </div>
         <div className="p-6 space-y-4">
-            <div className="text-center">
-                <p className="text-sm text-text-secondary">{t('invoice_number')} #{bill.invoiceNumber}</p>
-                <div className="grid grid-cols-3 gap-2 mt-2 text-center">
-                    <div><span className="text-xs text-text-secondary block">{t('total')}</span><span className="font-semibold">฿{bill.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                    <div><span className="text-xs text-text-secondary block">{t('amount_paid')}</span><span className="font-semibold text-green-600">- ฿{bill.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                    <div><span className="text-xs text-text-secondary block">{t('balance_due')}</span><span className="font-bold text-lg text-primary">฿{balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                </div>
+          <div className="text-center">
+            <p className="text-sm text-text-secondary">{t('invoice_number')} #{bill.invoiceNumber}</p>
+            <div className="grid grid-cols-3 gap-2 mt-2 text-center">
+              <div><span className="text-xs text-text-secondary block">{t('total')}</span><span className="font-semibold">฿{bill.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div><span className="text-xs text-text-secondary block">{t('amount_paid')}</span><span className="font-semibold text-green-600">- ฿{(bill.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div><span className="text-xs text-text-secondary block">{t('balance_due')}</span><span className="font-bold text-lg text-primary">฿{balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
             </div>
-            <div className="border-t pt-4">
-                <label htmlFor="payment-amount" className="block text-sm font-medium text-text-secondary">{t('amount_to_pay')}</label>
-                <input
-                    type="number"
-                    id="payment-amount"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : Math.max(0, Math.min(balanceDue, Number(e.target.value))))}
-                    min="0.01"
-                    max={balanceDue}
-                    step="0.01"
-                    className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300 text-lg font-bold"
-                    required
-                    autoFocus
-                />
+          </div>
+          <div className="border-t pt-4">
+            <label htmlFor="payment-amount" className="block text-sm font-medium text-text-secondary">{t('amount_to_pay')}</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              id="payment-amount"
+              value={paymentAmount}
+              onChange={handleAmountChange}
+              className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300 text-lg font-bold"
+              required
+              autoFocus
+              placeholder="0.00"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="payment-date" className="block text-sm font-medium text-text-secondary">{t('payment_date')}</label>
+              <input type="date" id="payment-date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="payment-date" className="block text-sm font-medium text-text-secondary">{t('payment_date')}</label>
-                    <input type="date" id="payment-date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" required />
-                </div>
-                <div>
-                    <label htmlFor="payment-method" className="block text-sm font-medium text-text-secondary">{t('payment_method')}</label>
-                    <select id="payment-method" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300">
-                        <option value="Bank Transfer">{t('payment_bank_transfer')}</option>
-                        <option value="Cash">{t('payment_cash')}</option>
-                        <option value="Cheque">{t('payment_cheque')}</option>
-                        <option value="Card">{t('payment_card')}</option>
-                    </select>
-                </div>
+            <div>
+              <label htmlFor="payment-method" className="block text-sm font-medium text-text-secondary">{t('payment_method')}</label>
+              <select id="payment-method" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300">
+                <option value="Bank Transfer">{t('payment_bank_transfer')}</option>
+                <option value="Cash">{t('payment_cash')}</option>
+                <option value="Cheque">{t('payment_cheque')}</option>
+                <option value="Card">{t('payment_card')}</option>
+              </select>
             </div>
-             <div>
-                <label htmlFor="reference" className="block text-sm font-medium text-text-secondary">{t('reference_note')} (Optional)</label>
-                <input type="text" id="reference" value={referenceNote} onChange={(e) => setReferenceNote(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" placeholder="e.g., Transaction ID, Cheque No." />
-            </div>
+          </div>
+          <div>
+            <label htmlFor="reference" className="block text-sm font-medium text-text-secondary">{t('reference_note')} (Optional)</label>
+            <input type="text" id="reference" value={referenceNote} onChange={(e) => setReferenceNote(e.target.value)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300" placeholder="e.g., Transaction ID, Cheque No." />
+          </div>
         </div>
         <div className="bg-background px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
           <button
             type="button"
-            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:bg-blue-300"
+            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm"
             onClick={handleConfirm}
-            disabled={!paymentAmount || paymentAmount <= 0}
           >
             {t('confirm')}
           </button>

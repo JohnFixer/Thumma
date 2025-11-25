@@ -491,6 +491,8 @@ const translations = {
     database_error: 'Database Error',
     payment_record_failed: 'Could not record payment: {error}',
     payment_recorded_success: 'Payment has been recorded.',
+    payment_recorded_successfully: 'Payment recorded successfully',
+    failed_to_record_payment: 'Failed to record payment',
     // Simulation alerts
     simulation_started: 'Simulation Started',
     simulation_started_desc: 'You are now simulating the {role} role. Click "Stop Simulation" to return to your original role.',
@@ -501,6 +503,7 @@ const translations = {
     barcode_exists_desc: 'A product variant with this barcode already exists (SKU: {sku}).',
     // Order/Invoice alerts
     invoice_created: 'Invoice Created',
+    past_invoice_import_success: 'Successfully imported {count} past invoices.',
     invoice_created_desc: 'Invoice {invoiceId} has been created successfully.',
     order_created: 'Order Created',
     order_created_desc: 'Unpaid order {orderId} created for {customerName}.',
@@ -533,8 +536,7 @@ const translations = {
     security: 'Security',
     change_password: 'Change your password.',
     current_password: 'Current Password',
-    new_password: 'New Password',
-    confirm_new_password: 'Confirm New Password',
+
     hide_password: 'Hide password',
     show_password: 'Show password',
     // Customer Types
@@ -543,7 +545,7 @@ const translations = {
     customer_type_government: 'Government',
     customer_type_organization: 'Organization',
     // Category Management
-    category_management: 'Category Management',
+
     manage_categories_desc: 'Manage product categories and sub-categories',
     add_category: 'Add Category',
     no_categories_yet: 'No categories yet',
@@ -1067,6 +1069,8 @@ const translations = {
     database_error: 'ข้อผิดพลาดฐานข้อมูล',
     payment_record_failed: 'ไม่สามารถบันทึกการชำระเงินได้: {error}',
     payment_recorded_success: 'บันทึกการชำระเงินสำเร็จ',
+    payment_recorded_successfully: 'บันทึกการชำระเงินสำเร็จ',
+    failed_to_record_payment: 'ไม่สามารถบันทึกการชำระเงินได้',
     // Simulation alerts
     simulation_started: 'เริ่มการจำลอง',
     simulation_started_desc: 'คุณกำลังจำลองบทบาท {role} คลิก "หยุดการจำลอง" เพื่อกลับสู่บทบาทเดิม',
@@ -1077,6 +1081,7 @@ const translations = {
     barcode_exists_desc: 'มีสินค้าที่ใช้บาร์โค้ดนี้อยู่แล้ว (SKU: {sku})',
     // Order/Invoice alerts
     invoice_created: 'สร้างใบแจ้งหนี้สำเร็จ',
+    past_invoice_import_success: 'นำเข้าใบแจ้งหนี้ย้อนหลังสำเร็จ {count} รายการ',
     invoice_created_desc: 'สร้างใบแจ้งหนี้ {invoiceId} สำเร็จ',
     order_created: 'สร้างออเดอร์สำเร็จ',
     order_created_desc: 'สร้างออเดอร์ค้างชำระ {orderId} สำหรับ {customerName}',
@@ -1109,8 +1114,7 @@ const translations = {
     security: 'ความปลอดภัย',
     change_password: 'เปลี่ยนรหัสผ่านของคุณ',
     current_password: 'รหัสผ่านปัจจุบัน',
-    new_password: 'รหัสผ่านใหม่',
-    confirm_new_password: 'ยืนยันรหัสผ่านใหม่',
+
     hide_password: 'ซ่อนรหัสผ่าน',
     // Customer Types
     customer_type_walk_in: 'ลูกค้าทั่วไป',
@@ -1164,7 +1168,7 @@ export const useTranslations = (language: Language) => {
       let text = (langDict as any)[key] || key;
 
       for (const varKey in vars) {
-        const regex = new RegExp(`{${varKey}}`, 'g');
+        const regex = new RegExp(`{${varKey} } `, 'g');
         text = text.replace(regex, String(vars[varKey]));
       }
 

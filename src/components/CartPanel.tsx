@@ -349,25 +349,23 @@ const CartPanel: React.FC<CartPanelProps> = ({
         </div>
 
         <div className="p-4 border-t bg-background space-y-3">
-          {orderType === 'Delivery' && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <label className="text-sm font-semibold text-blue-800">{t('transportation_fee')}</label>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex rounded-md shadow-sm w-full">
-                  <button type="button" onClick={() => setFeeMode('manual')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-l-md -mr-px ${feeMode === 'manual' ? 'bg-primary text-white' : 'bg-white'}`}>{t('manual')}</button>
-                  <button type="button" onClick={() => setFeeMode('distance')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-r-md ${feeMode === 'distance' ? 'bg-primary text-white' : 'bg-white'}`}>{t('by_distance')}</button>
-                </div>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <label className="text-sm font-semibold text-blue-800">{t('transportation_fee')}</label>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex rounded-md shadow-sm w-full">
+                <button type="button" onClick={() => setFeeMode('manual')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-l-md -mr-px ${feeMode === 'manual' ? 'bg-primary text-white' : 'bg-white'}`}>{t('manual')}</button>
+                <button type="button" onClick={() => setFeeMode('distance')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-r-md ${feeMode === 'distance' ? 'bg-primary text-white' : 'bg-white'}`}>{t('by_distance')}</button>
               </div>
-              {feeMode === 'manual' ? (
-                <input type="number" placeholder="Fee Amount" value={manualFee} onChange={e => setManualFee(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2 w-full p-2 border rounded-md" />
-              ) : (
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <input type="number" placeholder={t('distance_km')} value={distance} onChange={e => setDistance(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
-                  <input type="number" placeholder={t('rate_per_km')} value={ratePerKm} onChange={e => setRatePerKm(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
-                </div>
-              )}
             </div>
-          )}
+            {feeMode === 'manual' ? (
+              <input type="number" placeholder="Fee Amount" value={manualFee} onChange={e => setManualFee(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2 w-full p-2 border rounded-md" />
+            ) : (
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <input type="number" placeholder={t('distance_km')} value={distance} onChange={e => setDistance(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
+                <input type="number" placeholder={t('rate_per_km')} value={ratePerKm} onChange={e => setRatePerKm(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
+              </div>
+            )}
+          </div>
           <div className="flex justify-between text-sm">
             <span>{t('subtotal')}</span>
             <span>฿{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>

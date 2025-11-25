@@ -156,6 +156,9 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
             <div className="border-t border-dashed border-black mt-2 pt-1 font-sans">
               <div className="flex justify-between"><span>{t_receipt('subtotal')}:</span><span>{transaction.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span></div>
               <div className="flex justify-between"><span>{t_receipt('tax_7')}:</span><span>{transaction.tax?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span></div>
+              {transaction.transportationFee && transaction.transportationFee > 0 && (
+                <div className="flex justify-between"><span>{t_receipt('transportation_fee')}:</span><span>{transaction.transportationFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              )}
               {transaction.appliedStoreCredit && (
                 <div className="flex justify-between"><span>{t_receipt('store_credit')}:</span><span>-{transaction.appliedStoreCredit.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
               )}

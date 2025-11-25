@@ -320,7 +320,7 @@ export const fetchOrders = async (): Promise<any[]> => {
     }));
 };
 
-export const createOrder = async (order: any): Promise<boolean> => {
+export const createOrder = async (order: any): Promise<{ success: boolean; error?: string }> => {
     const { error } = await supabase.from('orders').insert({
         id: order.id,
         date: order.date,
@@ -329,23 +329,27 @@ export const createOrder = async (order: any): Promise<boolean> => {
         customer_type: order.customer.type,
         customer_phone: order.customer.phone,
         customer_address: order.customer.address || order.address,
+        customer: order.customer, // Populate legacy/required 'customer' column
         items: order.items,
         total: order.total,
         transportation_fee: order.transportationFee,
         fulfillment_status: order.status,
+        status: order.status, // Populate legacy/required 'status' column
         order_type: order.type,
+        type: order.type, // Populate legacy/required 'type' column
         delivery_address: order.address,
         notes: order.notes,
         payment_status: order.paymentStatus,
+        paymentStatus: order.paymentStatus, // Populate legacy/required 'paymentStatus' column
         payment_method: order.paymentMethod
     });
 
     if (error) {
         console.error("Error creating order:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
-        return false;
+        return { success: false, error: error.message };
     }
-    return true;
+    return { success: true };
 };
 
 export const updateOrderPaymentStatus = async (orderId: string, paymentStatus: string, paymentMethod?: string): Promise<boolean> => {
@@ -379,7 +383,7 @@ export const updateOrderFulfillmentStatus = async (orderId: string, fulfillmentS
     return true;
 };
 
-export const createTransaction = async (transaction: Transaction): Promise<boolean> => {
+export const createTransaction = async (transaction: Transaction): Promise<{ success: boolean; error?: string }> => {
     const { error } = await supabase.from('transactions').insert({
         id: transaction.id,
         date: transaction.date,
@@ -406,9 +410,9 @@ export const createTransaction = async (transaction: Transaction): Promise<boole
     if (error) {
         console.error("Error creating transaction:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
-        return false;
+        return { success: false, error: error.message };
     }
-    return true;
+    return { success: true };
 };
 
 export const deleteTransaction = async (id: string): Promise<boolean> => {

@@ -413,16 +413,27 @@ const App: React.FC = () => {
     const handleImportCustomers = (newCustomers: NewCustomerData[]) => { console.log("Import Customers", newCustomers); };
     const handleImportSuppliers = (newSuppliers: NewSupplierData[]) => { console.log("Import Suppliers", newSuppliers); };
     const handleImportBills = (billsToImport: any[]) => { console.log("Import Bills", billsToImport); };
-    const handleNewTransaction = async (transactionData: Omit<Transaction, 'payment_status' | 'due_date' | 'paid_amount'>, cartItems: CartItem[], appliedCreditId?: string, carriedForwardBalance?: { customerId: string, amount: number }): Promise<Transaction | undefined> => {
+    const handleNewTransaction = async (transactionData: Partial<Transaction> & Omit<Transaction, 'payment_status' | 'due_date' | 'paid_amount'>, cartItems: CartItem[], appliedCreditId?: string, carriedForwardBalance?: { customerId: string, amount: number }): Promise<Transaction | undefined> => {
         const newTransaction: Transaction = {
             ...transactionData,
-            payment_status: PaymentStatus.PAID, // Default for POS
-            paid_amount: transactionData.total,
-            items: cartItems
-        };
+            payment_status: transactionData.payment_status || PaymentStatus.PAID,
+            paid_amount: transactionData.paid_amount !== undefined ? transactionData.paid_amount : transactionData.total,
+            items: cartItems,
+            // Ensure required fields are present if not in transactionData
+            id: transactionData.id || `${Date.now()}`,
+            date: transactionData.date || new Date().toISOString(),
+            customerName: transactionData.customerName || 'Guest',
+            customerType: transactionData.customerType || 'walkIn',
+            operator: transactionData.operator || currentUser?.name || 'System',
+            paymentMethod: transactionData.paymentMethod || 'Cash',
+            vatIncluded: transactionData.vatIncluded !== undefined ? transactionData.vatIncluded : true,
+            subtotal: transactionData.subtotal || 0,
+            tax: transactionData.tax || 0,
+            total: transactionData.total || 0,
+        } as Transaction;
 
-        const success = await db.createTransaction(newTransaction);
-        if (success) {
+        const result = await db.createTransaction(newTransaction);
+        if (result.success) {
             setTransactions(prev => [newTransaction, ...prev]);
             // Also update product stock locally to reflect change immediately (optional, but good for UI)
             // In a real app, you might re-fetch products or use real-time subscription
@@ -430,17 +441,41 @@ const App: React.FC = () => {
             setProducts(updatedProducts);
             return newTransaction;
         } else {
-            showAlert(t('alert_error'), t('transaction_create_failed'));
+            showAlert(t('alert_error'), `${t('transaction_create_failed')}: ${result.error}`);
             return undefined;
         }
     };
     const handleNewInvoice = (transaction: Omit<Transaction, 'payment_status' | 'paymentMethod' | 'paid_amount'>, cartItems: CartItem[]) => { console.log("New Invoice"); };
     const handleNewOrder = async (order: Order) => {
-        const success = await db.createOrder(order);
-        if (success) {
+        const result = await db.createOrder(order);
+        if (result.success) {
             setOrders(prev => [order, ...prev]);
+
+            // If the order is PAID, also record it as a transaction for Sales History
+            if (order.paymentStatus === PaymentStatus.PAID) {
+                const transactionData: Transaction = {
+                    id: order.id,
+                    date: order.date,
+                    items: order.items,
+                    subtotal: order.total - (order.transportationFee || 0),
+                    tax: 0,
+                    transportationFee: order.transportationFee,
+                    total: order.total,
+                    customerId: order.customer.id,
+                    customerName: order.customer.name,
+                    customerAddress: order.address,
+                    customerPhone: order.customer.phone,
+                    customerType: order.customer.type,
+                    operator: currentUser?.name || 'System',
+                    paymentMethod: order.paymentMethod || 'Cash',
+                    vatIncluded: true,
+                    payment_status: PaymentStatus.PAID,
+                    paid_amount: order.total,
+                };
+                await handleNewTransaction(transactionData, order.items);
+            }
         } else {
-            showAlert(t('alert_error'), 'Failed to create order');
+            showAlert(t('alert_error'), `Failed to create order: ${result.error}`);
         }
     };
     const handleUpdateOrderStatus = async (orderId: string, status: FulfillmentStatus) => {
@@ -453,6 +488,33 @@ const App: React.FC = () => {
         const success = await db.updateOrderPaymentStatus(orderId, status, method);
         if (success) {
             setOrders(prev => prev.map(o => o.id === orderId ? { ...o, paymentStatus: status, paymentMethod: method } : o));
+
+            // If status changed to PAID, create a transaction record
+            if (status === PaymentStatus.PAID) {
+                const order = orders.find(o => o.id === orderId);
+                if (order) {
+                    const transactionData: Transaction = {
+                        id: order.id,
+                        date: new Date().toISOString(), // Use current time of payment, or order.date? Usually payment time is better for cash flow, but order.date links them better. Let's use order.date to keep it simple and consistent with the order.
+                        items: order.items,
+                        subtotal: order.total - (order.transportationFee || 0),
+                        tax: 0,
+                        transportationFee: order.transportationFee,
+                        total: order.total,
+                        customerId: order.customer.id,
+                        customerName: order.customer.name,
+                        customerAddress: order.address,
+                        customerPhone: order.customer.phone,
+                        customerType: order.customer.type,
+                        operator: currentUser?.name || 'System',
+                        paymentMethod: method,
+                        vatIncluded: true,
+                        payment_status: PaymentStatus.PAID,
+                        paid_amount: order.total,
+                    };
+                    await handleNewTransaction(transactionData, order.items);
+                }
+            }
         }
     };
     const handleConvertOrderToInvoice = (order: Order) => { console.log("Convert Order to Invoice", order); };

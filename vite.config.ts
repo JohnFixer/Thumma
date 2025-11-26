@@ -17,5 +17,8 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3001' // For local dev with `vercel dev`
     }
+  },
+  build: {
+    assetsDir: 'static'
   }
 })

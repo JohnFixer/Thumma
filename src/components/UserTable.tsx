@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { User, NewUserData } from '../types';
 import { Role } from '../types';
-import { PencilIcon, TrashIcon, PlusIcon, KeyIcon } from './icons/HeroIcons';
+import { PencilIcon, TrashIcon, PlusIcon, KeyIcon, UserCircleIcon } from './icons/HeroIcons';
 import ConfirmationModal from './ConfirmationModal';
 import EditUserModal from './EditUserModal';
 import type { TranslationKey } from '../translations';
@@ -93,7 +93,11 @@ const UserTable: React.FC<UserTableProps> = ({ users, currentUser, onAddUserClic
                 <tr key={user.id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <UserCircleIcon className="h-10 w-10 text-gray-400" />
+                      )}
                       <span>{user.name}</span>
                     </div>
                   </td>

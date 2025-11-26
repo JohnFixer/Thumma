@@ -459,9 +459,9 @@ export const fetchUsers = async (): Promise<User[]> => {
     if (error) return [];
     return data.map((u: any) => ({
         id: u.id,
-        name: u.full_name || u.username,
+        name: u.full_name || u.username || 'Unknown User',
         role: u.role,
-        avatar: u.avatar_url,
+        avatar: u.avatar_url || '',
         settings: u.settings,
         permissions: u.permissions,
         salary: u.salary,

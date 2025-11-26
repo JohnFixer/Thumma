@@ -1162,7 +1162,6 @@ const translations = {
 export type TranslationKey = keyof typeof translations.en;
 
 export const useTranslations = (language: Language) => {
-  console.log('Translations loaded: v2 (regex fix applied)');
   return useMemo(() => {
     return function t(key: TranslationKey, vars: Record<string, string | number> = {}): string {
       const langDict = translations[language] || translations.en;

@@ -503,7 +503,7 @@ const translations = {
     barcode_exists_desc: 'A product variant with this barcode already exists (SKU: {sku}).',
     // Order/Invoice alerts
     invoice_created: 'Invoice Created',
-    past_invoice_import_success: 'Successfully imported {count} past invoices.',
+
     invoice_created_desc: 'Invoice {invoiceId} has been created successfully.',
     order_created: 'Order Created',
     order_created_desc: 'Unpaid order {orderId} created for {customerName}.',
@@ -1081,7 +1081,7 @@ const translations = {
     barcode_exists_desc: 'มีสินค้าที่ใช้บาร์โค้ดนี้อยู่แล้ว (SKU: {sku})',
     // Order/Invoice alerts
     invoice_created: 'สร้างใบแจ้งหนี้สำเร็จ',
-    past_invoice_import_success: 'นำเข้าใบแจ้งหนี้ย้อนหลังสำเร็จ {count} รายการ',
+
     invoice_created_desc: 'สร้างใบแจ้งหนี้ {invoiceId} สำเร็จ',
     order_created: 'สร้างออเดอร์สำเร็จ',
     order_created_desc: 'สร้างออเดอร์ค้างชำระ {orderId} สำหรับ {customerName}',

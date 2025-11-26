@@ -127,7 +127,19 @@ const App: React.FC = () => {
     });
     const [viewState, setViewState] = useState<any>(null);
     const [language, setLanguage] = useState<Language>('th');
-    const [navigationHistory, setNavigationHistory] = useState<string[]>(['dashboard']);
+    const [navigationHistory, setNavigationHistory] = useState<string[]>(() => {
+        try {
+            const savedUserJSON = localStorage.getItem('currentUser');
+            if (savedUserJSON) {
+                const user = JSON.parse(savedUserJSON);
+                if (user.role && user.role[0] === 'CEO') {
+                    return ['ceo_dashboard'];
+                }
+            }
+        } catch (e) { }
+        return ['dashboard'];
+    });
+    const [historyIndex, setHistoryIndex] = useState(0);
     const [isForcePasswordChangeOpen, setIsForcePasswordChangeOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [hoveredProduct, setHoveredProduct] = useState<Product | null>(null);
@@ -742,7 +754,7 @@ const App: React.FC = () => {
             if (data.newCustomerName) {
                 const newCustomer = await db.createCustomer({
                     name: data.newCustomerName,
-                    type: 'Contractor', // Default type for new customers from import
+                    type: 'contractor', // Default type for new customers from import
                     phone: '',
                     address: ''
                 });
@@ -802,9 +814,9 @@ const App: React.FC = () => {
                 setTransactions(prev => prev.map(t => t.id === invoiceId ? { ...t, ...updates } : t));
                 setIsEditPastInvoiceModalOpen(false);
                 setInvoiceToEdit(null);
-                showAlert(t('alert_success'), t('transaction_updated_success') || 'Transaction updated successfully');
+                showAlert(t('alert_success'), 'Transaction updated successfully');
             } else {
-                showAlert(t('alert_error'), t('transaction_update_failed') || 'Failed to update transaction');
+                showAlert(t('alert_error'), 'Failed to update transaction');
             }
         } catch (error) {
             console.error("Error editing transaction:", error);
@@ -904,12 +916,37 @@ const App: React.FC = () => {
 
     // NAVIGATION & UI LOGIC
     const handleNavigate = (view: string, state?: any) => {
-        if (view === 'dashboard' && currentUser && currentUser.role[0] === 'CEO') {
-            setActiveView('ceo_dashboard');
-        } else {
-            setActiveView(view);
+        // If we're navigating to a new view (not just going back/forward)
+        if (view !== activeView) {
+            const newHistory = navigationHistory.slice(0, historyIndex + 1);
+            newHistory.push(view);
+            setNavigationHistory(newHistory);
+            setHistoryIndex(newHistory.length - 1);
         }
-        setViewState(state || null);
+
+        setActiveView(view);
+        if (state) {
+            setViewState(state);
+        } else {
+            setViewState(null);
+        }
+        setIsSidebarOpen(false); // Close sidebar on mobile when navigating
+    };
+
+    const handleBack = () => {
+        if (historyIndex > 0) {
+            const newIndex = historyIndex - 1;
+            setHistoryIndex(newIndex);
+            setActiveView(navigationHistory[newIndex]);
+        }
+    };
+
+    const handleForward = () => {
+        if (historyIndex < navigationHistory.length - 1) {
+            const newIndex = historyIndex + 1;
+            setHistoryIndex(newIndex);
+            setActiveView(navigationHistory[newIndex]);
+        }
     };
     const handleLogin = (username: string, password: string) => {
         const permissions = getPermissionsFromRoles([Role.ADMIN]);
@@ -948,7 +985,6 @@ const App: React.FC = () => {
     };
     const handleProductMouseEnter = (product: Product, event: React.MouseEvent) => { };
     const handleProductMouseLeave = () => { };
-    const handleBack = () => { };
     const openScanner = (onSuccess: (code: string) => void) => {
         setScanCallback(() => onSuccess);
         setIsScannerOpen(true);
@@ -1067,7 +1103,9 @@ const App: React.FC = () => {
                         t={t}
                         onOpenSidebar={() => setIsSidebarOpen(true)}
                         onBack={handleBack}
-                        canGoBack={navigationHistory.length > 1}
+                        canGoBack={historyIndex > 0}
+                        onForward={handleForward}
+                        canGoForward={historyIndex < navigationHistory.length - 1}
                         originalUser={originalUser}
                         onStopSimulation={handleStopSimulation}
                     />

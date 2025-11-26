@@ -175,7 +175,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onAd
                     <div className="flex text-sm text-gray-600 justify-center">
                       <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-blue-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
                         <span>Upload a file</span>
-                        <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} required />
+                        <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
                       </label>
                     </div>
                     <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>

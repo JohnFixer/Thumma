@@ -67,7 +67,7 @@ import { ProductStatus, Role, FulfillmentStatus, PaymentStatus, BillStatus } fro
 import type { TranslationKey } from './translations';
 import {
     ChartPieIcon, ShoppingCartIcon, CubeIcon, ArrowUturnLeftIcon, UserGroupIcon, TruckIcon,
-    BanknotesIcon, ListBulletIcon, EyeIcon, UsersIcon, UserCircleIcon, ShieldCheckIcon, CalendarDaysIcon, Cog6ToothIcon, ClipboardDocumentListIcon, CurrencyBangladeshiIcon
+    BanknotesIcon, CurrencyBangladeshiIcon, ListBulletIcon, EyeIcon, UsersIcon, UserCircleIcon, ShieldCheckIcon, CalendarDaysIcon, Cog6ToothIcon, ClipboardDocumentListIcon
 } from './components/icons/HeroIcons';
 
 interface BillImportData {
@@ -1034,6 +1034,7 @@ const App: React.FC = () => {
         end_of_day: <CalendarDaysIcon className="h-5 w-5" />,
         shift_history: <ClipboardDocumentListIcon className="h-5 w-5" />,
         activity_log: <ShieldCheckIcon className="h-5 w-5" />,
+        user_management: <UserCircleIcon className="h-5 w-5" />,
     };
 
     const renderView = () => {

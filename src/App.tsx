@@ -103,7 +103,7 @@ const App: React.FC = () => {
             if (savedUserJSON) {
                 const savedUser = JSON.parse(savedUserJSON);
                 // Quick validation to ensure it's a user object and has new permissions
-                if (savedUser && savedUser.id && savedUser.name && savedUser.permissions && savedUser.permissions.category_management) {
+                if (savedUser && savedUser.id && savedUser.name && savedUser.permissions && savedUser.permissions.category_management && savedUser.permissions.sidebar?.user_management) {
                     return savedUser as User;
                 }
             }

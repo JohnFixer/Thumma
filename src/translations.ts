@@ -1168,7 +1168,7 @@ export const useTranslations = (language: Language) => {
       let text = (langDict as any)[key] || key;
 
       for (const varKey in vars) {
-        const regex = new RegExp(`{${varKey} } `, 'g');
+        const regex = new RegExp(`{${varKey}}`, 'g');
         text = text.replace(regex, String(vars[varKey]));
       }
 

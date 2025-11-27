@@ -1,0 +1,3 @@
+
+ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_person TEXT;
+ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS logo_url TEXT;

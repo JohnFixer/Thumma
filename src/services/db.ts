@@ -218,22 +218,27 @@ export const fetchSuppliers = async (): Promise<Supplier[]> => {
     return data.map((s: any) => ({
         id: s.id,
         name: s.name,
-        contactPerson: s.contact_person,
+        contactPerson: s.contactPerson || s.contact_person, // Fallback to snake_case if camelCase is missing (though we know camelCase exists)
         email: s.email,
         phone: s.phone,
         address: s.address,
-        logo: s.logo_url,
-        orderHistory: [] // Not implemented in DB yet
+        logo: s.logo || s.logo_url, // Fallback
+        orderHistory: s.orderHistory || []
     }));
 };
 
 export const createSupplier = async (supplier: NewSupplierData): Promise<Supplier | null> => {
     const { data, error } = await supabase.from('suppliers').insert({
         name: supplier.name,
-        contact_person: supplier.contactPerson,
+        contactPerson: supplier.contactPerson, // Use camelCase to match DB
         email: supplier.email,
         phone: supplier.phone,
         address: supplier.address,
+        logo: supplier.logo, // Use camelCase to match DB
+        // Also populate snake_case columns just in case other parts of the system rely on them, or to keep them in sync?
+        // But the error was about contactPerson being null.
+        // Let's just populate the camelCase ones which are required.
+        contact_person: supplier.contactPerson,
         logo_url: supplier.logo
     }).select().single();
 
@@ -242,12 +247,12 @@ export const createSupplier = async (supplier: NewSupplierData): Promise<Supplie
     return {
         id: data.id,
         name: data.name,
-        contactPerson: data.contact_person,
+        contactPerson: data.contactPerson || data.contact_person,
         email: data.email,
         phone: data.phone,
         address: data.address,
-        logo: data.logo_url,
-        orderHistory: []
+        logo: data.logo || data.logo_url,
+        orderHistory: data.orderHistory || []
     };
 };
 

@@ -29,6 +29,7 @@ import StoreSettingsView from './components/StoreSettingsView';
 import LoginView from './components/LoginView';
 import AccountsPayableView from './components/AccountsPayableView';
 import AddBillModal from './components/AddBillModal';
+import EditBillModal from './components/EditBillModal';
 import RecordPaymentModal from './components/PayBillModal';
 import AccountsReceivableView from './components/AccountsReceivableView';
 import ReceivePaymentModal from './components/ReceivePaymentModal';
@@ -160,6 +161,7 @@ const App: React.FC = () => {
     const [isImportCustomersModalOpen, setIsImportCustomersModalOpen] = useState(false);
     const [isImportSuppliersModalOpen, setIsImportSuppliersModalOpen] = useState(false);
     const [isAddBillModalOpen, setIsAddBillModalOpen] = useState(false);
+    const [isEditBillModalOpen, setIsEditBillModalOpen] = useState(false);
     const [isImportBillsModalOpen, setIsImportBillsModalOpen] = useState(false);
     const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] = useState(false);
     const [isReceivePaymentModalOpen, setIsReceivePaymentModalOpen] = useState(false);
@@ -195,6 +197,7 @@ const App: React.FC = () => {
     const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
 
     const [billToDelete, setBillToDelete] = useState<Bill | null>(null);
+    const [billToEdit, setBillToEdit] = useState<Bill | null>(null);
 
     const [transactionToReceivePayment, setTransactionToReceivePayment] = useState<Transaction | null>(null);
     const [consolidationData, setConsolidationData] = useState<{ customer: Customer, transactions: Transaction[] } | null>(null);
@@ -449,6 +452,23 @@ const App: React.FC = () => {
             showAlert(t('alert_success'), t('payment_recorded_successfully'));
         } else {
             showAlert(t('alert_error'), t('failed_to_record_payment'));
+        }
+    };
+    const handleEditBillClick = (bill: Bill) => {
+        setBillToEdit(bill);
+        setIsEditBillModalOpen(true);
+    };
+
+    const handleUpdateBill = async (billData: NewBillData) => {
+        if (!billToEdit) return;
+        const success = await db.updateBill(billToEdit.id, billData);
+        if (success) {
+            setBills(prev => prev.map(b => b.id === billToEdit.id ? { ...b, ...billData } : b));
+            setIsEditBillModalOpen(false);
+            setBillToEdit(null);
+            showAlert(t('alert_success'), t('bill_updated_success'));
+        } else {
+            showAlert(t('alert_error'), t('bill_update_failed'));
         }
     };
     const handleBillUpdate = (updatedBill: Bill) => { console.log("Update Bill", updatedBill); };
@@ -1086,7 +1106,7 @@ const App: React.FC = () => {
             case 'returns': return <ReturnsView transactions={transactions} products={products} onProcessReturn={handleProcessReturn} t={t} language={language} />;
             case 'customers': return <CustomersView customers={customers} onAddCustomer={handleAddCustomer} onEditCustomer={handleEditCustomer} onDeleteCustomer={handleDeleteCustomer} onImportCustomersClick={() => setIsImportCustomersModalOpen(true)} t={t} currentUser={currentUser} showAlert={showAlert} />;
             case 'suppliers': return <SuppliersView suppliers={suppliers} onAddSupplier={() => setIsAddSupplierModalOpen(true)} onEditSupplier={handleEditSupplier} onDeleteSupplier={handleDeleteSupplier} onImportSuppliersClick={() => setIsImportSuppliersModalOpen(true)} t={t} currentUser={currentUser} showAlert={showAlert} />;
-            case 'accounts_payable': return <AccountsPayableView bills={bills} suppliers={suppliers} onAddBillClick={() => setIsAddBillModalOpen(true)} onPayBillClick={(b) => { setBillToRecordPaymentFor(b); setIsRecordPaymentModalOpen(true); }} onDeleteBill={handleDeleteBill} onImportBillsClick={() => setIsImportBillsModalOpen(true)} t={t} language={language} currentUser={currentUser} />;
+            case 'accounts_payable': return <AccountsPayableView bills={bills} suppliers={suppliers} onAddBillClick={() => setIsAddBillModalOpen(true)} onEditBillClick={handleEditBillClick} onPayBillClick={(b) => { setBillToRecordPaymentFor(b); setIsRecordPaymentModalOpen(true); }} onDeleteBill={handleDeleteBill} onImportBillsClick={() => setIsImportBillsModalOpen(true)} t={t} language={language} currentUser={currentUser} />;
             case 'accounts_receivable': return <AccountsReceivableView transactions={transactions} customers={customers} onReceivePaymentClick={(t) => { setTransactionToReceivePayment(t); setIsReceivePaymentModalOpen(true); }} onCreateConsolidatedInvoice={(c, txs) => { setConsolidationData({ customer: c, transactions: txs }); setIsConsolidatedInvoiceModalOpen(true); }} onRecordPastInvoiceClick={() => setIsRecordPastInvoiceModalOpen(true)} onImportPastInvoicesClick={() => setIsImportPastInvoicesModalOpen(true)} onEditPastInvoiceClick={(t) => { setInvoiceToEdit(t); setIsEditPastInvoiceModalOpen(true); }} onDeleteTransaction={handleDeleteTransaction} onUndoConsolidationClick={(t) => { setTransactionToUndo(t); setIsUndoConfirmationModalOpen(true); }} t={t} language={language} currentUser={currentUser} viewState={viewState} onNavigate={handleNavigate} />;
             case 'sales_history': return <SalesHistoryView transactions={transactions} onDeleteTransaction={handleDeleteTransaction} onReceivePaymentClick={(t) => { setTransactionToReceivePayment(t); setIsReceivePaymentModalOpen(true); }} onEditPastInvoiceClick={(t) => { setInvoiceToEdit(t); setIsEditPastInvoiceModalOpen(true); }} onUndoConsolidationClick={(t) => { setTransactionToUndo(t); setIsUndoConfirmationModalOpen(true); }} storeSettings={storeSettings} t={t} language={language} currentUser={currentUser} />;
             case 'order_fulfillment': return <OrderFulfillmentView orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} onUpdateOrderPaymentStatus={handleUpdateOrderPaymentStatus} onConvertOrderToInvoice={handleConvertOrderToInvoice} storeSettings={storeSettings} t={t} language={language} />;
@@ -1162,6 +1182,7 @@ const App: React.FC = () => {
             <AddSupplierModal isOpen={isAddSupplierModalOpen} onClose={() => setIsAddSupplierModalOpen(false)} onAddSupplier={handleAddSupplier} showAlert={showAlert} t={t} />
             <ImportSuppliersModal isOpen={isImportSuppliersModalOpen} onClose={() => setIsImportSuppliersModalOpen(false)} onApplyImport={handleImportSuppliers} t={t} />
             <AddBillModal isOpen={isAddBillModalOpen} onClose={() => setIsAddBillModalOpen(false)} onAddBill={handleAddBill} suppliers={suppliers} t={t} showAlert={showAlert} />
+            <EditBillModal isOpen={isEditBillModalOpen} onClose={() => { setIsEditBillModalOpen(false); setBillToEdit(null); }} onEditBill={handleUpdateBill} bill={billToEdit} suppliers={suppliers} showAlert={showAlert} t={t} />
             <ImportBillsModal isOpen={isImportBillsModalOpen} onClose={() => setIsImportBillsModalOpen(false)} onApplyImport={handleImportBills} suppliers={suppliers} t={t} />
             <RecordPaymentModal isOpen={isRecordPaymentModalOpen} onClose={() => setIsRecordPaymentModalOpen(false)} onConfirm={handleRecordBillPayment} bill={billToRecordPaymentFor} t={t} />
 

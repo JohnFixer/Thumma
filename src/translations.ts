@@ -482,7 +482,9 @@ const translations = {
     transaction_delete_failed: 'Failed to delete transaction.',
     // Bill alerts
     bill_added_success: 'Bill added successfully.',
+    bill_updated_success: 'Bill updated successfully.',
     bill_add_failed: 'Failed to add bill.',
+    bill_update_failed: 'Failed to update bill.',
     bill_not_found: 'Bill not found',
     // User alerts
     user_updated_success: 'User updated successfully.',
@@ -1064,7 +1066,9 @@ const translations = {
     transaction_delete_failed: 'ไม่สามารถลบธุรกรรมได้',
     // Bill alerts
     bill_added_success: 'เพิ่มบิลสำเร็จ',
-    bill_add_failed: 'ไม่สามารถเพิ่มบิลได้',
+    bill_updated_success: 'อัปเดตบิลสำเร็จ',
+    bill_add_failed: 'เพิ่มบิลไม่สำเร็จ',
+    bill_update_failed: 'อัปเดตบิลไม่สำเร็จ',
     bill_not_found: 'ไม่พบบิล',
     // User alerts
     user_updated_success: 'อัปเดตข้อมูลผู้ใช้สำเร็จ',

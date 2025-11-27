@@ -3,7 +3,7 @@ import type { Bill, Supplier, User, Language } from '../types';
 import { BillStatus, Role } from '../types';
 import StatsCard from './StatsCard';
 import ConfirmationModal from './ConfirmationModal';
-import { PlusIcon, MagnifyingGlassIcon, BanknotesIcon, ExclamationTriangleIcon, ClockIcon, TrashIcon, ArrowUpTrayIcon, ChevronUpIcon, ChevronDownIcon } from './icons/HeroIcons';
+import { PlusIcon, MagnifyingGlassIcon, BanknotesIcon, ExclamationTriangleIcon, ClockIcon, TrashIcon, ArrowUpTrayIcon, ChevronUpIcon, ChevronDownIcon, PencilIcon } from './icons/HeroIcons';
 import type { TranslationKey } from '../translations';
 
 interface AccountsPayableViewProps {
@@ -12,6 +12,7 @@ interface AccountsPayableViewProps {
     currentUser: User;
     onAddBillClick: () => void;
     onImportBillsClick: () => void;
+    onEditBillClick: (bill: Bill) => void;
     onPayBillClick: (bill: Bill) => void; // This will now open the record payment modal
     onDeleteBill: (billId: string) => void;
     t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
@@ -21,7 +22,7 @@ interface AccountsPayableViewProps {
 type StatusFilter = 'All' | 'Due' | 'Overdue' | 'Paid';
 type CardFilter = 'total' | 'overdue' | 'dueSoon' | null;
 
-const AccountsPayableView: React.FC<AccountsPayableViewProps> = ({ bills, suppliers, currentUser, onAddBillClick, onImportBillsClick, onPayBillClick, onDeleteBill, t, language }) => {
+const AccountsPayableView: React.FC<AccountsPayableViewProps> = ({ bills, suppliers, currentUser, onAddBillClick, onImportBillsClick, onEditBillClick, onPayBillClick, onDeleteBill, t, language }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
     const [cardFilter, setCardFilter] = useState<CardFilter>(null);
@@ -255,6 +256,11 @@ const AccountsPayableView: React.FC<AccountsPayableViewProps> = ({ bills, suppli
                                                 {bill.status !== BillStatus.PAID && canWrite && (
                                                     <button onClick={() => onPayBillClick(bill)} className="text-xs px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700">
                                                         {t('record_payment')}
+                                                    </button>
+                                                )}
+                                                {canWrite && (
+                                                    <button onClick={() => onEditBillClick(bill)} className="text-blue-600 hover:text-blue-800 p-1" title={t('edit')}>
+                                                        <PencilIcon className="h-4 w-4" />
                                                     </button>
                                                 )}
                                                 {canDelete && (

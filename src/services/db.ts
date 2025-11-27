@@ -535,6 +535,23 @@ export const createBill = async (bill: NewBillData): Promise<Bill | null> => {
     };
 };
 
+export const updateBill = async (id: string, bill: NewBillData): Promise<boolean> => {
+    const { error } = await supabase.from('bills').update({
+        supplier_id: bill.supplierId,
+        invoice_number: bill.invoiceNumber,
+        bill_date: bill.billDate,
+        due_date: bill.dueDate,
+        amount: bill.amount,
+        notes: bill.notes
+    }).eq('id', id);
+
+    if (error) {
+        console.error("Error updating bill:", error);
+        return false;
+    }
+    return true;
+};
+
 export const recordBillPayment = async (billId: string, payment: { amount: number, date: string, method: string, reference: string }): Promise<boolean> => {
     // 1. Fetch current bill
     const { data: bill, error: fetchError } = await supabase.from('bills').select('*').eq('id', billId).single();

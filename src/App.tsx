@@ -398,7 +398,15 @@ const App: React.FC = () => {
         }
     };
 
-    const handleEditSupplier = (supplierId: string, supplierData: NewSupplierData) => { console.log("Edit Supplier", supplierId, supplierData); }; // TODO: Implement updateSupplier in db.ts if needed
+    const handleEditSupplier = async (supplierId: string, supplierData: NewSupplierData) => {
+        const success = await db.updateSupplier(supplierId, supplierData);
+        if (success) {
+            setSuppliers(prev => prev.map(s => s.id === supplierId ? { ...s, ...supplierData } : s));
+            showAlert(t('alert_success'), t('supplier_updated_success'));
+        } else {
+            showAlert(t('alert_error'), t('supplier_update_failed'));
+        }
+    };
 
     const handleDeleteSupplier = async (supplierId: string) => {
         const success = await db.deleteSupplier(supplierId);
@@ -446,7 +454,33 @@ const App: React.FC = () => {
     const handleBillUpdate = (updatedBill: Bill) => { console.log("Update Bill", updatedBill); };
     const handleDeleteBill = (billId: string) => { console.log("Delete Bill", billId); };
     const handleImportCustomers = (newCustomers: NewCustomerData[]) => { console.log("Import Customers", newCustomers); };
-    const handleImportSuppliers = (newSuppliers: NewSupplierData[]) => { console.log("Import Suppliers", newSuppliers); };
+    const handleImportSuppliers = async (newSuppliers: NewSupplierData[]) => {
+        let importedCount = 0;
+        let errorCount = 0;
+        const createdSuppliers: Supplier[] = [];
+
+        for (const supplierData of newSuppliers) {
+            const newSupplier = await db.createSupplier(supplierData);
+            if (newSupplier) {
+                createdSuppliers.push(newSupplier);
+                importedCount++;
+            } else {
+                errorCount++;
+            }
+        }
+
+        if (createdSuppliers.length > 0) {
+            setSuppliers(prev => [...prev, ...createdSuppliers]);
+        }
+
+        setIsImportSuppliersModalOpen(false);
+
+        if (errorCount === 0) {
+            showAlert(t('alert_success'), t('suppliers_imported_success', { count: importedCount }));
+        } else {
+            showAlert(t('alert_warning'), t('suppliers_imported_partial', { success: importedCount, failed: errorCount }));
+        }
+    };
     const handleImportBills = (billsToImport: any[]) => { console.log("Import Bills", billsToImport); };
     const handleNewTransaction = async (transactionData: Partial<Transaction> & Omit<Transaction, 'payment_status' | 'due_date' | 'paid_amount'>, cartItems: CartItem[], appliedCreditId?: string, carriedForwardBalance?: { customerId: string, amount: number }): Promise<Transaction | undefined> => {
         const newTransaction: Transaction = {
@@ -1125,6 +1159,8 @@ const App: React.FC = () => {
             <BarcodeScannerModal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} onScanSuccess={handleScanSuccess} />
             <BarcodeDisplayModal isOpen={isBarcodeDisplayOpen} onClose={() => setIsBarcodeDisplayOpen(false)} product={productToView} variant={variantToShowBarcode} t={t} language={language} />
             <ImportProductsModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onApplyImport={handleImportProducts} products={products} t={t} />
+            <AddSupplierModal isOpen={isAddSupplierModalOpen} onClose={() => setIsAddSupplierModalOpen(false)} onAddSupplier={handleAddSupplier} showAlert={showAlert} t={t} />
+            <ImportSuppliersModal isOpen={isImportSuppliersModalOpen} onClose={() => setIsImportSuppliersModalOpen(false)} onApplyImport={handleImportSuppliers} t={t} />
             <AddBillModal isOpen={isAddBillModalOpen} onClose={() => setIsAddBillModalOpen(false)} onAddBill={handleAddBill} suppliers={suppliers} t={t} showAlert={showAlert} />
             <ImportBillsModal isOpen={isImportBillsModalOpen} onClose={() => setIsImportBillsModalOpen(false)} onApplyImport={handleImportBills} suppliers={suppliers} t={t} />
             <RecordPaymentModal isOpen={isRecordPaymentModalOpen} onClose={() => setIsRecordPaymentModalOpen(false)} onConfirm={handleRecordBillPayment} bill={billToRecordPaymentFor} t={t} />

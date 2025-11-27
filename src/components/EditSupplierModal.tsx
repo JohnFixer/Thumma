@@ -34,9 +34,9 @@ const EditSupplierModal: React.FC<EditSupplierModalProps> = ({ isOpen, onClose, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !contactPerson || !email) {
-        showAlert(t('missing_information'), t('add_supplier_validation'));
-        return;
+    if (!name) {
+      showAlert(t('missing_information'), t('add_supplier_validation'));
+      return;
     }
     onEditSupplier({ name, logo, contactPerson, email, phone, address });
   };
@@ -54,7 +54,7 @@ const EditSupplierModal: React.FC<EditSupplierModalProps> = ({ isOpen, onClose, 
         </div>
         <form onSubmit={handleSubmit}>
           <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-             <div>
+            <div>
               <label htmlFor="s-edit-name" className="block text-sm font-medium text-text-secondary">Supplier Name</label>
               <input type="text" id="s-edit-name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" required />
             </div>
@@ -74,7 +74,7 @@ const EditSupplierModal: React.FC<EditSupplierModalProps> = ({ isOpen, onClose, 
               <label htmlFor="s-edit-address" className="block text-sm font-medium text-text-secondary">{t('address')}</label>
               <textarea id="s-edit-address" value={address} onChange={(e) => setAddress(e.target.value)} rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" />
             </div>
-             <div>
+            <div>
               <label htmlFor="s-edit-logo" className="block text-sm font-medium text-text-secondary">Logo URL</label>
               <input type="url" id="s-edit-logo" value={logo} onChange={(e) => setLogo(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 bg-background" />
             </div>

@@ -256,6 +256,22 @@ export const createSupplier = async (supplier: NewSupplierData): Promise<Supplie
     };
 };
 
+export const updateSupplier = async (id: string, supplier: NewSupplierData): Promise<boolean> => {
+    const { error } = await supabase.from('suppliers').update({
+        name: supplier.name,
+        contactPerson: supplier.contactPerson,
+        email: supplier.email,
+        phone: supplier.phone,
+        address: supplier.address,
+        logo: supplier.logo,
+        // Also populate snake_case columns
+        contact_person: supplier.contactPerson,
+        logo_url: supplier.logo
+    }).eq('id', id);
+
+    return !error;
+};
+
 export const deleteSupplier = async (id: string): Promise<boolean> => {
     const { error } = await supabase.from('suppliers').delete().eq('id', id);
     return !error;
@@ -500,6 +516,7 @@ export const createBill = async (bill: NewBillData): Promise<Bill | null> => {
         bill_date: bill.billDate,
         due_date: bill.dueDate,
         amount: bill.amount,
+        status: 'Due',
         notes: bill.notes
     }).select().single();
 

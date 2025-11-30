@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                 ) : (
                     <WrenchScrewdriverIcon className="h-14 w-14 text-secondary flex-shrink-0" />
                 )}
-                <h1 className="text-lg font-bold leading-tight">{storeSettings?.store_name ? storeSettings.store_name[language] : 'บจก ธรรมะคอนกรีต'}</h1>
+                <h1 className="text-lg font-bold leading-tight">{storeSettings?.store_name ? storeSettings.store_name[language] : 'บจก ธรรมะคอนกรีต'} <span className="text-xs font-normal opacity-70">(v1.1)</span></h1>
             </div>
 
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-700 scrollbar-track-transparent">

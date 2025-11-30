@@ -586,6 +586,20 @@ const translations = {
     no_outstanding_invoices: 'No outstanding invoices',
     return_process_failed: 'Failed to process return.',
     credit_create_failed: 'Failed to create store credit.',
+    has_returns: 'Has Returns',
+    returned: 'Returned',
+    returned_items: {
+      en: 'Returned Items',
+      th: 'สินค้าที่คืน'
+    },
+    payment_received_success: {
+      en: 'Payment received successfully',
+      th: 'รับชำระเงินเรียบร้อยแล้ว'
+    },
+    payment_receive_failed: {
+      en: 'Failed to receive payment',
+      th: 'ไม่สามารถรับชำระเงินได้'
+    },
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -1168,6 +1182,9 @@ const translations = {
     no_outstanding_invoices: 'ไม่มีใบแจ้งหนี้ค้างชำระ',
     return_process_failed: 'ไม่สามารถดำเนินการคืนสินค้าได้',
     credit_create_failed: 'ไม่สามารถสร้างเครดิตร้านค้าได้',
+    has_returns: 'มีการคืนสินค้า',
+    returned: 'คืนแล้ว',
+    returned_items: 'รายการที่คืน',
   }
 };
 

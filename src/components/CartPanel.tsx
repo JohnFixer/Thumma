@@ -43,6 +43,8 @@ interface CartPanelProps {
   storeSettings: StoreSettings | null;
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
   language: Language;
+  transactionDate: string;
+  onTransactionDateChange: (date: string) => void;
 }
 
 const CartPanel: React.FC<CartPanelProps> = ({
@@ -51,7 +53,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
   onCustomerPhoneChange, onSelectCustomer, customerType, onCustomerTypeChange, isVatIncluded, onVatToggle,
   appliedCredit, onApplyCredit, orderType, onOrderTypeChange, products, onNewUnpaidOrder,
   customerOutstandingBalance, carriedForwardBalance, onCarryForwardBalance, onAddMiscItemClick,
-  transportationFee, setTransportationFee, storeSettings, t, language
+  transportationFee, setTransportationFee, storeSettings, t, language, transactionDate, onTransactionDateChange
 }) => {
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -192,6 +194,16 @@ const CartPanel: React.FC<CartPanelProps> = ({
               <button onClick={onClearCart} className="text-sm text-red-600 hover:text-red-800 font-medium">{t('clear_all')}</button>
             )}
           </div>
+        </div>
+
+        <div className="px-4 pt-2 pb-0">
+          <label className="block text-xs font-medium text-text-secondary mb-1">{t('date')}</label>
+          <input
+            type="date"
+            value={transactionDate}
+            onChange={(e) => onTransactionDateChange(e.target.value)}
+            className="block w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm"
+          />
         </div>
 
         <div className="p-4 border-b">
@@ -401,7 +413,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
             {renderActionButtons()}
           </div>
         </div>
-      </div>
+      </div >
       <SalesAssistantModal
         isOpen={isAssistantModalOpen}
         onClose={() => setIsAssistantModalOpen(false)}

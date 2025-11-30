@@ -528,6 +528,14 @@ const App: React.FC = () => {
             // In a real app, you might re-fetch products or use real-time subscription
             const updatedProducts = await db.fetchProducts();
             setProducts(updatedProducts);
+
+            if (appliedCreditId) {
+                await db.markStoreCreditAsUsed(appliedCreditId);
+                // Refresh store credits to update the UI
+                const updatedCredits = await db.fetchStoreCredits();
+                setStoreCredits(updatedCredits);
+            }
+
             return newTransaction;
         } else {
             showAlert(t('alert_error'), `${t('transaction_create_failed')}: ${result.error}`);
@@ -607,7 +615,27 @@ const App: React.FC = () => {
         }
     };
     const handleConvertOrderToInvoice = (order: Order) => { console.log("Convert Order to Invoice", order); };
-    const handleReceivePayment = (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod) => { console.log("Receive Payment", transactionId, paymentAmount, paymentMethod); };
+    const handleReceivePayment = async (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod) => {
+        const updatedTransaction = await db.receivePayment(transactionId, paymentAmount, paymentMethod);
+        if (updatedTransaction) {
+            setTransactions(prev => prev.map(t => t.id === transactionId ? updatedTransaction : t));
+            setIsReceivePaymentModalOpen(false);
+            setTransactionToReceivePayment(null);
+            showAlert(t('alert_success'), t('payment_received_success'));
+
+            // Log activity
+            const logId = Date.now().toString();
+            const newLog: ActivityLog = {
+                id: logId,
+                userId: currentUser?.id || 'unknown',
+                action: `Received payment of ${paymentAmount} for transaction ${transactionId}`,
+                timestamp: new Date().toISOString()
+            };
+            setActivityLogs(prev => [newLog, ...prev]);
+        } else {
+            showAlert(t('alert_error'), t('payment_receive_failed'));
+        }
+    };
     const handleCreateConsolidatedInvoice = (customer: Customer, transactionsToConsolidate: Transaction[]) => { console.log("Create Consolidated Invoice", customer, transactionsToConsolidate); };
     const handleRecordPastInvoice = async (data: PastInvoiceData) => {
         // 1. Determine Customer
@@ -1148,6 +1176,15 @@ const App: React.FC = () => {
                     onStopSimulation={handleStopSimulation}
                 />
             )}
+
+            {/* Mobile Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-[90] md:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             <div className="flex-1 flex flex-col overflow-hidden">
                 {currentUser && activeView !== 'ceo_dashboard' && (
                     <Header

@@ -153,6 +153,21 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
                 )}
               </tbody>
             </table>
+            {transaction.returnedItems && transaction.returnedItems.length > 0 && (
+              <div className="border-t border-dashed border-black mt-2 pt-1 font-sans">
+                <p className="font-bold text-xs mb-1">{t_receipt('returned_items')}:</p>
+                <table className="w-full text-xs">
+                  <tbody>
+                    {transaction.returnedItems.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="text-left">{typeof item.name === 'object' ? (item.name?.[receiptLanguage] || item.name?.en) : item.name} (x{item.quantity})</td>
+                        <td className="text-right text-red-600">-{item.refundAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             <div className="border-t border-dashed border-black mt-2 pt-1 font-sans">
               <div className="flex justify-between"><span>{t_receipt('subtotal')}:</span><span>{transaction.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span></div>
               <div className="flex justify-between"><span>{t_receipt('tax_7')}:</span><span>{transaction.tax?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}</span></div>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Transaction, User, Language, StoreSettings, PaymentMethod } from '../types';
 import { Role, PaymentStatus } from '../types';
-import { MagnifyingGlassIcon, PrinterIcon, TrashIcon, ClipboardDocumentListIcon, PencilIcon, BackspaceIcon } from './icons/HeroIcons';
+import { MagnifyingGlassIcon, PrinterIcon, TrashIcon, ClipboardDocumentListIcon, PencilIcon, BackspaceIcon, ArrowUturnLeftIcon } from './icons/HeroIcons';
 import ReceiptModal from './ReceiptModal';
 import ConfirmationModal from './ConfirmationModal';
 import type { TranslationKey } from '../translations';
@@ -109,7 +109,15 @@ const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({ transactions, curre
                                     const isConsolidated = transaction.id.startsWith('C-INV-');
                                     return (
                                         <tr key={transaction.id} className="bg-white border-b hover:bg-gray-50">
-                                            <td className="px-6 py-4 font-mono text-xs font-medium text-gray-900">{transaction.id}</td>
+                                            <td className="px-6 py-4 font-mono text-xs font-medium text-gray-900">
+                                                {transaction.id}
+                                                {transaction.returnedItems && transaction.returnedItems.length > 0 && (
+                                                    <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" title={t('has_returns')}>
+                                                        <ArrowUturnLeftIcon className="h-3 w-3 mr-1" />
+                                                        {t('returned')}
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-6 py-4">{new Date(transaction.date).toLocaleString()}</td>
                                             <td className="px-6 py-4">{transaction.customerName}</td>
                                             <td className="px-6 py-4 text-right font-semibold">฿{transaction.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

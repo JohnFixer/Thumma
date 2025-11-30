@@ -54,25 +54,25 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
     const isPrivilegedUser = realUser.role.includes(Role.ADMIN) || realUser.role.includes(Role.CEO);
 
     return (
-        <aside className={`bg-primary text-white flex flex-col p-4 no-print w-64 fixed inset-y-0 left-0 z-[100] transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <aside className={`bg-primary text-white flex flex-col p-4 no-print w-64 fixed inset-y-0 left-0 z-[100] transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0 ${isOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}`}>
             <div className="flex items-center gap-3 mb-8 px-2 flex-shrink-0">
                 {storeSettings?.logo_url ? (
-                    <img src={storeSettings.logo_url} alt="Store Logo" className="h-[4.5rem] w-auto" />
+                    <img src={storeSettings.logo_url} alt="Store Logo" className="h-[4.5rem] w-auto object-contain" />
                 ) : (
-                    <WrenchScrewdriverIcon className="h-14 w-14 text-secondary" />
+                    <WrenchScrewdriverIcon className="h-14 w-14 text-secondary flex-shrink-0" />
                 )}
-                <h1 className="text-lg font-bold">{storeSettings?.store_name ? storeSettings.store_name[language] : 'บจก ธรรมะคอนกรีต'}</h1>
+                <h1 className="text-lg font-bold leading-tight">{storeSettings?.store_name ? storeSettings.store_name[language] : 'บจก ธรรมะคอนกรีต'}</h1>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-700 scrollbar-track-transparent">
                 <button
                     onClick={() => handleNavigation('my_profile')}
-                    className="flex items-center text-left w-full gap-3 mb-4 p-3 bg-blue-900/50 rounded-lg hover:bg-blue-900 transition-colors"
+                    className="flex items-center text-left w-full gap-3 mb-4 p-3 bg-blue-900/50 rounded-lg hover:bg-blue-900 transition-colors flex-shrink-0"
                 >
-                    <img src={currentUser.avatar} alt={currentUser.name} className="h-10 w-10 rounded-full border-2 border-secondary" />
-                    <div>
-                        <p className="font-semibold">{currentUser.name}</p>
-                        <p className="text-xs text-blue-200">{currentUser.role.map(getTranslatedRole).join(', ')}</p>
+                    <img src={currentUser.avatar} alt={currentUser.name} className="h-10 w-10 rounded-full border-2 border-secondary flex-shrink-0" />
+                    <div className="min-w-0">
+                        <p className="font-semibold truncate">{currentUser.name}</p>
+                        <p className="text-xs text-blue-200 truncate">{currentUser.role.map(getTranslatedRole).join(', ')}</p>
                     </div>
                 </button>
 
@@ -81,10 +81,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                         {originalUser ? (
                             <div>
                                 <p className="text-xs font-medium text-blue-200">Simulation Active</p>
-                                <p className="font-semibold text-white">As: {currentUser.role.map(getTranslatedRole).join(', ')}</p>
+                                <p className="font-semibold text-white truncate">As: {currentUser.role.map(getTranslatedRole).join(', ')}</p>
                                 <button
                                     onClick={onStopSimulation}
-                                    className="w-full mt-2 text-center text-sm font-medium text-white bg-secondary py-1.5 rounded-md hover:bg-orange-700"
+                                    className="w-full mt-2 text-center text-sm font-medium text-white bg-secondary py-1.5 rounded-md hover:bg-orange-700 transition-colors"
                                 >
                                     Stop Simulation
                                 </button>
@@ -100,7 +100,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                                 >
                                     <option value="" disabled>Select a role...</option>
                                     {Object.values(Role).filter(r => r !== Role.CEO).map(role => (
-
                                         <option key={role as string} value={role as string}>{t(`role_${(role as string).toLowerCase().replace(/\s/g, '_')}` as TranslationKey)}</option>
                                     ))}
                                 </select>
@@ -109,73 +108,73 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                     </div>
                 )}
 
-                <nav className="space-y-2">
+                <nav className="space-y-1">
                     {Object.entries(visibleNavLinks).map(([name, icon]) => (
                         <button
                             key={name}
                             onClick={() => handleNavigation(name)}
-                            className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer ${activeView === name
-                                ? 'bg-secondary text-white'
-                                : 'text-blue-100 hover:bg-blue-800'
+                            className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap ${activeView === name
+                                ? 'bg-secondary text-white shadow-sm'
+                                : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                                 }`}
                         >
-                            <span className="text-lg">{icon}</span>
-                            {t(name as TranslationKey)}
+                            <span className="text-lg flex-shrink-0">{icon}</span>
+                            <span className="truncate">{t(name as TranslationKey)}</span>
                         </button>
                     ))}
                 </nav>
             </div>
 
-            <div className="border-t border-blue-700/50 pt-2 space-y-1 flex-shrink-0">
+            <div className="border-t border-blue-700/50 pt-2 space-y-1 flex-shrink-0 mt-2">
                 {canSeeStoreSettings && (
                     <button
                         onClick={() => handleNavigation('store_settings')}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${activeView === 'store_settings'
-                            ? 'bg-secondary text-white'
-                            : 'text-blue-100 hover:bg-blue-800'
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap ${activeView === 'store_settings'
+                            ? 'bg-secondary text-white shadow-sm'
+                            : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                             }`}
                     >
-                        <Cog6ToothIcon className="h-5 w-5" />
-                        {t('store_settings')}
+                        <Cog6ToothIcon className="h-5 w-5 flex-shrink-0" />
+                        <span className="truncate">{t('store_settings')}</span>
                     </button>
                 )}
                 {canManageDashboard && (
                     <button
                         onClick={() => handleNavigation('dashboard_management')}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${activeView === 'dashboard_management'
-                            ? 'bg-secondary text-white'
-                            : 'text-blue-100 hover:bg-blue-800'
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap ${activeView === 'dashboard_management'
+                            ? 'bg-secondary text-white shadow-sm'
+                            : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                             }`}
                     >
-                        <PuzzlePieceIcon className="h-5 w-5" />
-                        {t('dashboard_management')}
+                        <PuzzlePieceIcon className="h-5 w-5 flex-shrink-0" />
+                        <span className="truncate">{t('dashboard_management')}</span>
                     </button>
                 )}
                 {canSeeStoreSettings && (
                     <button
                         onClick={() => handleNavigation('category_management')}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${activeView === 'category_management'
-                            ? 'bg-secondary text-white'
-                            : 'text-blue-100 hover:bg-blue-800'
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap ${activeView === 'category_management'
+                            ? 'bg-secondary text-white shadow-sm'
+                            : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                             }`}
                     >
-                        <Cog6ToothIcon className="h-5 w-5" />
-                        {t('category_management')}
+                        <Cog6ToothIcon className="h-5 w-5 flex-shrink-0" />
+                        <span className="truncate">{t('category_management')}</span>
                     </button>
                 )}
                 <button
                     onClick={() => handleNavigation('my_profile')}
-                    className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${activeView === 'my_profile'
-                        ? 'bg-secondary text-white'
-                        : 'text-blue-100 hover:bg-blue-800'
+                    className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap ${activeView === 'my_profile'
+                        ? 'bg-secondary text-white shadow-sm'
+                        : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                         }`}
                 >
-                    <UserCircleIcon className="h-5 w-5" />
-                    {t('my_profile')}
+                    <UserCircleIcon className="h-5 w-5 flex-shrink-0" />
+                    <span className="truncate">{t('my_profile')}</span>
                 </button>
-                <button onClick={handleLogoutClick} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 transition-colors duration-200">
-                    <ArrowLeftOnRectangleIcon className="h-5 w-5" />
-                    {t('logout')}
+                <button onClick={handleLogoutClick} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors duration-200 whitespace-nowrap">
+                    <ArrowLeftOnRectangleIcon className="h-5 w-5 flex-shrink-0" />
+                    <span className="truncate">{t('logout')}</span>
                 </button>
             </div>
         </aside>

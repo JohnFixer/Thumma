@@ -48,6 +48,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
     const [appliedCredit, setAppliedCredit] = useState<StoreCredit | null>(null);
     const [carriedForwardBalance, setCarriedForwardBalance] = useState(0);
     const [transportationFee, setTransportationFee] = useState(0);
+    const [transactionDate, setTransactionDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -169,6 +170,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
         setCarriedForwardBalance(0);
         setTransportationFee(0);
         setIsNewCustomer(false);
+        setTransactionDate(new Date().toISOString().split('T')[0]);
     }, [currentUser.settings?.defaultCustomerType]);
 
     const handleSelectCustomer = (customer: Customer) => {
@@ -459,7 +461,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
 
             const newTransactionData: Omit<Transaction, 'payment_status' | 'due_date' | 'paid_amount' | 'transportationFee'> & { transportationFee?: number } = {
                 id: `${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-                date: new Date().toISOString(),
+                date: new Date(transactionDate).toISOString(),
                 items: itemsForTx,
                 subtotal,
                 tax,
@@ -579,6 +581,8 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 storeSettings={storeSettings}
                 t={t}
                 language={language}
+                transactionDate={transactionDate}
+                onTransactionDateChange={setTransactionDate}
             />
             <PaymentModal
                 isOpen={isPaymentModalOpen}

@@ -8,8 +8,10 @@ import type {
     ShiftReport,
     Bill, NewBillData, StoreSettings,
     Category, NewCategoryData,
-    StoreCredit, ReturnedItem
+    Language, PaymentMethod,
+    StoreCredit, ReturnedItem, PastInvoiceData, BillPayment, CustomerType, NewProductVariantData
 } from '../types';
+import { PaymentStatus } from '../types';
 
 // --- Products ---
 
@@ -283,24 +285,34 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
     const { data, error } = await supabase.from('transactions').select('*').order('date', { ascending: false });
     if (error) return [];
 
-    return data.map((t: any) => ({
-        ...t,
-        // Map snake_case to camelCase, with fallbacks for legacy data
-        customerName: t.customer_name || t.customerName,
-        customerType: t.customer_type || t.customerType,
-        customerAddress: t.customer_address || t.customerAddress,
-        customerPhone: t.customer_phone || t.customerPhone,
-        customerId: t.customer_id || t.customerId,
-        paymentMethod: t.payment_method || t.paymentMethod,
-        paid_amount: t.paid_amount,
-        payment_status: t.payment_status,
-        due_date: t.due_date,
-        operator: t.operator_name || t.operator,
-        transportationFee: t.transportation_fee || t.transportationFee || 0,
-        vatIncluded: t.vat_included !== undefined ? t.vat_included : t.vatIncluded,
-        file_url: t.file_url,
-        returnedItems: t.returned_items || []
-    }));
+    return data.map((t: any) => {
+        if (t.returned_items && t.returned_items.length > 0) console.log('Raw Transaction with returns:', t);
+        return {
+            ...t,
+            // Map snake_case to camelCase, with fallbacks for legacy data
+            customerName: t.customer_name || t.customerName,
+            customerType: t.customer_type || t.customerType,
+            customerAddress: t.customer_address || t.customerAddress,
+            customerPhone: t.customer_phone || t.customerPhone,
+            customerId: t.customer_id || t.customerId,
+            paymentMethod: t.payment_method || t.paymentMethod,
+            paid_amount: t.paid_amount,
+            payment_status: t.payment_status,
+            due_date: t.due_date,
+            operator: t.operator_name || t.operator,
+            transportationFee: t.transportation_fee || t.transportationFee || 0,
+            vatIncluded: t.vat_included !== undefined ? t.vat_included : t.vatIncluded,
+            file_url: t.file_url,
+            returnedItems: (t.returned_items || []).map((ri: any) => ({
+                ...ri,
+                refundAmount: ri.refundAmount || (ri.unitPrice * ri.quantity)
+            })),
+            appliedStoreCredit: t.applied_store_credit ? {
+                id: t.applied_store_credit.id,
+                amount: t.applied_store_credit.amount
+            } : undefined
+        };
+    });
 
     return data || [];
 };
@@ -425,7 +437,11 @@ export const createTransaction = async (transaction: Transaction): Promise<{ suc
         items: transaction.items,
         vat_included: transaction.vatIncluded,
         file_url: transaction.file_url,
-        due_date: transaction.due_date
+        due_date: transaction.due_date,
+        applied_store_credit: transaction.appliedStoreCredit ? {
+            id: transaction.appliedStoreCredit.id,
+            amount: transaction.appliedStoreCredit.amount
+        } : null
     });
 
     if (error) {
@@ -434,6 +450,75 @@ export const createTransaction = async (transaction: Transaction): Promise<{ suc
         return { success: false, error: error.message };
     }
     return { success: true };
+};
+
+export const receivePayment = async (transactionId: string, amount: number, method: PaymentMethod): Promise<Transaction | null> => {
+    // 1. Fetch current transaction
+    const { data: transaction, error: fetchError } = await supabase.from('transactions').select('*').eq('id', transactionId).single();
+
+    if (fetchError || !transaction) {
+        console.error("Error fetching transaction for payment:", fetchError);
+        return null;
+    }
+
+    // 2. Calculate new values
+    const currentPaid = transaction.paid_amount || 0;
+    const newPaidAmount = currentPaid + amount;
+    const total = transaction.total;
+
+    // Determine status
+    let newStatus: PaymentStatus = transaction.payment_status;
+    if (newPaidAmount >= total) {
+        newStatus = PaymentStatus.PAID;
+    } else if (newPaidAmount > 0) {
+        newStatus = PaymentStatus.PARTIALLY_PAID;
+    }
+
+    // 3. Update transaction
+    const { data: updatedTransaction, error: updateError } = await supabase
+        .from('transactions')
+        .update({
+            paid_amount: newPaidAmount,
+            payment_status: newStatus
+        })
+        .eq('id', transactionId)
+        .select()
+        .single();
+
+    if (updateError) {
+        console.error("Error updating transaction payment:", updateError);
+        return null;
+    }
+
+    // 4. Map to frontend type (reusing logic from fetchTransactions would be better, but for now inline mapping to ensure consistency)
+    // We need to return a full Transaction object. 
+    // Since we just have the raw DB data, we should map it.
+    // However, to avoid code duplication and potential mapping errors, 
+    // it might be safer to just return the updated fields or re-fetch using fetchTransactions logic.
+    // But fetchTransactions returns an array.
+    // Let's do a simple mapping here similar to fetchTransactions but for a single item.
+
+    return {
+        ...updatedTransaction,
+        items: updatedTransaction.items || [], // Items are JSONB
+        date: updatedTransaction.date,
+        subtotal: updatedTransaction.subtotal,
+        tax: updatedTransaction.tax,
+        total: updatedTransaction.total,
+        customerName: updatedTransaction.customer_name,
+        customerType: updatedTransaction.customer_type,
+        paymentMethod: updatedTransaction.payment_method,
+        vatIncluded: updatedTransaction.vat_included,
+        payment_status: updatedTransaction.payment_status,
+        paid_amount: updatedTransaction.paid_amount,
+        // Map other fields if necessary, or rely on the fact that we primarily need the updated status/amount
+        // For the UI update, we might just merge this into the existing state.
+        returnedItems: (updatedTransaction.returned_items || []).map((ri: any) => ({
+            ...ri,
+            refundAmount: ri.refundAmount || (ri.unitPrice * ri.quantity)
+        })),
+        appliedStoreCredit: updatedTransaction.applied_store_credit
+    } as Transaction;
 };
 
 export const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<{ success: boolean; error?: string }> => {
@@ -872,5 +957,18 @@ export const updateTransactionReturns = async (transactionId: string, returnedIt
         return false;
     }
 
+    return true;
+};
+
+export const markStoreCreditAsUsed = async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+        .from('store_credits')
+        .update({ is_used: true })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error marking store credit as used:', error);
+        return false;
+    }
     return true;
 };

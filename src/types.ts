@@ -215,6 +215,7 @@ export interface ReturnedItem {
   quantity: number;
   reason: ReturnReason;
   unitPrice: number;
+  refundAmount: number;
 }
 
 export enum ReturnReason {

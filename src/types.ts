@@ -268,6 +268,14 @@ export enum PaymentStatus {
   CONSOLIDATED = 'Consolidated',
 }
 
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  date: string;
+  method: PaymentMethod;
+  note?: string;
+}
+
 export interface Transaction {
   id: string;
   date: string;
@@ -292,6 +300,7 @@ export interface Transaction {
   due_date?: string;
   file_url?: string;
   created_at?: string;
+  payments?: PaymentRecord[];
 }
 
 export interface Order {

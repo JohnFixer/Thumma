@@ -615,8 +615,8 @@ const App: React.FC = () => {
         }
     };
     const handleConvertOrderToInvoice = (order: Order) => { console.log("Convert Order to Invoice", order); };
-    const handleReceivePayment = async (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod) => {
-        const updatedTransaction = await db.receivePayment(transactionId, paymentAmount, paymentMethod);
+    const handleReceivePayment = async (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod, paymentDate: string) => {
+        const updatedTransaction = await db.receivePayment(transactionId, paymentAmount, paymentMethod, paymentDate);
         if (updatedTransaction) {
             setTransactions(prev => prev.map(t => t.id === transactionId ? updatedTransaction : t));
             setIsReceivePaymentModalOpen(false);

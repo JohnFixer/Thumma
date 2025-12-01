@@ -453,7 +453,7 @@ export const createTransaction = async (transaction: Transaction): Promise<{ suc
     return { success: true };
 };
 
-export const receivePayment = async (transactionId: string, amount: number, method: PaymentMethod): Promise<Transaction | null> => {
+export const receivePayment = async (transactionId: string, amount: number, method: PaymentMethod, paymentDate: string): Promise<Transaction | null> => {
     // 1. Fetch current transaction
     const { data: transaction, error: fetchError } = await supabase.from('transactions').select('*').eq('id', transactionId).single();
 
@@ -475,12 +475,23 @@ export const receivePayment = async (transactionId: string, amount: number, meth
         newStatus = PaymentStatus.PARTIALLY_PAID;
     }
 
+    // Update payments history
+    const currentPayments = transaction.payments || [];
+    const newPayment = {
+        id: Date.now().toString(),
+        amount,
+        date: paymentDate,
+        method
+    };
+    const updatedPayments = [...currentPayments, newPayment];
+
     // 3. Update transaction
     const { data: updatedTransaction, error: updateError } = await supabase
         .from('transactions')
         .update({
             paid_amount: newPaidAmount,
-            payment_status: newStatus
+            payment_status: newStatus,
+            payments: updatedPayments
         })
         .eq('id', transactionId)
         .select()
@@ -518,7 +529,9 @@ export const receivePayment = async (transactionId: string, amount: number, meth
             ...ri,
             refundAmount: ri.refundAmount || (ri.unitPrice * ri.quantity)
         })),
-        appliedStoreCredit: updatedTransaction.applied_store_credit
+        appliedStoreCredit: updatedTransaction.applied_store_credit,
+        created_at: updatedTransaction.created_at,
+        payments: updatedTransaction.payments
     } as Transaction;
 };
 

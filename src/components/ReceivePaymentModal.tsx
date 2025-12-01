@@ -6,7 +6,7 @@ import type { TranslationKey } from '../translations';
 interface ReceivePaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod) => void;
+  onConfirm: (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod, paymentDate: string) => void;
   transaction: Transaction | null;
   t: (key: TranslationKey) => string;
 }
@@ -14,13 +14,15 @@ interface ReceivePaymentModalProps {
 const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ isOpen, onClose, onConfirm, transaction, t }) => {
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
-  
+  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
   const balanceDue = transaction ? transaction.total - transaction.paid_amount : 0;
 
   useEffect(() => {
     if (isOpen && transaction) {
       setPaymentAmount(balanceDue);
       setPaymentMethod('Cash');
+      setPaymentDate(new Date().toISOString().split('T')[0]);
     }
   }, [isOpen, transaction, balanceDue]);
 
@@ -28,7 +30,7 @@ const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ isOpen, onClo
 
   const handleConfirm = () => {
     if (typeof paymentAmount === 'number' && paymentAmount > 0) {
-      onConfirm(transaction.id, paymentAmount, paymentMethod);
+      onConfirm(transaction.id, paymentAmount, paymentMethod, paymentDate);
     }
   };
 
@@ -42,53 +44,65 @@ const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ isOpen, onClo
           </button>
         </div>
         <div className="p-6 space-y-4">
-            <div className="text-center">
-                <p className="text-sm text-text-secondary">Invoice #{transaction.id}</p>
-                <div className="grid grid-cols-3 gap-2 mt-2 text-center">
-                    <div><span className="text-xs text-text-secondary block">{t('total')}</span><span className="font-semibold">฿{transaction.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                    <div><span className="text-xs text-text-secondary block">{t('amount_paid')}</span><span className="font-semibold text-green-600">- ฿{transaction.paid_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                    <div><span className="text-xs text-text-secondary block">{t('balance_due')}</span><span className="font-bold text-lg text-primary">฿{balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                </div>
+          <div className="text-center">
+            <p className="text-sm text-text-secondary">Invoice #{transaction.id}</p>
+            <div className="grid grid-cols-3 gap-2 mt-2 text-center">
+              <div><span className="text-xs text-text-secondary block">{t('total')}</span><span className="font-semibold">฿{transaction.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div><span className="text-xs text-text-secondary block">{t('amount_paid')}</span><span className="font-semibold text-green-600">- ฿{transaction.paid_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+              <div><span className="text-xs text-text-secondary block">{t('balance_due')}</span><span className="font-bold text-lg text-primary">฿{balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
             </div>
-            <div className="border-t pt-4">
-                <label htmlFor="payment-amount" className="block text-sm font-medium text-text-secondary">{t('payment_amount')}</label>
-                <input 
-                    type="number" 
-                    id="payment-amount"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : Math.max(0, Math.min(balanceDue, Number(e.target.value))))}
-                    min="0.01"
-                    max={balanceDue}
-                    step="0.01"
-                    className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300 text-lg font-bold"
-                    required
-                />
-            </div>
-             <div>
-                <label htmlFor="payment-method" className="block text-sm font-medium text-text-secondary">{t('payment_method')}</label>
-                <select id="payment-method" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300">
-                    <option value="Cash">{t('payment_cash')}</option>
-                    <option value="Bank Transfer">{t('payment_bank_transfer')}</option>
-                    <option value="Card">{t('payment_card')}</option>
-                </select>
-            </div>
+          </div>
+          <div className="border-t pt-4">
+            <label htmlFor="payment-amount" className="block text-sm font-medium text-text-secondary">{t('payment_amount')}</label>
+            <input
+              type="number"
+              id="payment-amount"
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : Math.max(0, Math.min(balanceDue, Number(e.target.value))))}
+              min="0.01"
+              max={balanceDue}
+              step="0.01"
+              className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300 text-lg font-bold"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="payment-date" className="block text-sm font-medium text-text-secondary">{t('date')}</label>
+            <input
+              type="date"
+              id="payment-date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="payment-method" className="block text-sm font-medium text-text-secondary">{t('payment_method')}</label>
+            <select id="payment-method" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)} className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300">
+              <option value="Cash">{t('payment_cash')}</option>
+              <option value="Bank Transfer">{t('payment_bank_transfer')}</option>
+              <option value="Card">{t('payment_card')}</option>
+              <option value="Cheque">{t('payment_cheque')}</option>
+            </select>
+          </div>
         </div>
         <div className="bg-background px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-            <button
-                type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:bg-blue-300"
-                onClick={handleConfirm}
-                disabled={!paymentAmount || paymentAmount <= 0}
-            >
-                {t('confirm')}
-            </button>
-            <button
-                type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
-                onClick={onClose}
-            >
-                {t('cancel')}
-            </button>
+          <button
+            type="button"
+            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:bg-blue-300"
+            onClick={handleConfirm}
+            disabled={!paymentAmount || paymentAmount <= 0}
+          >
+            {t('confirm')}
+          </button>
+          <button
+            type="button"
+            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
+            onClick={onClose}
+          >
+            {t('cancel')}
+          </button>
         </div>
       </div>
     </div>

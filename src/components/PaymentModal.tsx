@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { XMarkIcon, CreditCardIcon, CheckCircleIcon, CurrencyDollarIcon, BuildingLibraryIcon } from './icons/HeroIcons';
+import { XMarkIcon, CreditCardIcon, CheckCircleIcon, CurrencyDollarIcon, BuildingLibraryIcon, TicketIcon } from './icons/HeroIcons';
 import type { User, PaymentMethod } from '../types';
 import type { TranslationKey } from '../translations';
 
 interface PaymentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onPaymentSuccess: (method: 'Card' | 'Cash' | 'Bank Transfer') => void;
-  totalAmount: number;
-  currentUser: User;
-  t: (key: TranslationKey) => string;
+    isOpen: boolean;
+    onClose: () => void;
+    onPaymentSuccess: (method: 'Card' | 'Cash' | 'Bank Transfer' | 'Cheque') => void;
+    totalAmount: number;
+    currentUser: User;
+    t: (key: TranslationKey) => string;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onPaymentSuccess, totalAmount, currentUser, t }) => {
@@ -17,7 +17,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onPaymentS
     const [isSuccess, setIsSuccess] = useState(false);
     const defaultMethod = currentUser.settings?.defaultPaymentMethod || 'Card';
 
-    const handleConfirmPayment = (method: 'Card' | 'Cash' | 'Bank Transfer') => {
+    const handleConfirmPayment = (method: 'Card' | 'Cash' | 'Bank Transfer' | 'Cheque') => {
         setIsProcessing(true);
         setTimeout(() => {
             setIsProcessing(false);
@@ -58,15 +58,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onPaymentS
                 </div>
                 {!isSuccess && (
                     <div className="bg-background p-4 space-y-3 rounded-b-lg">
-                        <button 
+                        <button
                             onClick={() => handleConfirmPayment('Card')}
                             disabled={isProcessing}
                             className={`w-full flex justify-center items-center gap-2 rounded-md border border-transparent shadow-sm px-4 py-3 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-blue-300 disabled:cursor-wait ${defaultMethod === 'Card' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
                         >
-                             <CreditCardIcon className="h-5 w-5" />
+                            <CreditCardIcon className="h-5 w-5" />
                             {isProcessing ? t('processing') : t('pay_with_card')}
                         </button>
-                         <button 
+                        <button
                             onClick={() => handleConfirmPayment('Cash')}
                             disabled={isProcessing}
                             className={`w-full flex justify-center items-center gap-2 rounded-md border border-gray-300 shadow-sm px-4 py-3 bg-white text-base font-medium text-text-primary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-wait ${defaultMethod === 'Cash' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
@@ -74,13 +74,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onPaymentS
                             <CurrencyDollarIcon className="h-5 w-5" />
                             {isProcessing ? t('processing') : t('pay_with_cash')}
                         </button>
-                         <button 
+                        <button
                             onClick={() => handleConfirmPayment('Bank Transfer')}
                             disabled={isProcessing}
                             className={`w-full flex justify-center items-center gap-2 rounded-md border border-gray-300 shadow-sm px-4 py-3 bg-white text-base font-medium text-text-primary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-wait ${defaultMethod === 'Bank Transfer' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
                         >
                             <BuildingLibraryIcon className="h-5 w-5" />
                             {isProcessing ? t('processing') : t('pay_with_bank')}
+                        </button>
+                        <button
+                            onClick={() => handleConfirmPayment('Cheque')}
+                            disabled={isProcessing}
+                            className={`w-full flex justify-center items-center gap-2 rounded-md border border-gray-300 shadow-sm px-4 py-3 bg-white text-base font-medium text-text-primary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-200 disabled:cursor-wait ${defaultMethod === 'Cheque' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                        >
+                            <TicketIcon className="h-5 w-5" />
+                            {isProcessing ? t('processing') : t('payment_cheque')}
                         </button>
                     </div>
                 )}

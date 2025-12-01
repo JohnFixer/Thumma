@@ -62,7 +62,7 @@ import type {
     Bill, NewBillData, StoreSettings,
     Category, NewCategoryData,
     Language, PaymentMethod,
-    StoreCredit, ReturnedItem, PastInvoiceData, BillPayment, CustomerType, NewProductVariantData
+    StoreCredit, ReturnedItem, PastInvoiceData, BillPayment, CustomerType, NewProductVariantData, ProductImportPayload
 } from './types';
 import { ProductStatus, Role, FulfillmentStatus, PaymentStatus, BillStatus } from './types';
 import type { TranslationKey } from './translations';
@@ -146,6 +146,7 @@ const App: React.FC = () => {
     const [hoveredProduct, setHoveredProduct] = useState<Product | null>(null);
     const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
     const [originalUser, setOriginalUser] = useState<User | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
 
 
     // MODAL STATES
@@ -994,7 +995,39 @@ const App: React.FC = () => {
         }
     };
 
-    const handleImportProducts = (payload: any) => { console.log("Import Products", payload); };
+    const handleImportProducts = async (payload: ProductImportPayload) => {
+        setIsImporting(true);
+        try {
+            // 1. Create new products
+            const productsToCreate = payload.productsToCreate;
+            // Chunking to avoid overwhelming the server
+            const chunkSize = 10;
+            for (let i = 0; i < productsToCreate.length; i += chunkSize) {
+                const chunk = productsToCreate.slice(i, i + chunkSize);
+                await Promise.all(chunk.map(p => db.createProduct(p)));
+            }
+
+            // 2. Update existing variants
+            const variantsToUpdate = payload.variantsToUpdate;
+            for (let i = 0; i < variantsToUpdate.length; i += chunkSize) {
+                const chunk = variantsToUpdate.slice(i, i + chunkSize);
+                await Promise.all(chunk.map(v => db.updateVariant(v)));
+            }
+
+            // 3. Refresh data
+            const updatedProducts = await db.fetchProducts();
+            setProducts(updatedProducts);
+
+            // 4. Close modal and show success
+            setIsImportModalOpen(false);
+            showAlert('success', t('products_imported_successfully'));
+        } catch (error: any) {
+            console.error('Import failed:', error);
+            showAlert('error', `${t('import_failed')}: ${error.message}`);
+        } finally {
+            setIsImporting(false);
+        }
+    };
 
     // NAVIGATION & UI LOGIC
     const handleNavigate = (view: string, state?: any) => {
@@ -1215,7 +1248,7 @@ const App: React.FC = () => {
             <AlertModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} title={alertConfig.title} message={alertConfig.message} />
             <BarcodeScannerModal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} onScanSuccess={handleScanSuccess} />
             <BarcodeDisplayModal isOpen={isBarcodeDisplayOpen} onClose={() => setIsBarcodeDisplayOpen(false)} product={productToView} variant={variantToShowBarcode} t={t} language={language} />
-            <ImportProductsModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onApplyImport={handleImportProducts} products={products} t={t} />
+            <ImportProductsModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onApplyImport={handleImportProducts} products={products} categories={categories} t={t} isSubmitting={isImporting} />
             <AddSupplierModal isOpen={isAddSupplierModalOpen} onClose={() => setIsAddSupplierModalOpen(false)} onAddSupplier={handleAddSupplier} showAlert={showAlert} t={t} />
             <ImportSuppliersModal isOpen={isImportSuppliersModalOpen} onClose={() => setIsImportSuppliersModalOpen(false)} onApplyImport={handleImportSuppliers} t={t} />
             <AddBillModal isOpen={isAddBillModalOpen} onClose={() => setIsAddBillModalOpen(false)} onAddBill={handleAddBill} suppliers={suppliers} t={t} showAlert={showAlert} />

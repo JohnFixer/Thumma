@@ -182,6 +182,32 @@ export const updateProduct = async (id: string, productData: NewProductData): Pr
     return true;
 };
 
+export const updateVariant = async (variant: ProductVariant): Promise<boolean> => {
+    const variantData = {
+        sku: variant.sku,
+        size: variant.size,
+        stock_quantity: variant.stock,
+        price_walk_in: variant.price.walkIn,
+        price_contractor: variant.price.contractor,
+        price_government: variant.price.government,
+        cost_price: variant.price.cost,
+        status: variant.status,
+        barcode: variant.barcode,
+        history: variant.history
+    };
+
+    const { error } = await supabase
+        .from('product_variants')
+        .update(variantData)
+        .eq('id', variant.id);
+
+    if (error) {
+        console.error('Error updating variant:', error);
+        return false;
+    }
+    return true;
+};
+
 export const deleteProduct = async (id: string): Promise<boolean> => {
     const { error } = await supabase.from('products').delete().eq('id', id);
     return !error;

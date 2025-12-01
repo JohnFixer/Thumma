@@ -16,20 +16,38 @@ import { PaymentStatus } from '../types';
 // --- Products ---
 
 export const fetchProducts = async (): Promise<Product[]> => {
-    const { data: products, error } = await supabase
-        .from('products')
-        .select(`
-            *,
-            variants:product_variants(*)
-        `);
+    let allProducts: any[] = [];
+    let page = 0;
+    const pageSize = 200; // Reduced from 1000 to avoid statement timeout (57014)
+    let hasMore = true;
 
-    if (error) {
-        console.error('Error fetching products:', error);
-        return [];
+    while (hasMore) {
+        const { data: products, error } = await supabase
+            .from('products')
+            .select(`
+                *,
+                variants:product_variants(*)
+            `)
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) {
+            console.error('Error fetching products:', error);
+            break;
+        }
+
+        if (products && products.length > 0) {
+            allProducts = [...allProducts, ...products];
+            if (products.length < pageSize) {
+                hasMore = false;
+            }
+        } else {
+            hasMore = false;
+        }
+        page++;
     }
 
     // Map DB structure back to frontend Product type
-    return products.map((p: any) => ({
+    return allProducts.map((p: any) => ({
         id: p.id,
         name: p.name,
         description: p.description,
@@ -94,6 +112,10 @@ export const createProduct = async (productData: NewProductData): Promise<Produc
 
     if (variantsError) {
         console.error('Error creating variants:', variantsError);
+        // Check for unique violation (duplicate SKU)
+        if (variantsError.code === '23505') {
+            throw new Error('A variant with this SKU already exists.');
+        }
         // Ideally we should rollback product creation here, but Supabase JS doesn't support transactions easily without RPC.
         throw new Error(`Failed to create product variants: ${variantsError.message}`);
     }
@@ -137,7 +159,7 @@ export const fetchProductById = async (id: string): Promise<Product | null> => {
     };
 }
 
-export const updateProduct = async (id: string, productData: NewProductData): Promise<boolean> => {
+export const updateProduct = async (id: string, productData: NewProductData): Promise<{ success: boolean; error?: string }> => {
     // Update Product Info
     const { error: pError } = await supabase
         .from('products')
@@ -149,37 +171,49 @@ export const updateProduct = async (id: string, productData: NewProductData): Pr
         })
         .eq('id', id);
 
-    if (pError) return false;
+    if (pError) return { success: false, error: pError.message };
 
-    // Handle Variants (Upsert is complex here because we might delete some. For simplicity, we'll just upsert by ID if present, or create new.)
-    // A simpler approach for this prototype: Delete all variants and recreate them (CAUTION: destroys history if not careful, but we are passing history back).
-    // Better: Upsert.
+    // Handle Variants
+    try {
+        for (const v of productData.variants) {
+            const variantData = {
+                product_id: id,
+                sku: v.sku,
+                size: v.size,
+                stock_quantity: v.stock,
+                price_walk_in: v.price.walkIn,
+                price_contractor: v.price.contractor,
+                price_government: v.price.government,
+                cost_price: v.price.cost,
+                status: 'status' in v ? v.status : 'In Stock',
+                barcode: v.barcode,
+                history: 'history' in v ? v.history : []
+            };
 
-    for (const v of productData.variants) {
-        const variantData = {
-            product_id: id,
-            sku: v.sku,
-            size: v.size,
-            stock_quantity: v.stock,
-            price_walk_in: v.price.walkIn,
-            price_contractor: v.price.contractor,
-            price_government: v.price.government,
-            cost_price: v.price.cost,
-            status: 'status' in v ? v.status : 'In Stock',
-            barcode: v.barcode,
-            history: 'history' in v ? v.history : []
-        };
+            let error;
+            if ('id' in v && v.id) {
+                // Update existing
+                const { error: updateError } = await supabase.from('product_variants').update(variantData).eq('id', v.id);
+                error = updateError;
+            } else {
+                // Create new
+                const { error: insertError } = await supabase.from('product_variants').insert(variantData);
+                error = insertError;
+            }
 
-        if ('id' in v) {
-            // Update existing
-            await supabase.from('product_variants').update(variantData).eq('id', v.id);
-        } else {
-            // Create new
-            await supabase.from('product_variants').insert(variantData);
+            if (error) {
+                if (error.code === '23505') { // Unique violation
+                    throw new Error(`SKU "${v.sku}" already exists.`);
+                }
+                throw error;
+            }
         }
+    } catch (error: any) {
+        console.error('Error updating variants:', error);
+        return { success: false, error: error.message || 'Failed to update variants' };
     }
 
-    return true;
+    return { success: true };
 };
 
 export const updateVariant = async (variant: ProductVariant): Promise<boolean> => {

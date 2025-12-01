@@ -317,15 +317,15 @@ const App: React.FC = () => {
     };
 
     const handleEditProduct = async (productId: string, productData: NewProductData) => {
-        const success = await db.updateProduct(productId, productData);
-        if (success) {
+        const result = await db.updateProduct(productId, productData);
+        if (result.success) {
             // Refresh products to get updated variants
             const updatedProducts = await db.fetchProducts();
             setProducts(updatedProducts);
             setIsEditProductModalOpen(false);
             showAlert(t('alert_success'), t('product_updated_success'));
         } else {
-            showAlert(t('alert_error'), t('product_update_failed'));
+            showAlert(t('alert_error'), result.error || t('product_update_failed'));
         }
     };
 

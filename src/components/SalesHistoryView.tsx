@@ -175,6 +175,7 @@ const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({ transactions, curre
                 storeSettings={storeSettings}
                 t={t}
                 language={language}
+                isInvoice={transactionToView?.payment_status === PaymentStatus.UNPAID || transactionToView?.payment_status === PaymentStatus.PARTIALLY_PAID}
             />
             <ConfirmationModal
                 isOpen={!!transactionToDelete}

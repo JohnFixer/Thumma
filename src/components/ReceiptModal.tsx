@@ -11,9 +11,10 @@ interface ReceiptModalProps {
   storeSettings: StoreSettings | null;
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
   language: Language;
+  isInvoice?: boolean;
 }
 
-const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transaction, storeSettings, t, language }) => {
+const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transaction, storeSettings, t, language, isInvoice }) => {
   const [receiptLanguage, setReceiptLanguage] = useState<Language>(language);
   const t_receipt = useTranslations(receiptLanguage);
 
@@ -89,7 +90,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center no-print" aria-modal="true" role="dialog" onClick={onClose}>
       <div className="bg-surface rounded-lg shadow-xl w-full max-w-sm m-4" onClick={e => e.stopPropagation()}>
         <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-text-primary">Transaction Receipt</h3>
+          <h3 className="text-lg font-semibold text-text-primary">{isInvoice ? 'Transaction Invoice' : 'Transaction Receipt'}</h3>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-gray-100">
             <XMarkIcon className="h-6 w-6" />
           </button>
@@ -118,10 +119,10 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
               <p>{storeSettings?.address[receiptLanguage]}</p>
               <p>Tel: {storeSettings?.phone[receiptLanguage]}</p>
               <p className="mt-2 text-xs">{t_receipt('tax_id')}: {storeSettings?.tax_id[receiptLanguage]}</p>
-              <p className="font-bold my-2 text-lg">{t_receipt('receipt')}</p>
+              <p className="font-bold my-2 text-lg">{isInvoice ? (receiptLanguage === 'th' ? 'ใบส่งสินค้า / ใบแจ้งหนี้' : 'Product Order / Invoice') : t_receipt('receipt')}</p>
             </div>
             <div className="border-t border-b border-dashed border-black my-2 py-1 text-xs font-sans">
-              <p>{t_receipt('receipt_id')}: <span className="font-mono">{transaction.id}</span></p>
+              <p>{isInvoice ? t_receipt('invoice_id') : t_receipt('receipt_id')}: <span className="font-mono">{transaction.id}</span></p>
               <p>{t_receipt('date')}: {new Date(transaction.date).toLocaleString()}</p>
               <p>{t_receipt('operator')}: {transaction.operator || 'N/A'}</p>
               <p>{t_receipt('customer')}: {transaction.customerName || 'Walk-in Customer'}</p>

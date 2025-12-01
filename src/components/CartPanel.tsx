@@ -142,28 +142,11 @@ const CartPanel: React.FC<CartPanelProps> = ({
   };
 
   const renderActionButtons = () => {
-    if (orderType === 'Delivery' || orderType === 'Pickup') {
-      return (
-        <div className="flex gap-2">
-          <button onClick={onNewUnpaidOrder} className="w-1/2 bg-secondary text-white font-bold py-3 rounded-lg hover:bg-orange-700">{t('pay_later')}</button>
-          <button onClick={onCheckout} className="w-1/2 bg-primary text-white font-bold py-3 rounded-lg hover:bg-blue-800">{t('pay_now')}</button>
-        </div>
-      );
-    }
-
-    if (customerType === 'contractor' || customerType === 'government' || customerType === 'organization') {
-      return (
-        <div className="flex gap-2">
-          <button onClick={onCreateInvoice} className="w-1/2 bg-secondary text-white font-bold py-3 rounded-lg hover:bg-orange-700">{t('create_invoice')}</button>
-          <button onClick={onCheckout} className="w-1/2 bg-primary text-white font-bold py-3 rounded-lg hover:bg-blue-800">{t('proceed_to_payment')}</button>
-        </div>
-      );
-    }
-
     return (
-      <button onClick={onCheckout} className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-blue-800">
-        {t('proceed_to_payment')}
-      </button>
+      <div className="flex gap-2">
+        <button onClick={onNewUnpaidOrder} className="w-1/2 bg-secondary text-white font-bold py-3 rounded-lg hover:bg-orange-700">{t('pay_later')}</button>
+        <button onClick={onCheckout} className="w-1/2 bg-primary text-white font-bold py-3 rounded-lg hover:bg-blue-800">{t('pay_now')}</button>
+      </div>
     );
   };
 

@@ -18,7 +18,7 @@ interface POSViewProps {
     customers: Customer[];
     storeCredits: StoreCredit[];
     transactions: Transaction[];
-    onNewTransaction: (transaction: Omit<Transaction, 'payment_status' | 'due_date' | 'paid_amount'>, cartItems: CartItem[], appliedCreditId?: string, carriedForwardBalance?: { customerId: string, amount: number }) => Promise<Transaction | undefined>;
+    onNewTransaction: (transaction: Omit<Transaction, 'due_date' | 'paid_amount'> & { payment_status?: PaymentStatus }, cartItems: CartItem[], appliedCreditId?: string, carriedForwardBalance?: { customerId: string, amount: number }) => Promise<Transaction | undefined>;
     onNewInvoice: (transaction: Omit<Transaction, 'payment_status' | 'paymentMethod' | 'paid_amount'>, cartItems: CartItem[]) => void;
     onNewOrder: (order: Order) => void;
     onAddNewCustomerFromPOS: (customerData: NewCustomerData) => Promise<Customer | null>;
@@ -59,6 +59,8 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
     const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null);
     const [isOutsourceModalOpen, setIsOutsourceModalOpen] = useState(false);
     const [itemToOutsource, setItemToOutsource] = useState<{ product: Product, variant: ProductVariant } | null>(null);
+    const [isInvoiceModal, setIsInvoiceModal] = useState(false);
+
     const [isAddMiscItemModalOpen, setIsAddMiscItemModalOpen] = useState(false);
 
     const customerOutstandingBalance = useMemo(() => {
@@ -367,12 +369,20 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
             showAlert(t('cart_is_empty'), t('cart_empty_desc'));
             return;
         }
-        if (!customerAddress?.trim() || !customerPhone?.trim()) {
+
+        // Only require address and phone for Delivery
+        if (orderType === 'Delivery' && (!customerAddress?.trim() || !customerPhone?.trim())) {
             showAlert(t('missing_information'), t('delivery_requires_details_alert'));
             return;
         }
 
-        let finalCustomer: Customer;
+        let finalCustomer: Partial<Customer> & { name: string } = {
+            id: customerId,
+            name: customerName,
+            type: customerType,
+            address: customerAddress,
+            phone: customerPhone,
+        };
 
         if (isNewCustomer && customerName.trim() && customerName.trim().toLowerCase() !== 'guest') {
             const newCustomer = await onAddNewCustomerFromPOS({
@@ -388,34 +398,73 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
             }
             finalCustomer = newCustomer;
         } else {
-            finalCustomer = customers.find(c => c.id === customerId) || {
-                id: `guest-${Date.now()}`,
-                name: customerName,
-                type: customerType,
-                phone: customerPhone,
+            if (customerId) {
+                const existing = customers.find(c => c.id === customerId);
+                if (existing) finalCustomer = existing;
+            }
+        }
+
+        // Branch logic based on Order Type
+        if (orderType === 'Delivery') {
+            // Create Order (Fulfillment)
+            const newOrder: Omit<Order, 'transportationFee'> & { transportationFee?: number } = {
+                id: `ORD-${Date.now()}`,
+                customer: finalCustomer as Customer, // Should be safe or handle Guest
+                date: new Date().toISOString(),
+                items: cartItems,
+                total: total,
+                status: FulfillmentStatus.PROCESSING,
+                type: 'Delivery',
                 address: customerAddress,
+                paymentStatus: PaymentStatus.UNPAID,
             };
+
+            if (transportationFee > 0) {
+                newOrder.transportationFee = transportationFee;
+            }
+
+            onNewOrder(newOrder as Order);
+            showAlert(t('order_created'), t('order_created_desc', { orderId: newOrder.id, customerName }));
+        } else {
+            // In-Store or Pickup -> Create Transaction (Invoice / AR) directly
+            const newTransactionData: Omit<Transaction, 'due_date' | 'paid_amount' | 'transportationFee'> & { transportationFee?: number, payment_status: PaymentStatus } = {
+                id: `${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+                date: new Date(transactionDate).toISOString(),
+                items: cartItems,
+                subtotal,
+                tax,
+                total,
+                customerId: finalCustomer.id,
+                customerName: finalCustomer.name || 'Guest',
+                customerAddress: finalCustomer.address,
+                customerPhone: finalCustomer.phone,
+                customerType: customerType,
+                operator: currentUser.name,
+                paymentMethod: 'Cash', // Placeholder, unpaied
+                vatIncluded: isVatIncluded,
+                appliedStoreCredit: appliedCredit ? { id: appliedCredit.id, amount: appliedCredit.amount } : undefined,
+                payment_status: PaymentStatus.UNPAID,
+            };
+
+            if (transportationFee > 0) {
+                newTransactionData.transportationFee = transportationFee;
+            }
+
+            const newTx = await onNewTransaction(
+                newTransactionData,
+                cartItems,
+                appliedCredit?.id,
+                carriedForwardBalance > 0 && finalCustomer.id ? { customerId: finalCustomer.id, amount: carriedForwardBalance } : undefined
+            );
+
+            if (newTx) {
+                setLastTransaction(newTx);
+                setIsInvoiceModal(true); // Set to true for Pay Later
+                setIsReceiptModalOpen(true);
+                showAlert(t('invoice_created'), t('invoice_created_desc', { invoiceId: newTx.id }));
+            }
         }
 
-
-        const newOrder: Omit<Order, 'transportationFee'> & { transportationFee?: number } = {
-            id: `ORD-${Date.now()}`,
-            customer: finalCustomer,
-            date: new Date().toISOString(),
-            items: cartItems,
-            total: total,
-            status: FulfillmentStatus.PROCESSING,
-            type: 'Delivery',
-            address: customerAddress,
-            paymentStatus: PaymentStatus.UNPAID,
-        };
-
-        if (transportationFee > 0) {
-            newOrder.transportationFee = transportationFee;
-        }
-
-        onNewOrder(newOrder as Order);
-        showAlert(t('order_created'), t('order_created_desc', { orderId: newOrder.id, customerName }));
         handleClearCart();
     };
 
@@ -459,7 +508,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 ];
             }
 
-            const newTransactionData: Omit<Transaction, 'payment_status' | 'due_date' | 'paid_amount' | 'transportationFee'> & { transportationFee?: number } = {
+            const newTransactionData: Omit<Transaction, 'due_date' | 'paid_amount' | 'transportationFee'> & { transportationFee?: number, payment_status: PaymentStatus } = {
                 id: `${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
                 date: new Date(transactionDate).toISOString(),
                 items: itemsForTx,
@@ -475,6 +524,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 paymentMethod: method,
                 vatIncluded: isVatIncluded,
                 appliedStoreCredit: appliedCredit ? { id: appliedCredit.id, amount: appliedCredit.amount } : undefined,
+                payment_status: PaymentStatus.PAID,
             };
 
             if (transportationFee > 0) {
@@ -482,7 +532,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
             }
 
             const newTx = await onNewTransaction(
-                newTransactionData as Omit<Transaction, 'payment_status' | 'due_date' | 'paid_amount'>,
+                newTransactionData,
                 cartItems,
                 appliedCredit?.id,
                 carriedForwardBalance > 0 && finalCustomer.id ? { customerId: finalCustomer.id, amount: carriedForwardBalance } : undefined
@@ -490,6 +540,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
 
             if (newTx) {
                 setLastTransaction(newTx);
+                setIsInvoiceModal(false); // Set to false for Pay Now
                 setIsReceiptModalOpen(true);
                 handleClearCart();
             }
@@ -599,6 +650,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 storeSettings={storeSettings}
                 t={t}
                 language={language}
+                isInvoice={isInvoiceModal}
             />
             <VariantSelectionModal
                 isOpen={isVariantModalOpen}

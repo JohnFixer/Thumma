@@ -291,6 +291,7 @@ export interface Transaction {
   paid_amount: number;
   due_date?: string;
   file_url?: string;
+  created_at?: string;
 }
 
 export interface Order {
@@ -301,7 +302,7 @@ export interface Order {
   total: number;
   transportationFee?: number;
   status: FulfillmentStatus;
-  type: 'Pickup' | 'Delivery';
+  type: 'Pickup' | 'Delivery' | 'In-Store';
   address?: string;
   notes?: string;
   paymentStatus: PaymentStatus;

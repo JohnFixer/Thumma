@@ -310,7 +310,8 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
             appliedStoreCredit: t.applied_store_credit ? {
                 id: t.applied_store_credit.id,
                 amount: t.applied_store_credit.amount
-            } : undefined
+            } : undefined,
+            created_at: t.created_at
         };
     });
 

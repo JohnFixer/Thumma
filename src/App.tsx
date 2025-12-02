@@ -22,6 +22,7 @@ import CustomerAssistView from './components/CustomerAssistView';
 import OrderFulfillmentView from './components/OrderFulfillmentView';
 import SalesHistoryView from './components/SalesHistoryView';
 import ActivityLogView from './components/ActivityLogView';
+import DailyExpensesView from './features/DailyExpenses/DailyExpensesView';
 import ProfileView from './components/ProfileView';
 import EndOfDayView from './components/EndOfDayView';
 import ShiftHistoryView from './components/ShiftHistoryView';
@@ -1203,9 +1204,10 @@ const App: React.FC = () => {
             case 'my_profile': return <ProfileView currentUser={currentUser} onUpdateUser={handleUpdateUser} onUpdatePassword={handleUpdatePassword} links={navLinks} t={t} />;
             case 'category_management': return <CategoryManagementView categories={categories} currentUser={currentUser} onAddCategory={() => setIsAddCategoryModalOpen(true)} onEditCategory={(cat) => { setCategoryToEdit(cat); setIsEditCategoryModalOpen(true); }} onDeleteCategory={handleDeleteCategory} t={t} language={language} />;
             case 'dashboard_management': return <DashboardManagementView storeSettings={storeSettings} onUpdateSettings={handleUpdateSettings} t={t} />;
+            case 'daily_expenses': return <DailyExpensesView currentUser={currentUser} t={t as any} showAlert={showAlert} />;
             default:
                 if (currentUser && (currentUser.role[0] === 'CEO' || currentUser.role[0] === 'Admin')) {
-                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} />;
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
                 }
                 return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
         }

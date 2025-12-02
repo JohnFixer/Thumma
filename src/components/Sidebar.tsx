@@ -1,7 +1,7 @@
 import React from 'react';
 import type { User, StoreSettings, Language, UserPermissions } from '../types';
 import { Role } from '../types';
-import { WrenchScrewdriverIcon, ArrowLeftOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, PuzzlePieceIcon } from './icons/HeroIcons';
+import { WrenchScrewdriverIcon, ArrowLeftOnRectangleIcon, UserCircleIcon, Cog6ToothIcon, PuzzlePieceIcon, BanknotesIcon } from './icons/HeroIcons';
 import type { TranslationKey } from '../translations';
 
 interface SidebarProps {
@@ -160,6 +160,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentUser, onNavigate, activeView, 
                     >
                         <Cog6ToothIcon className="h-5 w-5 flex-shrink-0" />
                         <span className="truncate">{t('category_management')}</span>
+                    </button>
+                )}
+                {currentUser.role.includes(Role.ACCOUNT_MANAGER) && (
+                    <button
+                        onClick={() => handleNavigation('daily_expenses')}
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap ${activeView === 'daily_expenses'
+                            ? 'bg-secondary text-white shadow-sm'
+                            : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                            }`}
+                    >
+                        <BanknotesIcon className="h-5 w-5 flex-shrink-0" />
+                        <span className="truncate">{t('daily_expenses')}</span>
                     </button>
                 )}
                 <button

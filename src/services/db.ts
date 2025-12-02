@@ -11,6 +11,7 @@ import type {
     Language, PaymentMethod,
     StoreCredit, ReturnedItem, PastInvoiceData, BillPayment, CustomerType, NewProductVariantData
 } from '../types';
+import { DailyExpense } from '../features/DailyExpenses/ExpenseTypes';
 import { PaymentStatus } from '../types';
 
 // --- Products ---
@@ -1042,6 +1043,67 @@ export const markStoreCreditAsUsed = async (id: string): Promise<boolean> => {
 
     if (error) {
         console.error('Error marking store credit as used:', error);
+        return false;
+    }
+    return true;
+};
+
+// --- Daily Expenses ---
+
+export const createDailyExpense = async (expense: Omit<DailyExpense, 'id'>): Promise<DailyExpense | null> => {
+    const { data, error } = await supabase
+        .from('daily_expenses')
+        .insert([expense])
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Error creating daily expense:', error);
+        return null;
+    }
+    return data;
+};
+
+export const fetchDailyExpenses = async (date: string): Promise<DailyExpense[]> => {
+    // Fetch expenses where the date part matches the provided date string (YYYY-MM-DD)
+    const startOfDay = `${date}T00:00:00`;
+    const endOfDay = `${date}T23:59:59`;
+
+    const { data, error } = await supabase
+        .from('daily_expenses')
+        .select('*')
+        .gte('date', startOfDay)
+        .lte('date', endOfDay)
+        .order('date', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching daily expenses:', error);
+        return [];
+    }
+    return data || [];
+};
+
+export const updateDailyExpense = async (id: string, updates: Partial<Omit<DailyExpense, 'id' | 'date' | 'createdBy'>>): Promise<boolean> => {
+    const { error } = await supabase
+        .from('daily_expenses')
+        .update(updates)
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error updating daily expense:', error);
+        return false;
+    }
+    return true;
+};
+
+export const deleteDailyExpense = async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+        .from('daily_expenses')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error deleting daily expense:', error);
         return false;
     }
     return true;

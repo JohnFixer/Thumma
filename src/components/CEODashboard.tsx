@@ -8,7 +8,8 @@ import LowStockProductsModal from './LowStockProductsModal';
 import BillDetailsModal from './BillDetailsModal';
 import TransactionDetailsModal from './TransactionDetailsModal';
 import RecordPaymentModal from './PayBillModal';
-import { supabase } from '../lib/supabaseClient';
+import { fetchDailyExpenses } from '../services/db';
+import { DailyExpense } from '../features/DailyExpenses/ExpenseTypes';
 
 
 interface CEODashboardProps {
@@ -71,6 +72,8 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
     const [transactionModalData, setTransactionModalData] = useState<{ isOpen: boolean; title: string; transactions: Transaction[] }>({ isOpen: false, title: '', transactions: [] });
     const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] = useState(false);
     const [billToRecordPaymentFor, setBillToRecordPaymentFor] = useState<Bill | null>(null);
+    const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
+    const [isDailyExpensesExpanded, setIsDailyExpensesExpanded] = useState(false);
 
     // To-Do List Logic
     useEffect(() => {
@@ -78,6 +81,16 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
             const savedTodos = localStorage.getItem('ceo-todos');
             if (savedTodos) setTodos(JSON.parse(savedTodos));
         } catch (error) { console.error("Failed to load todos", error); }
+    }, []);
+
+    // Fetch Daily Expenses
+    useEffect(() => {
+        const loadDailyExpenses = async () => {
+            const today = new Date().toISOString().split('T')[0];
+            const expenses = await fetchDailyExpenses(today);
+            setDailyExpenses(expenses);
+        };
+        loadDailyExpenses();
     }, []);
 
     const saveTodos = (newTodos: ToDoItem[]) => {
@@ -287,7 +300,32 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                         {isWidgetVisible('ceo_daily_expenses') && (
                             <div className="bg-gray-800 p-4 rounded-lg">
                                 <h2 className="text-lg font-semibold mb-4">{t('daily_expenses')}</h2>
-                                <StatsCard title={t('wages_today')} value={`฿${metrics.wagesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50" />
+                                <StatsCard
+                                    title={t('daily_expenses_total')}
+                                    value={`฿${dailyExpenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}`}
+                                    icon={<BanknotesIcon className="h-6 w-6" />}
+                                    color="text-red-400"
+                                    className="bg-gray-700/50"
+                                    isClickable
+                                    onClick={() => setIsDailyExpensesExpanded(!isDailyExpensesExpanded)}
+                                />
+                                {isDailyExpensesExpanded && (
+                                    <div className="mt-4 bg-gray-700/30 rounded-lg p-3 space-y-2 animate-fadeIn">
+                                        {dailyExpenses.length > 0 ? (
+                                            dailyExpenses.map(expense => (
+                                                <div key={expense.id} className="flex justify-between items-center text-sm border-b border-gray-600/50 last:border-0 pb-2 last:pb-0">
+                                                    <div>
+                                                        <p className="font-medium">{expense.remark}</p>
+                                                        <p className="text-xs text-gray-400">{new Date(expense.date).toLocaleTimeString()} • {expense.createdBy}</p>
+                                                    </div>
+                                                    <span className="text-red-400 font-bold">-฿{expense.amount.toLocaleString()}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-center text-gray-500 text-sm">{t('no_expenses_today')}</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                         {/* Accounts Summary */}

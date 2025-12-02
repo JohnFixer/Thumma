@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { CartItem, CustomerType, Customer, StoreCredit, Product, Language, StoreSettings } from '../types';
-import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from './icons/HeroIcons';
-import SalesAssistantModal from './SalesAssistantModal';
+import type { CustomerType, StoreCredit } from '../types'; // Keep these as types if they are only used as types
+import { TrashIcon, PlusIcon, MinusIcon, UserCircleIcon, CheckCircleIcon, XCircleIcon, PhoneIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon, ShoppingCartIcon, CubeIcon, XMarkIcon } from './icons/HeroIcons';
+import { CartItem, Customer, Product, StoreSettings, Language } from '../types';
 import type { TranslationKey } from '../translations';
+import SalesAssistantModal from './SalesAssistantModal';
 
 interface CartPanelProps {
   cartItems: CartItem[];
@@ -15,21 +16,21 @@ interface CartPanelProps {
   total: number;
   onCheckout: () => void;
   onCreateInvoice: () => void;
-  customerId?: string;
+  customerId: string;
   customerName: string;
   onCustomerNameChange: (name: string) => void;
   onCustomerInputBlur: () => void;
-  customerAddress?: string;
+  customerAddress: string;
   onCustomerAddressChange: (address: string) => void;
-  customerPhone?: string;
+  customerPhone: string;
   onCustomerPhoneChange: (phone: string) => void;
   onSelectCustomer: (customer: Customer) => void;
-  customerType: CustomerType;
-  onCustomerTypeChange: (type: CustomerType) => void;
+  customerType: 'walkIn' | 'contractor' | 'government' | 'organization';
+  onCustomerTypeChange: (type: 'walkIn' | 'contractor' | 'government' | 'organization') => void;
   isVatIncluded: boolean;
-  onVatToggle: (isIncluded: boolean) => void;
-  appliedCredit: StoreCredit | null;
-  onApplyCredit: (creditId: string) => { success: boolean; message: string };
+  onVatToggle: (included: boolean) => void;
+  appliedCredit: { id: string; amount: number } | null;
+  onApplyCredit: (code: string) => { success: boolean; message: string };
   orderType: 'In-Store' | 'Pickup' | 'Delivery';
   onOrderTypeChange: (type: 'In-Store' | 'Pickup' | 'Delivery') => void;
   products: Product[];
@@ -39,12 +40,16 @@ interface CartPanelProps {
   onCarryForwardBalance: (amount: number) => void;
   onAddMiscItemClick: () => void;
   transportationFee: number;
-  setTransportationFee: (fee: number) => void;
-  storeSettings: StoreSettings | null;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+  setTransportationFee: (amount: number) => void;
+  storeSettings?: StoreSettings;
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string;
   language: Language;
   transactionDate: string;
   onTransactionDateChange: (date: string) => void;
+  discount: number;
+  onDiscountChange: (amount: number) => void;
+  remark: string;
+  onRemarkChange: (text: string) => void;
 }
 
 const CartPanel: React.FC<CartPanelProps> = ({
@@ -53,7 +58,8 @@ const CartPanel: React.FC<CartPanelProps> = ({
   onCustomerPhoneChange, onSelectCustomer, customerType, onCustomerTypeChange, isVatIncluded, onVatToggle,
   appliedCredit, onApplyCredit, orderType, onOrderTypeChange, products, onNewUnpaidOrder,
   customerOutstandingBalance, carriedForwardBalance, onCarryForwardBalance, onAddMiscItemClick,
-  transportationFee, setTransportationFee, storeSettings, t, language, transactionDate, onTransactionDateChange
+  transportationFee, setTransportationFee, storeSettings, t, language, transactionDate, onTransactionDateChange,
+  discount, onDiscountChange, remark, onRemarkChange
 }) => {
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -66,6 +72,8 @@ const CartPanel: React.FC<CartPanelProps> = ({
   const [manualFee, setManualFee] = useState<number | ''>('');
   const [distance, setDistance] = useState<number | ''>('');
   const [ratePerKm, setRatePerKm] = useState<number | ''>('');
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+
 
   useEffect(() => {
     setRatePerKm(storeSettings?.delivery_rate_per_km ?? 10);
@@ -141,286 +149,387 @@ const CartPanel: React.FC<CartPanelProps> = ({
     });
   };
 
-  const renderActionButtons = () => {
-    return (
-      <div className="flex gap-2">
-        <button onClick={onNewUnpaidOrder} className="w-1/2 bg-secondary text-white font-bold py-3 rounded-lg hover:bg-orange-700">{t('pay_later')}</button>
-        <button onClick={onCheckout} className="w-1/2 bg-primary text-white font-bold py-3 rounded-lg hover:bg-blue-800">{t('pay_now')}</button>
-      </div>
-    );
+  const handleRemoveCredit = () => {
+    onApplyCredit(''); // Assuming an empty string or null clears the credit
+    setCreditMessage({ type: 'success', text: 'Credit removed.' });
   };
+
+  const formatCurrency = (amount: number) => {
+    return `฿${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const filteredCustomers = customers.filter(c =>
+    c.name.toLowerCase().includes(customerName.toLowerCase()) ||
+    c.phone?.includes(customerName)
+  ).slice(0, 5);
 
 
   return (
     <>
-      <div className="bg-surface rounded-lg shadow flex flex-col h-full">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-text-primary">{t('current_order')}</h3>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onAddMiscItemClick}
-              className="flex items-center gap-1.5 text-sm text-primary hover:text-blue-700 font-medium"
-              title={t('add_misc_item')}
-            >
-              <PlusIcon className="h-5 w-5" />
-              <span>{t('misc_item')}</span>
-            </button>
-            <button
-              onClick={() => setIsAssistantModalOpen(true)}
-              className="flex items-center gap-1.5 text-sm text-primary hover:text-blue-700 font-medium"
-              title="Open AI Sales Assistant"
-            >
-              <SparklesIcon className="h-5 w-5 text-secondary" />
-              <span>{t('ai_assist')}</span>
-            </button>
-            {cartItems.length > 0 && (
-              <button onClick={onClearCart} className="text-sm text-red-600 hover:text-red-800 font-medium">{t('clear_all')}</button>
-            )}
+      <div className="bg-surface rounded-lg shadow flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b bg-background rounded-t-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+              <ShoppingCartIcon className="h-6 w-6 text-primary" />
+              {t('current_order')}
+            </h2>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsAssistantModalOpen(true)}
+                className="flex items-center gap-1.5 text-sm text-primary hover:text-blue-700 font-medium"
+                title="Open AI Sales Assistant"
+              >
+                <SparklesIcon className="h-5 w-5 text-secondary" />
+                <span>{t('ai_assist')}</span>
+              </button>
+              <button
+                onClick={onClearCart}
+                className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1"
+              >
+                <TrashIcon className="h-4 w-4" />
+                {t('clear_cart')}
+              </button>
+            </div>
+          </div>
+
+          {/* Customer Selection */}
+          <div className="space-y-3">
+            <div className="relative">
+              <div className="flex items-center border rounded-md bg-white focus-within:ring-2 focus-within:ring-primary">
+                <UserCircleIcon className="h-5 w-5 text-gray-400 ml-2" />
+                <input
+                  type="text"
+                  placeholder={t('search_customer_placeholder')}
+                  value={customerName}
+                  onChange={(e) => {
+                    onCustomerNameChange(e.target.value);
+                    setShowCustomerSearch(true);
+                  }}
+                  onBlur={() => setTimeout(() => {
+                    onCustomerInputBlur();
+                    setShowCustomerSearch(false);
+                  }, 200)}
+                  onFocus={() => setShowCustomerSearch(true)}
+                  className="w-full p-2 outline-none text-sm"
+                />
+              </div>
+              {showCustomerSearch && customerName && filteredCustomers.length > 0 && (
+                <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  {filteredCustomers.map(customer => (
+                    <div
+                      key={customer.id}
+                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      onClick={() => {
+                        onSelectCustomer(customer);
+                        setShowCustomerSearch(false);
+                      }}
+                    >
+                      <div className="font-medium">{customer.name}</div>
+                      <div className="text-xs text-gray-500">{customer.phone}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Customer Details & Type */}
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={customerType}
+                onChange={(e) => onCustomerTypeChange(e.target.value as any)}
+                className="p-2 border rounded-md text-sm bg-white"
+              >
+                <option value="walkIn">{t('walk_in')}</option>
+                <option value="contractor">{t('contractor')}</option>
+                <option value="government">{t('government')}</option>
+                <option value="organization">{t('organization')}</option>
+              </select>
+              <select
+                value={orderType}
+                onChange={(e) => onOrderTypeChange(e.target.value as any)}
+                className="p-2 border rounded-md text-sm bg-white"
+              >
+                <option value="In-Store">{t('in_store')}</option>
+                <option value="Pickup">{t('pickup')}</option>
+                <option value="Delivery">{t('delivery')}</option>
+              </select>
+            </div>
+
+            {/* Additional Customer Info (Collapsible or always visible if needed) */}
+            {/* Additional Customer Info */}
+            <div className="space-y-2 text-sm">
+              <input
+                type="text"
+                placeholder={t('customer_phone')}
+                value={customerPhone || ''}
+                onChange={(e) => onCustomerPhoneChange(e.target.value)}
+                className="w-full p-2 border rounded-md"
+              />
+              <textarea
+                placeholder={t('address')}
+                value={customerAddress || ''}
+                onChange={(e) => onCustomerAddressChange(e.target.value)}
+                className="w-full p-2 border rounded-md h-16 resize-none"
+              />
+            </div>
+
+            {/* Transaction Date */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">{t('date')}:</label>
+              <input
+                type="date"
+                value={transactionDate}
+                onChange={(e) => onTransactionDateChange(e.target.value)}
+                className="w-full p-2 border rounded-md text-sm"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="px-4 pt-2 pb-0">
-          <label className="block text-xs font-medium text-text-secondary mb-1">{t('date')}</label>
-          <input
-            type="date"
-            value={transactionDate}
-            onChange={(e) => onTransactionDateChange(e.target.value)}
-            className="block w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm"
-          />
-        </div>
-
-        <div className="p-4 border-b">
-          <button
-            onClick={() => setIsCustomerSectionCollapsed(!isCustomerSectionCollapsed)}
-            className="w-full flex justify-between items-center font-semibold text-text-primary mb-2"
-          >
-            {t('customer_and_order_type')}
-            {isCustomerSectionCollapsed ? <ChevronDownIcon className="h-5 w-5" /> : <ChevronUpIcon className="h-5 w-5" />}
-          </button>
-          {!isCustomerSectionCollapsed && (
-            <div className="space-y-3">
-              <div ref={searchWrapperRef}>
-                <label htmlFor="customer-name" className="block text-sm font-medium text-text-secondary mb-1">{t('customer_name')}</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserCircleIcon className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    id="customer-name"
-                    value={customerName}
-                    onChange={handleNameChange}
-                    onFocus={handleNameChange}
-                    onBlur={onCustomerInputBlur}
-                    placeholder={t('search_or_enter_name_placeholder')}
-                    autoComplete="off"
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-background text-text-primary placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                  />
-                  {isDropdownVisible && (
-                    <ul className="absolute z-10 w-full mt-1 bg-surface border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                      {searchResults.map(customer => (
-                        <li
-                          key={customer.id}
-                          onClick={() => handleSelect(customer)}
-                          className="px-4 py-2 text-sm text-text-primary hover:bg-primary hover:text-white cursor-pointer"
-                        >
-                          {customer.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="customer-phone" className="block text-sm font-medium text-text-secondary mb-1">{t('customer_phone')}</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <PhoneIcon className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="tel"
-                    id="customer-phone"
-                    value={customerPhone || ''}
-                    onChange={(e) => onCustomerPhoneChange(e.target.value)}
-                    placeholder={t('enter_phone_placeholder')}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-background text-text-primary placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="customer-address" className="block text-sm font-medium text-text-secondary mb-1">{t('customer_address')}</label>
-                <input
-                  type="text"
-                  id="customer-address"
-                  value={customerAddress || ''}
-                  onChange={(e) => onCustomerAddressChange(e.target.value)}
-                  placeholder={orderType === 'Delivery' ? t('enter_delivery_address_placeholder') : t('enter_tax_invoice_address_placeholder')}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-background text-text-primary placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                />
-              </div>
-
-              {customerOutstandingBalance > 0 && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
-                  <p className="font-semibold text-yellow-800">{t('outstanding_balance')}: ฿{customerOutstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  <button
-                    onClick={() => onCarryForwardBalance(carriedForwardBalance > 0 ? 0 : customerOutstandingBalance)}
-                    className={`w-full mt-2 px-3 py-1.5 text-xs font-bold rounded-md ${carriedForwardBalance > 0 ? 'bg-red-500 text-white' : 'bg-yellow-500 text-yellow-900'}`}
-                  >
-                    {carriedForwardBalance > 0 ? 'Cancel' : t('add_balance_to_order')}
-                  </button>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="customer-type" className="block text-sm font-medium text-text-secondary mb-1">{t('customer_type')}</label>
-                  <select
-                    id="customer-type"
-                    value={customerType}
-                    onChange={(e) => onCustomerTypeChange(e.target.value as CustomerType)}
-                    disabled={!!customerId}
-                    className="block w-full p-2 border border-gray-300 rounded-md bg-background disabled:bg-gray-200 disabled:cursor-not-allowed"
-                  >
-                    <option value="walkIn">{t('walk_in')}</option>
-                    <option value="contractor">{t('contractor')}</option>
-                    <option value="government">{t('government')}</option>
-                    <option value="organization">{t('organization')}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">{t('order_type')}</label>
-                  <div className="flex rounded-md shadow-sm">
-                    {(['In-Store', 'Pickup', 'Delivery'] as const).map(type => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => onOrderTypeChange(type)}
-                        className={`px-2 py-2 text-xs font-medium border border-gray-300 flex-1 first:rounded-l-md last:rounded-r-md -ml-px ${orderType === type ? 'bg-primary text-white z-10' : 'bg-white text-gray-700 hover:bg-gray-50'
-                          }`}
-                      >
-                        {t(type.toLowerCase().replace('-', '_') as TranslationKey)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
+        {/* Scrollable Content Area: Product List + Footer */}
+        <div className="flex-1">
+          {/* Product List */}
           <div className="p-4">
             {cartItems.length === 0 ? (
-              <div className="text-center py-16 text-text-secondary">
+              <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-2 min-h-[200px]">
+                <ShoppingCartIcon className="h-12 w-12 opacity-20" />
                 <p>{t('cart_is_empty')}</p>
-                <p className="text-sm">{t('cart_empty_desc')}</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {cartItems.map(item => (
-                  <div key={item.variantId} className="flex items-center gap-3">
-                    <img src={item.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={item.name[language]} className="h-12 w-12 rounded object-cover" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium leading-tight">{item.name[language]} - {item.size}</p>
-                      <p className="text-xs text-text-secondary">
-                        {t(item.isOutsourced ? 'outsourced' : 'stock')}: {item.stock}
-                      </p>
+                {cartItems.map((item) => (
+                  <div key={item.variantId} className="flex items-center justify-between bg-white p-3 rounded-lg border shadow-sm">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="h-12 w-12 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.name[language]} className="h-full w-full object-cover" />
+                        ) : (
+                          <CubeIcon className="h-6 w-6 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-text-primary truncate">{item.name[language]}</h4>
+                        <p className="text-xs text-text-secondary">
+                          {item.size} | {item.sku}
+                          {item.isOutsourced && <span className="ml-1 text-orange-500 font-bold">({t('outsourced')})</span>}
+                        </p>
+                        <div className="text-sm font-bold text-primary mt-0.5">
+                          {formatCurrency(
+                            customerType === 'government' ? item.price.government :
+                              (customerType === 'contractor' ? item.price.contractor : item.price.walkIn)
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          if (item.quantity <= 1) {
-                            onRemoveItem(item.variantId);
-                          } else {
-                            onUpdateQuantity(item.variantId, item.quantity - 1);
-                          }
-                        }}
-                        className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"
-                      >
-                        <MinusIcon className="h-3 w-3" />
-                      </button>
-                      <div className="relative">
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center border rounded-md relative">
+                        <button
+                          onClick={() => onUpdateQuantity(item.variantId, item.quantity - 1)}
+                          className="p-1 hover:bg-gray-100 text-gray-600"
+                        >
+                          <MinusIcon className="h-4 w-4" />
+                        </button>
                         <input
                           type="number"
                           value={item.quantity === 0 ? '' : item.quantity}
                           onChange={(e) => {
-                            const val = e.target.value;
-                            const parsed = parseInt(val, 10);
-                            onUpdateQuantity(item.variantId, isNaN(parsed) ? 0 : parsed);
+                            const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                            onUpdateQuantity(item.variantId, isNaN(val) ? 0 : val);
                           }}
-                          className={`w-16 text-center border rounded-md p-1 text-sm ${item.quantity > item.stock && !item.isOutsourced ? 'border-red-500 text-red-600 bg-red-50' : 'border-gray-300'}`}
+                          className={`w-12 text-center text-sm border-x py-1 focus:outline-none ${!item.isOutsourced && item.quantity > item.stock ? 'text-red-600 font-bold bg-red-50' : ''}`}
                         />
-                        {item.quantity > item.stock && !item.isOutsourced && (
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
-                            Exceeds Stock
+                        <button
+                          onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)}
+                          className="p-1 hover:bg-gray-100 text-gray-600"
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                        </button>
+                        {/* Tooltip for Over Stock */}
+                        {!item.isOutsourced && item.quantity > item.stock && (
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
+                            Exceeds Stock ({item.stock})
                           </div>
                         )}
                       </div>
-                      <button onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"><PlusIcon className="h-3 w-3" /></button>
+                      <button
+                        onClick={() => onRemoveItem(item.variantId)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <XMarkIcon className="h-5 w-5" />
+                      </button>
                     </div>
-                    <button onClick={() => onRemoveItem(item.variantId)} className="text-red-500 hover:text-red-700"><TrashIcon className="h-4 w-4" /></button>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="p-4 border-t bg-background space-y-3">
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <label className="text-sm font-semibold text-blue-800">{t('transportation_fee')}</label>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex rounded-md shadow-sm w-full">
-                  <button type="button" onClick={() => setFeeMode('manual')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-l-md -mr-px ${feeMode === 'manual' ? 'bg-primary text-white' : 'bg-white'}`}>{t('manual')}</button>
-                  <button type="button" onClick={() => setFeeMode('distance')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-r-md ${feeMode === 'distance' ? 'bg-primary text-white' : 'bg-white'}`}>{t('by_distance')}</button>
+          {/* Configuration Section (Moved from Footer) */}
+          <div className="p-4 space-y-3 border-t">
+            {/* Add Misc Item Button */}
+            <button
+              onClick={onAddMiscItemClick}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {t('add_misc_item')}
+            </button>
+
+            {/* Financial Inputs */}
+            <div className="space-y-2 pt-2 border-t">
+              {/* Carried Forward Balance */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">{t('carried_forward_balance')}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">฿</span>
+                  <input
+                    type="number"
+                    value={carriedForwardBalance || ''}
+                    onChange={(e) => onCarryForwardBalance(parseFloat(e.target.value) || 0)}
+                    className="w-24 text-right border rounded p-1 text-sm"
+                    placeholder="0.00"
+                  />
                 </div>
               </div>
-              {feeMode === 'manual' ? (
-                <input type="number" placeholder="Fee Amount" value={manualFee} onChange={e => setManualFee(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2 w-full p-2 border rounded-md" />
-              ) : (
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <input type="number" placeholder={t('distance_km')} value={distance} onChange={e => setDistance(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
-                  <input type="number" placeholder={t('rate_per_km')} value={ratePerKm} onChange={e => setRatePerKm(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
+
+              {/* Transportation Fee */}
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <label className="text-sm font-semibold text-blue-800">{t('transportation_fee')}</label>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex rounded-md shadow-sm w-full">
+                    <button type="button" onClick={() => setFeeMode('manual')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-l-md -mr-px ${feeMode === 'manual' ? 'bg-primary text-white' : 'bg-white'}`}>{t('manual')}</button>
+                    <button type="button" onClick={() => setFeeMode('distance')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-r-md ${feeMode === 'distance' ? 'bg-primary text-white' : 'bg-white'}`}>{t('by_distance')}</button>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>{t('subtotal')}</span>
-              <span>฿{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>{t('tax_7')}</span>
-              <span>฿{tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="vat-toggle" checked={isVatIncluded} onChange={e => onVatToggle(e.target.checked)} disabled={customerType === 'government'} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-              <label htmlFor="vat-toggle" className="text-sm">{t('include_vat_7')}</label>
-            </div>
-
-            <div className="border-t pt-2">
-              <label className="text-sm font-medium">{t('store_credit')}</label>
-              <div className="flex gap-2 mt-1">
-                <input type="text" placeholder={t('enter_code_placeholder')} value={creditCode} onChange={e => setCreditCode(e.target.value)} className="flex-grow w-full p-2 border rounded-md text-sm" />
-                <button onClick={handleApplyCreditClick} className="px-4 py-2 bg-secondary text-white text-sm font-bold rounded-md hover:bg-orange-700">{t('apply')}</button>
+                {feeMode === 'manual' ? (
+                  <input type="number" placeholder="Fee Amount" value={manualFee} onChange={e => setManualFee(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2 w-full p-2 border rounded-md text-sm" />
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <input type="number" placeholder={t('distance_km')} value={distance} onChange={e => setDistance(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md text-sm" />
+                    <input type="number" placeholder={t('rate_per_km')} value={ratePerKm} onChange={e => setRatePerKm(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md text-sm" />
+                  </div>
+                )}
               </div>
-              {creditMessage && (
-                <p className={`text-xs mt-1 flex items-center gap-1 ${creditMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                  {creditMessage.type === 'success' ? <CheckCircleIcon className="h-4 w-4" /> : <XCircleIcon className="h-4 w-4" />}
-                  {creditMessage.text}
-                </p>
-              )}
+
+              {/* Discount */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">{t('discount')}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">- ฿</span>
+                  <input
+                    type="number"
+                    value={discount || ''}
+                    onChange={(e) => onDiscountChange(parseFloat(e.target.value) || 0)}
+                    className="w-24 text-right border rounded p-1 text-sm text-red-600"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              {/* Store Credit */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">{t('store_credit')}</span>
+                {appliedCredit ? (
+                  <div className="flex items-center gap-2 text-green-600 font-medium">
+                    <span>- {formatCurrency(appliedCredit.amount)}</span>
+                    <button onClick={handleRemoveCredit} className="text-red-500 hover:text-red-700">
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      placeholder={t('code')}
+                      value={creditCode}
+                      onChange={(e) => setCreditCode(e.target.value)}
+                      className="w-20 border rounded p-1 text-xs"
+                    />
+                    <button
+                      onClick={handleApplyCreditClick}
+                      className="bg-gray-200 hover:bg-gray-300 px-2 rounded text-xs"
+                    >
+                      {t('apply')}
+                    </button>
+                  </div>
+                )}
+              </div>
+              {creditMessage && <p className={`text-xs text-right ${creditMessage.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>{creditMessage.text}</p>}
             </div>
 
-            <div className="border-t pt-3 mt-3 flex justify-between items-baseline">
-              <span className="text-lg font-bold">{t('grand_total')}</span>
-              <span className="text-2xl font-bold text-primary">฿{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="mt-2">
-              {renderActionButtons()}
+            {/* Remark */}
+            <div className="pt-2">
+              <textarea
+                placeholder={t('remark_placeholder')}
+                value={remark || ''}
+                onChange={(e) => onRemarkChange(e.target.value)}
+                className="w-full p-2 border rounded-md text-sm h-16 resize-none"
+              />
             </div>
           </div>
         </div>
-      </div >
+
+        {/* Footer Section (Totals & Actions) */}
+        <div className="p-4 bg-white border-t space-y-3">
+          {/* Totals Summary */}
+          <div className="bg-gray-50 p-3 rounded-lg space-y-1">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>{t('subtotal')}</span>
+              <span>{formatCurrency(subtotal)}</span>
+            </div>
+            {isVatIncluded && (
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>{t('tax_7')}</span>
+                <span>{formatCurrency(tax)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+              <span className="font-bold text-lg text-text-primary">{t('total')}</span>
+              <span className="font-bold text-xl text-primary">{formatCurrency(total)}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <input
+                type="checkbox"
+                id="vat-toggle"
+                checked={isVatIncluded}
+                onChange={(e) => onVatToggle(e.target.checked)}
+                className="rounded text-primary focus:ring-primary"
+              />
+              <label htmlFor="vat-toggle" className="text-xs text-gray-600 cursor-pointer select-none">
+                {t('include_vat_7')}
+              </label>
+            </div>
+            {customerOutstandingBalance > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className="flex justify-between text-sm text-red-600 font-medium">
+                  <span>{t('outstanding_balance')}</span>
+                  <span>{formatCurrency(customerOutstandingBalance)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={onNewUnpaidOrder}
+              className="py-3 px-4 bg-white border border-primary text-primary rounded-lg font-semibold hover:bg-blue-50 transition-colors flex flex-col items-center justify-center gap-1"
+            >
+              <span className="text-sm">{t('pay_later')}</span>
+              <span className="text-xs font-normal opacity-75">{t('create_invoice')}</span>
+            </button>
+            <button
+              onClick={onCheckout}
+              className="py-3 px-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors shadow-lg shadow-blue-500/30 flex flex-col items-center justify-center gap-1"
+            >
+              <span className="text-sm">{t('pay_now')}</span>
+              <span className="text-xs font-normal opacity-75">{formatCurrency(total)}</span>
+            </button>
+          </div>
+        </div>
+      </div>
       <SalesAssistantModal
         isOpen={isAssistantModalOpen}
         onClose={() => setIsAssistantModalOpen(false)}
@@ -431,4 +540,6 @@ const CartPanel: React.FC<CartPanelProps> = ({
     </>
   );
 };
+
 export default CartPanel;
+

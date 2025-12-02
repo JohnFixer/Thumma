@@ -49,6 +49,8 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
     const [carriedForwardBalance, setCarriedForwardBalance] = useState(0);
     const [transportationFee, setTransportationFee] = useState(0);
     const [transactionDate, setTransactionDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [discount, setDiscount] = useState(0);
+    const [remark, setRemark] = useState('');
 
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -170,6 +172,8 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
         setTransportationFee(0);
         setIsNewCustomer(false);
         setTransactionDate(new Date().toISOString().split('T')[0]);
+        setDiscount(0);
+        setRemark('');
     }, [currentUser.settings?.defaultCustomerType]);
 
     const handleSelectCustomer = (customer: Customer) => {
@@ -255,11 +259,12 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
 
         total += carriedForwardBalance;
         total += transportationFee;
+        total -= discount;
         const originalTotal = total;
         const finalTotal = total - (appliedCredit ? appliedCredit.amount : 0);
 
         return { subtotal, tax, total: finalTotal, originalTotal };
-    }, [cartItems, customerType, isVatIncluded, appliedCredit, carriedForwardBalance, transportationFee]);
+    }, [cartItems, customerType, isVatIncluded, appliedCredit, carriedForwardBalance, transportationFee, discount]);
 
     const handleApplyCredit = (creditId: string): { success: boolean; message: string } => {
         if (!creditId) {
@@ -437,12 +442,13 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 customerPhone: finalCustomer.phone,
                 customerType: customerType,
                 operator: currentUser.name,
-                paymentMethod: 'Cash', // Placeholder, unpaied
+                paymentMethod: 'Cash', // Default for unpaid orders
                 vatIncluded: isVatIncluded,
                 appliedStoreCredit: appliedCredit ? { id: appliedCredit.id, amount: appliedCredit.amount } : undefined,
                 payment_status: PaymentStatus.UNPAID,
+                discount: discount > 0 ? discount : undefined,
+                remark: remark || undefined,
             };
-
             if (transportationFee > 0) {
                 newTransactionData.transportationFee = transportationFee;
             }
@@ -522,8 +528,9 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 vatIncluded: isVatIncluded,
                 appliedStoreCredit: appliedCredit ? { id: appliedCredit.id, amount: appliedCredit.amount } : undefined,
                 payment_status: PaymentStatus.PAID,
+                discount: discount > 0 ? discount : undefined,
+                remark: remark || undefined,
             };
-
             if (transportationFee > 0) {
                 newTransactionData.transportationFee = transportationFee;
             }
@@ -554,6 +561,8 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                 address: customerAddress,
                 paymentStatus: PaymentStatus.PAID,
                 paymentMethod: method,
+                discount: discount > 0 ? discount : undefined,
+                remark: remark || undefined,
             };
 
             onNewOrder(newOrder);
@@ -579,59 +588,68 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
     }, [posScannedCode, setPosScannedCode, products, handleProductSelect, showAlert, t]);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-            <ProductGrid
-                products={products}
-                onProductSelect={handleProductSelect}
-                onScanClick={() => openScanner(code => setPosScannedCode(code))}
-                onProductMouseEnter={onProductMouseEnter}
-                onProductMouseLeave={onProductMouseLeave}
-                t={t}
-                language={language}
-            />
-            <CartPanel
-                cartItems={cartItems}
-                customers={customers}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                onClearCart={handleClearCart}
-                subtotal={subtotal}
-                tax={tax}
-                total={total}
-                onCheckout={handleCheckout}
-                onCreateInvoice={handleCreateInvoice}
-                customerName={customerName}
-                onCustomerNameChange={handleCustomerNameChange}
-                onCustomerInputBlur={handleCustomerInputBlur}
-                customerAddress={customerAddress}
-                onCustomerAddressChange={setCustomerAddress}
-                customerPhone={customerPhone}
-                onCustomerPhoneChange={setCustomerPhone}
-                onSelectCustomer={handleSelectCustomer}
-                customerType={customerType}
-                onCustomerTypeChange={handleCustomerTypeChange}
-                isVatIncluded={isVatIncluded}
-                onVatToggle={setIsVatIncluded}
-                appliedCredit={appliedCredit}
-                onApplyCredit={handleApplyCredit}
-                orderType={orderType}
-                onOrderTypeChange={setOrderType}
-                products={products}
-                // FIX: Corrected typo 'handleNewUnpaidOrder' to 'handleCreateUnpaidOrder'
-                onNewUnpaidOrder={handleCreateUnpaidOrder}
-                customerOutstandingBalance={customerOutstandingBalance}
-                carriedForwardBalance={carriedForwardBalance}
-                // FIX: Corrected typo 'setCarryForwardBalance' to 'setCarriedForwardBalance'
-                onCarryForwardBalance={setCarriedForwardBalance}
-                onAddMiscItemClick={() => setIsAddMiscItemModalOpen(true)}
-                transportationFee={transportationFee}
-                setTransportationFee={setTransportationFee}
-                storeSettings={storeSettings}
-                t={t}
-                language={language}
-                transactionDate={transactionDate}
-                onTransactionDateChange={setTransactionDate}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="lg:sticky lg:top-0 lg:h-[calc(100vh-6rem)] z-10">
+                <ProductGrid
+                    products={products}
+                    onProductSelect={handleProductSelect}
+                    onScanClick={() => openScanner(code => setPosScannedCode(code))}
+                    onProductMouseEnter={onProductMouseEnter}
+                    onProductMouseLeave={onProductMouseLeave}
+                    t={t}
+                    language={language}
+                />
+            </div>
+            <div>
+                <CartPanel
+                    cartItems={cartItems}
+                    customers={customers}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemoveItem={handleRemoveItem}
+                    onClearCart={handleClearCart}
+                    subtotal={subtotal}
+                    tax={tax}
+                    total={total}
+                    onCheckout={handleCheckout}
+                    onCreateInvoice={handleCreateInvoice}
+                    customerName={customerName}
+                    onCustomerNameChange={handleCustomerNameChange}
+                    onCustomerInputBlur={handleCustomerInputBlur}
+                    customerAddress={customerAddress || ''}
+                    onCustomerAddressChange={setCustomerAddress}
+                    customerPhone={customerPhone || ''}
+                    onCustomerPhoneChange={setCustomerPhone}
+                    onSelectCustomer={handleSelectCustomer}
+                    customerType={customerType}
+                    onCustomerTypeChange={handleCustomerTypeChange}
+                    isVatIncluded={isVatIncluded}
+                    onVatToggle={setIsVatIncluded}
+                    appliedCredit={appliedCredit}
+                    onApplyCredit={handleApplyCredit}
+                    orderType={orderType}
+                    onOrderTypeChange={setOrderType}
+                    products={products}
+                    // FIX: Corrected typo 'handleNewUnpaidOrder' to 'handleCreateUnpaidOrder'
+                    onNewUnpaidOrder={handleCreateUnpaidOrder}
+                    customerOutstandingBalance={customerOutstandingBalance}
+                    carriedForwardBalance={carriedForwardBalance}
+                    // FIX: Corrected typo 'setCarryForwardBalance' to 'setCarriedForwardBalance'
+                    onCarryForwardBalance={setCarriedForwardBalance}
+                    onAddMiscItemClick={() => setIsAddMiscItemModalOpen(true)}
+                    transportationFee={transportationFee}
+                    setTransportationFee={setTransportationFee}
+                    storeSettings={storeSettings || undefined}
+                    t={t}
+                    language={language}
+                    transactionDate={transactionDate}
+                    onTransactionDateChange={setTransactionDate}
+                    discount={discount}
+                    onDiscountChange={setDiscount}
+                    remark={remark}
+                    onRemarkChange={setRemark}
+                    customerId={customerId || ''}
+                />
+            </div>
             <PaymentModal
                 isOpen={isPaymentModalOpen}
                 onClose={() => setIsPaymentModalOpen(false)}

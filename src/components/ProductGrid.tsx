@@ -75,7 +75,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, on
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 min-h-0">
                 {filteredProducts.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {filteredProducts.map(product => {
@@ -86,6 +86,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, on
 
                             return (
                                 <button
+                                    type="button"
                                     key={product.id}
                                     onClick={() => onProductSelect(product)}
                                     onMouseEnter={(e) => onProductMouseEnter(product, e)}

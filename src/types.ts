@@ -283,6 +283,7 @@ export interface Transaction {
   subtotal: number;
   tax: number;
   transportationFee?: number;
+  discount?: number;
   total: number;
   customerId?: string;
   customerName: string;
@@ -301,6 +302,7 @@ export interface Transaction {
   file_url?: string;
   created_at?: string;
   payments?: PaymentRecord[];
+  remark?: string;
 }
 
 export interface Order {
@@ -310,12 +312,14 @@ export interface Order {
   items: CartItem[];
   total: number;
   transportationFee?: number;
+  discount?: number;
   status: FulfillmentStatus;
   type: 'Pickup' | 'Delivery' | 'In-Store';
   address?: string;
   notes?: string;
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;
+  remark?: string;
 }
 
 

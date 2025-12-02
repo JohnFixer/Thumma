@@ -140,14 +140,11 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
 
     const handleUpdateQuantity = useCallback((variantId: string, quantity: number) => {
         setCartItems(prevItems => {
-            if (quantity <= 0) {
-                return prevItems.filter(item => item.variantId !== variantId);
-            }
             return prevItems.map(item => {
                 if (item.variantId === variantId) {
-                    // For outsourced items, don't cap by stock, as stock is an artificial value.
-                    // For regular items, cap at available stock.
-                    const newQuantity = item.isOutsourced ? quantity : Math.min(quantity, item.stock);
+                    // Allow any quantity, even if it exceeds stock.
+                    // Allow 0 for typing purposes
+                    const newQuantity = quantity;
                     return { ...item, quantity: newQuantity };
                 }
                 return item;

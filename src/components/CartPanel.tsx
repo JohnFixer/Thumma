@@ -309,91 +309,115 @@ const CartPanel: React.FC<CartPanelProps> = ({
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          {cartItems.length === 0 ? (
-            <div className="text-center py-16 text-text-secondary">
-              <p>{t('cart_is_empty')}</p>
-              <p className="text-sm">{t('cart_empty_desc')}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {cartItems.map(item => (
-                <div key={item.variantId} className="flex items-center gap-3">
-                  <img src={item.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={item.name[language]} className="h-12 w-12 rounded object-cover" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium leading-tight">{item.name[language]} - {item.size}</p>
-                    <p className="text-xs text-text-secondary">
-                      {t(item.isOutsourced ? 'outsourced' : 'stock')}: {item.stock}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => onUpdateQuantity(item.variantId, item.quantity - 1)} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"><MinusIcon className="h-3 w-3" /></button>
-                    <input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => onUpdateQuantity(item.variantId, parseInt(e.target.value, 10) || 0)}
-                      className="w-12 text-center border-gray-300 rounded-md p-1 text-sm"
-                    />
-                    <button onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"><PlusIcon className="h-3 w-3" /></button>
-                  </div>
-                  <button onClick={() => onRemoveItem(item.variantId)} className="text-red-500 hover:text-red-700"><TrashIcon className="h-4 w-4" /></button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 border-t bg-background space-y-3">
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <label className="text-sm font-semibold text-blue-800">{t('transportation_fee')}</label>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="flex rounded-md shadow-sm w-full">
-                <button type="button" onClick={() => setFeeMode('manual')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-l-md -mr-px ${feeMode === 'manual' ? 'bg-primary text-white' : 'bg-white'}`}>{t('manual')}</button>
-                <button type="button" onClick={() => setFeeMode('distance')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-r-md ${feeMode === 'distance' ? 'bg-primary text-white' : 'bg-white'}`}>{t('by_distance')}</button>
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            {cartItems.length === 0 ? (
+              <div className="text-center py-16 text-text-secondary">
+                <p>{t('cart_is_empty')}</p>
+                <p className="text-sm">{t('cart_empty_desc')}</p>
               </div>
-            </div>
-            {feeMode === 'manual' ? (
-              <input type="number" placeholder="Fee Amount" value={manualFee} onChange={e => setManualFee(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2 w-full p-2 border rounded-md" />
             ) : (
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <input type="number" placeholder={t('distance_km')} value={distance} onChange={e => setDistance(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
-                <input type="number" placeholder={t('rate_per_km')} value={ratePerKm} onChange={e => setRatePerKm(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
+              <div className="space-y-3">
+                {cartItems.map(item => (
+                  <div key={item.variantId} className="flex items-center gap-3">
+                    <img src={item.imageUrl || 'https://placehold.co/400x400?text=No+Image'} alt={item.name[language]} className="h-12 w-12 rounded object-cover" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium leading-tight">{item.name[language]} - {item.size}</p>
+                      <p className="text-xs text-text-secondary">
+                        {t(item.isOutsourced ? 'outsourced' : 'stock')}: {item.stock}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (item.quantity <= 1) {
+                            onRemoveItem(item.variantId);
+                          } else {
+                            onUpdateQuantity(item.variantId, item.quantity - 1);
+                          }
+                        }}
+                        className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"
+                      >
+                        <MinusIcon className="h-3 w-3" />
+                      </button>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={item.quantity === 0 ? '' : item.quantity}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const parsed = parseInt(val, 10);
+                            onUpdateQuantity(item.variantId, isNaN(parsed) ? 0 : parsed);
+                          }}
+                          className={`w-16 text-center border rounded-md p-1 text-sm ${item.quantity > item.stock && !item.isOutsourced ? 'border-red-500 text-red-600 bg-red-50' : 'border-gray-300'}`}
+                        />
+                        {item.quantity > item.stock && !item.isOutsourced && (
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap z-10">
+                            Exceeds Stock
+                          </div>
+                        )}
+                      </div>
+                      <button onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"><PlusIcon className="h-3 w-3" /></button>
+                    </div>
+                    <button onClick={() => onRemoveItem(item.variantId)} className="text-red-500 hover:text-red-700"><TrashIcon className="h-4 w-4" /></button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-          <div className="flex justify-between text-sm">
-            <span>{t('subtotal')}</span>
-            <span>฿{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span>{t('tax_7')}</span>
-            <span>฿{tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="vat-toggle" checked={isVatIncluded} onChange={e => onVatToggle(e.target.checked)} disabled={customerType === 'government'} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-            <label htmlFor="vat-toggle" className="text-sm">{t('include_vat_7')}</label>
-          </div>
 
-          <div className="border-t pt-2">
-            <label className="text-sm font-medium">{t('store_credit')}</label>
-            <div className="flex gap-2 mt-1">
-              <input type="text" placeholder={t('enter_code_placeholder')} value={creditCode} onChange={e => setCreditCode(e.target.value)} className="flex-grow w-full p-2 border rounded-md text-sm" />
-              <button onClick={handleApplyCreditClick} className="px-4 py-2 bg-secondary text-white text-sm font-bold rounded-md hover:bg-orange-700">{t('apply')}</button>
+          <div className="p-4 border-t bg-background space-y-3">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <label className="text-sm font-semibold text-blue-800">{t('transportation_fee')}</label>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex rounded-md shadow-sm w-full">
+                  <button type="button" onClick={() => setFeeMode('manual')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-l-md -mr-px ${feeMode === 'manual' ? 'bg-primary text-white' : 'bg-white'}`}>{t('manual')}</button>
+                  <button type="button" onClick={() => setFeeMode('distance')} className={`px-2 py-1 text-xs font-medium border border-gray-300 rounded-r-md ${feeMode === 'distance' ? 'bg-primary text-white' : 'bg-white'}`}>{t('by_distance')}</button>
+                </div>
+              </div>
+              {feeMode === 'manual' ? (
+                <input type="number" placeholder="Fee Amount" value={manualFee} onChange={e => setManualFee(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2 w-full p-2 border rounded-md" />
+              ) : (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <input type="number" placeholder={t('distance_km')} value={distance} onChange={e => setDistance(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
+                  <input type="number" placeholder={t('rate_per_km')} value={ratePerKm} onChange={e => setRatePerKm(e.target.value === '' ? '' : Number(e.target.value))} className="p-2 border rounded-md" />
+                </div>
+              )}
             </div>
-            {creditMessage && (
-              <p className={`text-xs mt-1 flex items-center gap-1 ${creditMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                {creditMessage.type === 'success' ? <CheckCircleIcon className="h-4 w-4" /> : <XCircleIcon className="h-4 w-4" />}
-                {creditMessage.text}
-              </p>
-            )}
-          </div>
+            <div className="flex justify-between text-sm">
+              <span>{t('subtotal')}</span>
+              <span>฿{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>{t('tax_7')}</span>
+              <span>฿{tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="vat-toggle" checked={isVatIncluded} onChange={e => onVatToggle(e.target.checked)} disabled={customerType === 'government'} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+              <label htmlFor="vat-toggle" className="text-sm">{t('include_vat_7')}</label>
+            </div>
 
-          <div className="border-t pt-3 mt-3 flex justify-between items-baseline">
-            <span className="text-lg font-bold">{t('grand_total')}</span>
-            <span className="text-2xl font-bold text-primary">฿{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
-          <div className="mt-2">
-            {renderActionButtons()}
+            <div className="border-t pt-2">
+              <label className="text-sm font-medium">{t('store_credit')}</label>
+              <div className="flex gap-2 mt-1">
+                <input type="text" placeholder={t('enter_code_placeholder')} value={creditCode} onChange={e => setCreditCode(e.target.value)} className="flex-grow w-full p-2 border rounded-md text-sm" />
+                <button onClick={handleApplyCreditClick} className="px-4 py-2 bg-secondary text-white text-sm font-bold rounded-md hover:bg-orange-700">{t('apply')}</button>
+              </div>
+              {creditMessage && (
+                <p className={`text-xs mt-1 flex items-center gap-1 ${creditMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                  {creditMessage.type === 'success' ? <CheckCircleIcon className="h-4 w-4" /> : <XCircleIcon className="h-4 w-4" />}
+                  {creditMessage.text}
+                </p>
+              )}
+            </div>
+
+            <div className="border-t pt-3 mt-3 flex justify-between items-baseline">
+              <span className="text-lg font-bold">{t('grand_total')}</span>
+              <span className="text-2xl font-bold text-primary">฿{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="mt-2">
+              {renderActionButtons()}
+            </div>
           </div>
         </div>
       </div >

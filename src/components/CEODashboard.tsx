@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import type { User, Transaction, Bill, Product, ToDoItem, Language, StoreSettings, Supplier, ProductVariant } from '../types';
 import { BillStatus, ProductStatus, PaymentStatus } from '../types';
 import StatsCard from './StatsCard';
@@ -86,7 +87,12 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
     // Fetch Daily Expenses
     useEffect(() => {
         const loadDailyExpenses = async () => {
-            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            // Use local time instead of UTC to ensure correct daily reset
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
             const expenses = await fetchDailyExpenses(today);
             setDailyExpenses(expenses);
         };
@@ -233,7 +239,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
 
     return (
         <>
-            <div className="bg-gray-900 text-white font-sans h-full">
+            <div className="bg-gray-900 text-white font-sans min-h-screen">
                 <header className="p-4 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         {storeSettings?.logo_url ? <img src={storeSettings.logo_url} alt="Logo" className="h-12" /> : <CubeIcon className="h-12 w-12 text-secondary" />}
@@ -288,9 +294,9 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                         {isWidgetVisible('ceo_sales_performance') && (
                             <div className="bg-gray-800 p-4 rounded-lg">
                                 <h2 className="text-lg font-semibold mb-4">{t('sales_performance')}</h2>
-                                <StatsCard title={t('sales_today')} value={`฿${metrics.salesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CurrencyDollarIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" />
-                                <StatsCard title={t('sales_month')} value={`฿${metrics.salesMonth.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" />
-                                <StatsCard title={t('sales_year')} value={`฿${metrics.salesYear.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-purple-400" className="bg-gray-700/50 mt-4" />
+                                <StatsCard title={t('sales_today')} value={`฿${metrics.salesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CurrencyDollarIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" valueColor="text-gray-900" titleColor="text-gray-600" />
+                                <StatsCard title={t('sales_month')} value={`฿${metrics.salesMonth.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" valueColor="text-gray-900" titleColor="text-gray-600" />
+                                <StatsCard title={t('sales_year')} value={`฿${metrics.salesYear.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-purple-400" className="bg-gray-700/50 mt-4" valueColor="text-gray-900" titleColor="text-gray-600" />
                             </div>
                         )}
                     </div>
@@ -308,6 +314,8 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                                     className="bg-gray-700/50"
                                     isClickable
                                     onClick={() => setIsDailyExpensesExpanded(!isDailyExpensesExpanded)}
+                                    valueColor="text-gray-900"
+                                    titleColor="text-gray-600"
                                 />
                                 {isDailyExpensesExpanded && (
                                     <div className="mt-4 bg-gray-700/30 rounded-lg p-3 space-y-2 animate-fadeIn">
@@ -332,17 +340,17 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                         {isWidgetVisible('ceo_accounts_summary') && (
                             <div className="bg-gray-800 p-4 rounded-lg">
                                 <h2 className="text-lg font-semibold mb-4">Accounts Summary</h2>
-                                <StatsCard title={t('total_receivables')} value={`฿${metrics.totalReceivables.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" />
-                                <StatsCard title={t('overdue_amount')} value={`฿${metrics.overdueARAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ExclamationTriangleIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openTransactionModal('overdue_amount', metrics.overdueAR)} />
-                                <StatsCard title={t('total_owed')} value={`฿${metrics.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-orange-400" className="bg-gray-700/50 mt-4" />
-                                <StatsCard title={t('due_in_days', { days: 7 })} value={`฿${metrics.dueNext7DaysBillsAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ClockIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openBillModal('due_in_days', metrics.dueNext7DaysBills)} />
+                                <StatsCard title={t('total_receivables')} value={`฿${metrics.totalReceivables.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" valueColor="text-gray-900" titleColor="text-gray-600" />
+                                <StatsCard title={t('overdue_amount')} value={`฿${metrics.overdueARAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ExclamationTriangleIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openTransactionModal('overdue_amount', metrics.overdueAR)} valueColor="text-gray-900" titleColor="text-gray-600" />
+                                <StatsCard title={t('total_owed')} value={`฿${metrics.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-orange-400" className="bg-gray-700/50 mt-4" valueColor="text-gray-900" titleColor="text-gray-600" />
+                                <StatsCard title={t('due_in_days', { days: 7 })} value={`฿${metrics.dueNext7DaysBillsAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ClockIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openBillModal('due_in_days', metrics.dueNext7DaysBills)} valueColor="text-gray-900" titleColor="text-gray-600" />
                             </div>
                         )}
                         {/* Inventory Alert */}
                         {isWidgetVisible('ceo_inventory') && (
                             <div className="bg-gray-800 p-4 rounded-lg">
                                 <h2 className="text-lg font-semibold mb-4">{t('inventory_overview')}</h2>
-                                <StatsCard title={t('low_stock_items')} value={metrics.lowStockVariants.length} icon={<CubeIcon className="h-6 w-6" />} color="text-yellow-400" className="bg-gray-700/50" isClickable onClick={() => setIsLowStockModalOpen(true)} />
+                                <StatsCard title={t('low_stock_items')} value={metrics.lowStockVariants.length} icon={<CubeIcon className="h-6 w-6" />} color="text-yellow-400" className="bg-gray-700/50" isClickable onClick={() => setIsLowStockModalOpen(true)} valueColor="text-gray-900" titleColor="text-gray-600" />
                             </div>
                         )}
                     </div>

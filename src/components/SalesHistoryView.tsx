@@ -53,6 +53,8 @@ const SalesHistoryView: React.FC<SalesHistoryViewProps> = ({ transactions, curre
                 result = result.filter(t => new Date(t.date).toDateString() === today && t.paymentMethod === 'Card' && t.payment_status !== PaymentStatus.UNPAID);
             } else if (activeFilter === 'transfer_today') {
                 result = result.filter(t => new Date(t.date).toDateString() === today && t.paymentMethod === 'Bank Transfer' && t.payment_status !== PaymentStatus.UNPAID);
+            } else if (activeFilter === 'total_today') {
+                result = result.filter(t => new Date(t.date).toDateString() === today && t.payment_status !== PaymentStatus.UNPAID);
             }
         }
 

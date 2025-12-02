@@ -1064,9 +1064,32 @@ const App: React.FC = () => {
         }
     };
     const handleLogin = (username: string, password: string) => {
-        const permissions = getPermissionsFromRoles([Role.ADMIN]);
-        setCurrentUser({ id: '1', name: 'Admin', role: [Role.ADMIN], avatar: '', permissions });
-        setActiveView('dashboard');
+        // In a real app, this would be an API call to verify credentials securely.
+        // For this local-first/demo version, we check against the loaded users.
+        const user = users.find(u => u.name === username || (u as any).username === username);
+
+        if (user) {
+            // For simplicity in this demo, we are not checking passwords strictly if they aren't in the DB,
+            // or we assume the user knows what they are doing. 
+            // In a real scenario: if (user.password === password) ...
+
+            // Ensure permissions are set (if not already in the user object, generate them based on role)
+            const permissions = user.permissions || getPermissionsFromRoles(user.role);
+            const userWithPermissions = { ...user, permissions };
+
+            setCurrentUser(userWithPermissions);
+
+            // Redirect based on role
+            if (user.role.includes(Role.CEO)) {
+                setActiveView('ceo_dashboard');
+            } else {
+                setActiveView('dashboard');
+            }
+
+            showAlert(t('alert_success'), t('login_success', { name: user.name.toUpperCase() }));
+        } else {
+            showAlert(t('alert_error'), t('login_failed'));
+        }
     };
     const handleLogout = () => { setCurrentUser(null); };
 
@@ -1154,12 +1177,12 @@ const App: React.FC = () => {
 
     const renderView = () => {
         if (!currentUser) return <LoginView onLogin={handleLogin} storeSettings={storeSettings} language={language} setLanguage={setLanguage} t={t} />;
-        if (activeView === 'ceo_dashboard') return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} />;
+        if (activeView === 'ceo_dashboard') return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
 
         switch (activeView) {
             case 'dashboard':
                 if (currentUser && currentUser.role[0] === 'CEO') {
-                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} />;
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
                 }
                 return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
             case 'pos': return <POSView products={products} currentUser={currentUser} customers={customers} storeCredits={storeCredits} transactions={transactions} onNewTransaction={handleNewTransaction} onNewInvoice={handleNewInvoice} onNewOrder={handleNewOrder} onAddNewCustomerFromPOS={handleAddNewCustomerFromPOS} openScanner={openScanner} posScannedCode={posScannedCode} setPosScannedCode={setPosScannedCode} showAlert={showAlert} storeSettings={storeSettings} onProductMouseEnter={handleProductMouseEnter} onProductMouseLeave={handleProductMouseLeave} t={t} language={language} />;

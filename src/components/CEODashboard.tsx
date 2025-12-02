@@ -25,9 +25,10 @@ interface CEODashboardProps {
     setLanguage: (lang: Language) => void;
     onBillUpdated: (updatedBill: Bill) => void;
     showAlert: (title: string, message: string) => void;
+    onNavigate: (view: string, state?: any) => void;
 }
 
-const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, transactions, bills, users, products, suppliers, storeSettings, t, language, setLanguage, onBillUpdated, showAlert }) => {
+const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, transactions, bills, users, products, suppliers, storeSettings, t, language, setLanguage, onBillUpdated, showAlert, onNavigate }) => {
 
     // Widget visibility based on role settings
     const getVisibleWidgets = (): string[] => {
@@ -233,7 +234,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                             </select>
                             <LanguageIcon className="h-5 w-5 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
-                        <p className="text-sm">{currentUser.name}</p>
+                        <p className="text-sm">{currentUser.name.toUpperCase()}</p>
                         <button onClick={onLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white"><ArrowLeftOnRectangleIcon className="h-5 w-5" /> {t('logout')}</button>
                     </div>
                 </header>
@@ -247,6 +248,29 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                     )}
                     {/* Column 1 */}
                     <div className="space-y-6">
+                        {/* Daily Breakdown - Moved to Top */}
+                        {isWidgetVisible('ceo_daily_overview') && (
+                            <div className="bg-gray-800 p-4 rounded-lg">
+                                <h2 className="text-lg font-semibold mb-4">{t('daily_sales_overview')}</h2>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded cursor-pointer hover:bg-gray-600 transition-colors" onClick={() => onNavigate('sales_history', { filter: 'total_today' })}>
+                                        <span>{t('total_sales_today')}</span><span className="font-bold">฿{metrics.salesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded cursor-pointer hover:bg-gray-600 transition-colors" onClick={() => onNavigate('sales_history', { filter: 'cash_today' })}>
+                                        <span>{t('cash_sales')}</span><span className="font-bold">฿{metrics.salesTodayCash.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded cursor-pointer hover:bg-gray-600 transition-colors" onClick={() => onNavigate('sales_history', { filter: 'card_today' })}>
+                                        <span>{t('card_sales')}</span><span className="font-bold">฿{metrics.salesTodayCard.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded cursor-pointer hover:bg-gray-600 transition-colors" onClick={() => onNavigate('sales_history', { filter: 'transfer_today' })}>
+                                        <span>{t('bank_transfer_sales')}</span><span className="font-bold">฿{metrics.salesTodayBank.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 bg-yellow-900/50 rounded cursor-pointer hover:bg-yellow-800 transition-colors" onClick={() => openTransactionModal('ar_new', transactions.filter(tx => new Date(tx.date).toDateString() === new Date().toDateString() && tx.payment_status === PaymentStatus.UNPAID))}>
+                                        <span>{t('ar_new')}</span><span className="font-bold">฿{metrics.salesTodayAR.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {/* Sales Performance */}
                         {isWidgetVisible('ceo_sales_performance') && (
                             <div className="bg-gray-800 p-4 rounded-lg">
@@ -254,20 +278,6 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                                 <StatsCard title={t('sales_today')} value={`฿${metrics.salesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CurrencyDollarIcon className="h-6 w-6" />} color="text-green-400" className="bg-gray-700/50" />
                                 <StatsCard title={t('sales_month')} value={`฿${metrics.salesMonth.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-blue-400" className="bg-gray-700/50 mt-4" />
                                 <StatsCard title={t('sales_year')} value={`฿${metrics.salesYear.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<CalendarDaysIcon className="h-6 w-6" />} color="text-purple-400" className="bg-gray-700/50 mt-4" />
-                            </div>
-                        )}
-                        {/* Daily Breakdown */}
-                        {isWidgetVisible('ceo_daily_overview') && (
-                            <div className="bg-gray-800 p-4 rounded-lg">
-                                <h2 className="text-lg font-semibold mb-4">{t('daily_sales_overview')}</h2>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('cash_sales')}</span><span className="font-bold">฿{metrics.salesTodayCash.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
-                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('card_sales')}</span><span className="font-bold">฿{metrics.salesTodayCard.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
-                                    <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded"><span>{t('bank_transfer_sales')}</span><span className="font-bold">฿{metrics.salesTodayBank.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span></div>
-                                    <div className="flex justify-between items-center p-2 bg-yellow-900/50 rounded cursor-pointer" onClick={() => openTransactionModal('ar_new', transactions.filter(tx => new Date(tx.date).toDateString() === new Date().toDateString() && tx.payment_status === PaymentStatus.UNPAID))}>
-                                        <span>{t('ar_new')}</span><span className="font-bold">฿{metrics.salesTodayAR.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
-                                    </div>
-                                </div>
                             </div>
                         )}
                     </div>
@@ -278,7 +288,6 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                             <div className="bg-gray-800 p-4 rounded-lg">
                                 <h2 className="text-lg font-semibold mb-4">{t('daily_expenses')}</h2>
                                 <StatsCard title={t('wages_today')} value={`฿${metrics.wagesToday.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<BanknotesIcon className="h-6 w-6" />} color="text-red-400" className="bg-gray-700/50" />
-                                <StatsCard title={t('due_today')} value={`฿${metrics.dueTodayAmount.toLocaleString(undefined, { minimumFractionDigits: 0 })}`} icon={<ExclamationTriangleIcon className="h-6 w-6" />} color="text-yellow-400" className="bg-gray-700/50 mt-4" isClickable onClick={() => openBillModal('due_today', metrics.dueTodayBills)} />
                             </div>
                         )}
                         {/* Accounts Summary */}

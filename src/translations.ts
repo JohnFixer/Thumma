@@ -611,6 +611,10 @@ const translations = {
       en: 'Failed to receive payment',
       th: 'ไม่สามารถรับชำระเงินได้'
     },
+    login_success: 'Welcome back, {name}',
+    login_failed: 'Invalid username or password',
+    no_widgets_visible: 'No widgets are visible.',
+    check_dashboard_settings: 'Please check your Dashboard Management settings.',
   },
   th: {
     dashboard: 'แดชบอร์ด',
@@ -1206,6 +1210,11 @@ const translations = {
     has_returns: 'มีการคืนสินค้า',
     returned: 'คืนแล้ว',
     returned_items: 'รายการที่คืน',
+    payment_receive_failed: 'ไม่สามารถรับชำระเงินได้',
+    login_success: 'ยินดีต้อนรับ, {name}',
+    login_failed: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+    no_widgets_visible: 'ไม่มีวิดเจ็ตที่แสดงอยู่',
+    check_dashboard_settings: 'กรุณาตรวจสอบการตั้งค่าการจัดการแดชบอร์ดของคุณ',
   }
 };
 

@@ -117,15 +117,23 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
             <div className="text-center font-sans">
               <h1 className="text-2xl font-bold">{storeSettings?.store_name[receiptLanguage]}</h1>
               <p>{storeSettings?.address[receiptLanguage]}</p>
-              <p>Tel: {storeSettings?.phone[receiptLanguage]}</p>
-              <p className="mt-2 text-xs">{t_receipt('tax_id')}: {storeSettings?.tax_id[receiptLanguage]}</p>
+              <p>Tel: {storeSettings?.phone[receiptLanguage]} {t_receipt('tax_id')}: {storeSettings?.tax_id[receiptLanguage]}</p>
               <p className="font-bold my-2 text-lg">{isInvoice ? (receiptLanguage === 'th' ? 'ใบส่งสินค้า / ใบแจ้งหนี้' : 'Product Order / Invoice') : t_receipt('receipt')}</p>
             </div>
             <div className="border-t border-b border-dashed border-black my-2 py-1 text-xs font-sans">
-              <p>{isInvoice ? t_receipt('invoice_id') : t_receipt('receipt_id')}: <span className="font-mono">{transaction.id}</span></p>
-              <p>{t_receipt('date')}: {new Date(transaction.date).toLocaleString()}</p>
-              <p>{t_receipt('operator')}: {transaction.operator || 'N/A'}</p>
-              <p>{t_receipt('customer')}: {transaction.customerName || 'Walk-in Customer'}</p>
+              <p>
+                {isInvoice ? t_receipt('invoice_id') : t_receipt('receipt_id')}: <span className="font-mono">{transaction.id}</span>{' '}
+                {t_receipt('date')}: {new Date(transaction.date).toLocaleString()}{' '}
+                {t_receipt('operator')}: {transaction.operator || 'N/A'}
+              </p>
+              <p>
+                {t_receipt('customer')}: {transaction.customerName || 'Walk-in Customer'}{' '}
+                {(transaction.customerAddress || transaction.customerPhone) && (
+                  <span className="text-xs">
+                    {transaction.customerAddress} {transaction.customerPhone ? `Tel: ${transaction.customerPhone}` : ''}
+                  </span>
+                )}
+              </p>
             </div>
             <table className="w-full text-sm font-sans">
               <thead>

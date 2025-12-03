@@ -60,7 +60,9 @@ const ConsolidatedInvoiceModal: React.FC<ConsolidatedInvoiceModalProps> = ({ isO
               <div>
                 <h1 className="text-xl font-bold">{storeSettings?.store_name[language]}</h1>
                 <p className="text-xs">{storeSettings?.address[language]}</p>
-                <p className="text-xs">{t('tax_id')}: {storeSettings?.tax_id[language]}</p>
+                <p className="text-xs">
+                  Tel: {storeSettings?.phone[language]} {t('tax_id')}: {storeSettings?.tax_id[language]}
+                </p>
               </div>
               <div className="text-right">
                 <h2 className="text-2xl font-bold uppercase">{t('consolidated_invoice')}</h2>
@@ -73,8 +75,9 @@ const ConsolidatedInvoiceModal: React.FC<ConsolidatedInvoiceModalProps> = ({ isO
             <div className="my-4 text-sm">
               <h4 className="font-bold mb-1">{t('bill_to').toUpperCase()}:</h4>
               <p>{invoice.customerName}</p>
-              {invoice.customerAddress && <p>{invoice.customerAddress}</p>}
-              {invoice.customerPhone && <p>{invoice.customerPhone}</p>}
+              {(invoice.customerAddress || invoice.customerPhone) && (
+                <p>{invoice.customerAddress} {invoice.customerPhone ? `Tel: ${invoice.customerPhone}` : ''}</p>
+              )}
             </div>
 
             <table className="w-full text-sm border-collapse border">
@@ -88,9 +91,9 @@ const ConsolidatedInvoiceModal: React.FC<ConsolidatedInvoiceModalProps> = ({ isO
                 {invoice.items.map(item => (
                   <tr key={item.variantId}>
                     <td className="border p-2">
-                        {t('consolidates_invoices')}: <span className="font-mono text-xs">{item.sku}</span>
-                        <br />
-                        <span className="text-xs text-gray-600">Original Date: {item.size}</span>
+                      {t('consolidates_invoices')}: <span className="font-mono text-xs">{item.sku}</span>
+                      <br />
+                      <span className="text-xs text-gray-600">Original Date: {item.size}</span>
                     </td>
                     <td className="border p-2 text-right font-mono">฿{item.price.walkIn.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
@@ -98,8 +101,8 @@ const ConsolidatedInvoiceModal: React.FC<ConsolidatedInvoiceModalProps> = ({ isO
               </tbody>
               <tfoot>
                 <tr className="bg-gray-100 font-bold">
-                    <td className="border p-2 text-right">{t('grand_total').toUpperCase()}</td>
-                    <td className="border p-2 text-right font-mono text-lg">฿{invoice.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="border p-2 text-right">{t('grand_total').toUpperCase()}</td>
+                  <td className="border p-2 text-right font-mono text-lg">฿{invoice.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               </tfoot>
             </table>

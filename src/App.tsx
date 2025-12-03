@@ -51,6 +51,7 @@ import DashboardManagementView from './components/DashboardManagementView';
 import CategoryManagementView from './components/CategoryManagementView';
 import AddCategoryModal from './components/AddCategoryModal';
 import EditCategoryModal from './components/EditCategoryModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import * as db from './services/db';
 
 import type {
@@ -1261,7 +1262,9 @@ const App: React.FC = () => {
                     />
                 )}
                 <main className="flex-1 overflow-y-auto p-4 md:p-6">
-                    {renderView()}
+                    <ErrorBoundary>
+                        {renderView()}
+                    </ErrorBoundary>
                 </main>
             </div>
 

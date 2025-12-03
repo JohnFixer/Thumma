@@ -84,6 +84,14 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
         } catch (error) { console.error("Failed to load todos", error); }
     }, []);
 
+    // Helper for safe date parsing
+    const safeDate = (dateInput: string | Date | undefined | null): Date => {
+        if (!dateInput) return new Date();
+        const date = new Date(dateInput);
+        if (isNaN(date.getTime())) return new Date();
+        return date;
+    };
+
     // Fetch Daily Expenses
     useEffect(() => {
         const loadDailyExpenses = async () => {
@@ -179,9 +187,9 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const yearStart = new Date(now.getFullYear(), 0, 1);
 
-        const txToday = transactions.filter(tx => new Date(tx.date) >= todayStart);
-        const txMonth = transactions.filter(tx => new Date(tx.date) >= monthStart);
-        const txYear = transactions.filter(tx => new Date(tx.date) >= yearStart);
+        const txToday = transactions.filter(tx => safeDate(tx.date) >= todayStart);
+        const txMonth = transactions.filter(tx => safeDate(tx.date) >= monthStart);
+        const txYear = transactions.filter(tx => safeDate(tx.date) >= yearStart);
 
         const salesToday = txToday.reduce((sum, tx) => sum + tx.total, 0);
         const salesMonth = txMonth.reduce((sum, tx) => sum + tx.total, 0);
@@ -198,13 +206,13 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
         const unpaidBills = bills.filter(b => b.status !== BillStatus.PAID);
         const totalOwed = unpaidBills.reduce((sum, b) => sum + (b.amount - b.paidAmount), 0);
 
-        const dueTodayBills = unpaidBills.filter(b => new Date(b.dueDate).toDateString() === todayStart.toDateString());
+        const dueTodayBills = unpaidBills.filter(b => safeDate(b.dueDate).toDateString() === todayStart.toDateString());
         const dueTodayAmount = dueTodayBills.reduce((sum, b) => sum + (b.amount - b.paidAmount), 0);
 
         const next7Days = new Date(todayStart);
         next7Days.setDate(todayStart.getDate() + 7);
         const dueNext7DaysBills = unpaidBills.filter(b => {
-            const dueDate = new Date(b.dueDate);
+            const dueDate = safeDate(b.dueDate);
             return dueDate >= todayStart && dueDate <= next7Days;
         });
         const dueNext7DaysBillsAmount = dueNext7DaysBills.reduce((sum, b) => sum + (b.amount - b.paidAmount), 0);
@@ -217,7 +225,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
 
         const lowStockVariants = products.flatMap(p => p.variants).filter(v => v.status === ProductStatus.LOW_STOCK);
 
-        const overdueAR = unpaidTransactions.filter(tx => tx.due_date && new Date(tx.due_date) < todayStart);
+        const overdueAR = unpaidTransactions.filter(tx => tx.due_date && safeDate(tx.due_date) < todayStart);
         const overdueARAmount = overdueAR.reduce((sum, tx) => sum + (tx.total - tx.paid_amount), 0);
 
         return {
@@ -284,7 +292,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                                     <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded cursor-pointer hover:bg-gray-600 transition-colors" onClick={() => onNavigate('sales_history', { filter: 'transfer_today' })}>
                                         <span>{t('bank_transfer_sales')}</span><span className="font-bold">฿{metrics.salesTodayBank.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
                                     </div>
-                                    <div className="flex justify-between items-center p-2 bg-yellow-900/50 rounded cursor-pointer hover:bg-yellow-800 transition-colors" onClick={() => openTransactionModal('ar_new', transactions.filter(tx => new Date(tx.date).toDateString() === new Date().toDateString() && tx.payment_status === PaymentStatus.UNPAID))}>
+                                    <div className="flex justify-between items-center p-2 bg-yellow-900/50 rounded cursor-pointer hover:bg-yellow-800 transition-colors" onClick={() => openTransactionModal('ar_new', transactions.filter(tx => safeDate(tx.date).toDateString() === new Date().toDateString() && tx.payment_status === PaymentStatus.UNPAID))}>
                                         <span>{t('ar_new')}</span><span className="font-bold">฿{metrics.salesTodayAR.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
                                     </div>
                                 </div>
@@ -324,7 +332,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                                                 <div key={expense.id} className="flex justify-between items-center text-sm border-b border-gray-600/50 last:border-0 pb-2 last:pb-0">
                                                     <div>
                                                         <p className="font-medium">{expense.remark}</p>
-                                                        <p className="text-xs text-gray-400">{new Date(expense.date).toLocaleTimeString()} • {expense.createdBy}</p>
+                                                        <p className="text-xs text-gray-400">{safeDate(expense.date).toLocaleTimeString()} • {expense.createdBy}</p>
                                                     </div>
                                                     <span className="text-red-400 font-bold">-฿{expense.amount.toLocaleString()}</span>
                                                 </div>
@@ -372,7 +380,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                                         </button>
                                         <div className="flex-grow">
                                             <p className={`text-sm ${todo.completed ? 'line-through' : ''}`}>{todo.text}</p>
-                                            {todo.dueDate && <p className="text-xs text-gray-400">Due: {new Date(todo.dueDate).toLocaleDateString()}</p>}
+                                            {todo.dueDate && <p className="text-xs text-gray-400">Due: {safeDate(todo.dueDate).toLocaleDateString()}</p>}
                                         </div>
                                         {!todo.completed && (
                                             <div className="relative">

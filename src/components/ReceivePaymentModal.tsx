@@ -20,11 +20,11 @@ const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ isOpen, onClo
 
   useEffect(() => {
     if (isOpen && transaction) {
-      setPaymentAmount(balanceDue);
+      setPaymentAmount('');
       setPaymentMethod('Cash');
       setPaymentDate(new Date().toISOString().split('T')[0]);
     }
-  }, [isOpen, transaction, balanceDue]);
+  }, [isOpen, transaction]);
 
   if (!isOpen || !transaction) return null;
 
@@ -92,7 +92,7 @@ const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ isOpen, onClo
             type="button"
             className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:bg-blue-300"
             onClick={handleConfirm}
-            disabled={!paymentAmount || paymentAmount <= 0}
+            disabled={typeof paymentAmount !== 'number' || paymentAmount <= 0}
           >
             {t('confirm')}
           </button>

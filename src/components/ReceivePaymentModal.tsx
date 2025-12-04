@@ -57,11 +57,12 @@ const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ isOpen, onClo
             <input
               type="number"
               id="payment-amount"
-              value={paymentAmount}
+              value={paymentAmount === '' ? '' : paymentAmount}
               onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : Math.max(0, Math.min(balanceDue, Number(e.target.value))))}
               min="0.01"
               max={balanceDue}
               step="0.01"
+              placeholder="0.00"
               className="mt-1 block w-full rounded-md p-2 bg-background border-gray-300 text-lg font-bold"
               required
             />

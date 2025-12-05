@@ -7,12 +7,15 @@ import MarkAsPaidModal from './MarkAsPaidModal';
 import DeliveryNoteModal from './DeliveryNoteModal';
 import type { TranslationKey } from '../translations';
 import ConfirmationModal from './ConfirmationModal';
+import type { UserPermissions } from '../types';
 
 interface OrderManagementViewProps {
     orders: Order[];
     onUpdateOrderStatus: (orderId: string, status: FulfillmentStatus) => void;
     onUpdateOrderPaymentStatus: (orderId: string, status: PaymentStatus, method: PaymentMethod) => void;
     onConvertOrderToInvoice: (order: Order) => void;
+    onDeleteOrder?: (orderId: string) => void;
+    currentUserPermissions: UserPermissions;
     storeSettings: StoreSettings | null;
     t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
     language: Language;
@@ -38,7 +41,7 @@ const getPaymentStatusColor = (status: PaymentStatus) => {
     }
 };
 
-const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpdateOrderStatus, onUpdateOrderPaymentStatus, onConvertOrderToInvoice, storeSettings, t, language }) => {
+const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpdateOrderStatus, onUpdateOrderPaymentStatus, onConvertOrderToInvoice, onDeleteOrder, currentUserPermissions, storeSettings, t, language }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [fulfillmentStatusFilter, setFulfillmentStatusFilter] = useState('All');
     const [paymentStatusFilter, setPaymentStatusFilter] = useState('All');
@@ -46,6 +49,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
     const [orderToPay, setOrderToPay] = useState<Order | null>(null);
     const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
     const [orderToBill, setOrderToBill] = useState<Order | null>(null);
+    const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
     const handleToggleExpand = (orderId: string) => {
         setExpandedOrderIds(prev => {
@@ -71,6 +75,13 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
             onConvertOrderToInvoice(orderToBill);
         }
         setOrderToBill(null);
+    }
+
+    const handleConfirmDelete = () => {
+        if (orderToDelete && onDeleteOrder) {
+            onDeleteOrder(orderToDelete.id);
+        }
+        setOrderToDelete(null);
     }
 
     const filteredOrders = useMemo(() => {
@@ -173,16 +184,18 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex justify-center items-center gap-2">
-                                                <select
-                                                    value={order.status}
-                                                    onChange={(e) => onUpdateOrderStatus(order.id, e.target.value as FulfillmentStatus)}
-                                                    className="text-xs p-1 border rounded-md bg-background focus:ring-primary focus:border-primary"
-                                                >
-                                                    {(Object.values(FulfillmentStatus) as FulfillmentStatus[]).map(status => (
-                                                        <option key={status} value={status}>{getTranslatedFulfillmentStatus(status)}</option>
-                                                    ))}
-                                                </select>
-                                                {order.paymentStatus === PaymentStatus.UNPAID && (
+                                                {currentUserPermissions.order_fulfillment.edit && (
+                                                    <select
+                                                        value={order.status}
+                                                        onChange={(e) => onUpdateOrderStatus(order.id, e.target.value as FulfillmentStatus)}
+                                                        className="text-xs p-1 border rounded-md bg-background focus:ring-primary focus:border-primary"
+                                                    >
+                                                        {(Object.values(FulfillmentStatus) as FulfillmentStatus[]).map(status => (
+                                                            <option key={status} value={status}>{getTranslatedFulfillmentStatus(status)}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                                {currentUserPermissions.order_fulfillment.edit && order.paymentStatus === PaymentStatus.UNPAID && (
                                                     <>
                                                         <button onClick={() => setOrderToPay(order)} className="text-xs p-1 px-2 bg-green-600 text-white rounded-md hover:bg-green-700">
                                                             {t('mark_as_paid')}
@@ -200,6 +213,14 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
                                                     <PrinterIcon className="h-3 w-3" />
                                                     <span>{t('print_pdf')}</span>
                                                 </button>
+                                                {currentUserPermissions.order_fulfillment.delete && onDeleteOrder && (
+                                                    <button
+                                                        onClick={() => setOrderToDelete(order)}
+                                                        className="text-xs p-1 px-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                                    >
+                                                        {t('delete')}
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -276,6 +297,16 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = ({ orders, onUpd
                 message={t('bill_customer_confirm_message', { orderId: orderToBill?.id || '' })}
                 confirmText={t('confirm_and_bill')}
                 confirmButtonClass="bg-secondary hover:bg-orange-700 focus:ring-orange-500"
+                t={t}
+            />
+            <ConfirmationModal
+                isOpen={!!orderToDelete}
+                onClose={() => setOrderToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title={t('delete_order_confirm_title')}
+                message={t('delete_order_confirm_message', { orderId: orderToDelete?.id || '' })}
+                confirmText={t('delete')}
+                confirmButtonClass="bg-red-600 hover:bg-red-700 focus:ring-red-500"
                 t={t}
             />
         </>

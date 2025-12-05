@@ -788,6 +788,20 @@ const App: React.FC = () => {
         }
     };
     const handleConvertOrderToInvoice = (order: Order) => { console.log("Convert Order to Invoice", order); };
+
+    const handleDeleteOrder = async (orderId: string) => {
+        try {
+            const { error } = await supabase
+                .from('orders')
+                .delete()
+                .eq('id', orderId);
+
+            if (error) throw error;
+            setOrders(prev => prev.filter(o => o.id !== orderId));
+        } catch (error) {
+            console.error('Error deleting order:', error);
+        }
+    };
     const handleReceivePayment = async (transactionId: string, paymentAmount: number, paymentMethod: PaymentMethod, paymentDate: string) => {
         const updatedTransaction = await db.receivePayment(transactionId, paymentAmount, paymentMethod, paymentDate);
         if (updatedTransaction) {
@@ -1366,7 +1380,7 @@ const App: React.FC = () => {
             case 'accounts_payable': return <AccountsPayableView bills={bills} suppliers={suppliers} onAddBillClick={() => setIsAddBillModalOpen(true)} onEditBillClick={handleEditBillClick} onPayBillClick={(b) => { setBillToRecordPaymentFor(b); setIsRecordPaymentModalOpen(true); }} onDeleteBill={handleDeleteBill} onImportBillsClick={() => setIsImportBillsModalOpen(true)} t={t} language={language} currentUser={currentUser} />;
             case 'accounts_receivable': return <AccountsReceivableView transactions={transactions} customers={customers} onReceivePaymentClick={(t) => { setTransactionToReceivePayment(t); setIsReceivePaymentModalOpen(true); }} onCreateConsolidatedInvoice={(c, txs) => { setConsolidationData({ customer: c, transactions: txs }); setIsConsolidatedInvoiceModalOpen(true); }} onRecordPastInvoiceClick={() => setIsRecordPastInvoiceModalOpen(true)} onImportPastInvoicesClick={() => setIsImportPastInvoicesModalOpen(true)} onEditPastInvoiceClick={(t) => { setInvoiceToEdit(t); setIsEditPastInvoiceModalOpen(true); }} onDeleteTransaction={handleDeleteTransaction} onUndoConsolidationClick={(t) => { setTransactionToUndo(t); setIsUndoConfirmationModalOpen(true); }} t={t} language={language} currentUser={currentUser} viewState={viewState} onNavigate={handleNavigate} />;
             case 'sales_history': return <SalesHistoryView transactions={transactions} onDeleteTransaction={handleDeleteTransaction} onReceivePaymentClick={(t) => { setTransactionToReceivePayment(t); setIsReceivePaymentModalOpen(true); }} onEditPastInvoiceClick={(t) => { setInvoiceToEdit(t); setIsEditPastInvoiceModalOpen(true); }} onUndoConsolidationClick={(t) => { setTransactionToUndo(t); setIsUndoConfirmationModalOpen(true); }} storeSettings={storeSettings} t={t} language={language} currentUser={currentUser} viewState={viewState} onNavigate={handleNavigate} />;
-            case 'order_fulfillment': return <OrderFulfillmentView orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} onUpdateOrderPaymentStatus={handleUpdateOrderPaymentStatus} onConvertOrderToInvoice={handleConvertOrderToInvoice} storeSettings={storeSettings} t={t} language={language} />;
+            case 'order_fulfillment': return <OrderFulfillmentView orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} onUpdateOrderPaymentStatus={handleUpdateOrderPaymentStatus} onConvertOrderToInvoice={handleConvertOrderToInvoice} onDeleteOrder={handleDeleteOrder} currentUserPermissions={currentUser.permissions} storeSettings={storeSettings} t={t} language={language} />;
             case 'customer_assist': return <CustomerAssistView products={products} t={t} language={language} onProductMouseEnter={handleProductMouseEnter} onProductMouseLeave={handleProductMouseLeave} />;
             case 'end_of_day': return <EndOfDayView transactions={transactions} products={products} shiftReports={shiftReports} onCloseShift={handleCloseShift} t={t} language={language} currentUser={currentUser} />;
             case 'shift_history': return <ShiftHistoryView shiftReports={shiftReports} users={users} t={t} language={language} />;

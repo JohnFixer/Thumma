@@ -32,7 +32,7 @@ export interface UserPermissions {
   accounts_payable: PermissionSet;
   accounts_receivable: PermissionSet;
   sales_history: PermissionSet;
-  order_fulfillment: { read: boolean; write: boolean };
+  order_fulfillment: { read: boolean; create: boolean; edit: boolean; delete: boolean };
   customer_assist: { read: boolean };
   end_of_day: { read: boolean; write: boolean };
   shift_history: { read: boolean };

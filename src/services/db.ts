@@ -342,11 +342,39 @@ export const deleteSupplier = async (id: string): Promise<boolean> => {
 
 // --- Transactions ---
 
-export const fetchTransactions = async (): Promise<Transaction[]> => {
-    const { data, error } = await supabase.from('transactions').select('*').order('date', { ascending: false });
-    if (error) return [];
+export const fetchTransactions = async (): Promise<Transaction[] | null> => {
+    let allTransactions: any[] = [];
+    let page = 0;
+    const pageSize = 50; // Fetch in smaller chunks to avoid timeout
+    let hasMore = true;
 
-    return data.map((t: any) => {
+    while (hasMore) {
+        const { data, error } = await supabase
+            .from('transactions')
+            .select('*')
+            .order('date', { ascending: false })
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) {
+            console.error('Error fetching transactions:', error);
+            // If we have some data, maybe return it? Or return null to indicate failure?
+            // Let's return what we have if it's not empty, otherwise null.
+            if (allTransactions.length > 0) break;
+            return null;
+        }
+
+        if (data && data.length > 0) {
+            allTransactions = [...allTransactions, ...data];
+            if (data.length < pageSize) {
+                hasMore = false;
+            }
+        } else {
+            hasMore = false;
+        }
+        page++;
+    }
+
+    return allTransactions.map((t: any) => {
         if (t.returned_items && t.returned_items.length > 0) console.log('Raw Transaction with returns:', t);
         return {
             ...t,
@@ -375,8 +403,6 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
             created_at: t.created_at
         };
     });
-
-    return data || [];
 };
 
 // --- Orders ---

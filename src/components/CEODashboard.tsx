@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import type { User, Transaction, Bill, Product, ToDoItem, Language, StoreSettings, Supplier, ProductVariant } from '../types';
+import type { User, Transaction, Bill, Product, ToDoItem, Language, StoreSettings, Supplier, ProductVariant, DailyExpense } from '../types';
 import { BillStatus, ProductStatus, PaymentStatus } from '../types';
 import StatsCard from './StatsCard';
 import { ArrowLeftOnRectangleIcon, BanknotesIcon, CalendarDaysIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon, ExclamationTriangleIcon, PlusIcon, TrashIcon, LanguageIcon, CheckIcon, ClockIcon, CubeIcon } from './icons/HeroIcons';
@@ -10,7 +10,6 @@ import BillDetailsModal from './BillDetailsModal';
 import TransactionDetailsModal from './TransactionDetailsModal';
 import RecordPaymentModal from './PayBillModal';
 import { fetchDailyExpenses } from '../services/db';
-import { DailyExpense } from '../features/DailyExpenses/ExpenseTypes';
 
 
 interface CEODashboardProps {
@@ -22,6 +21,7 @@ interface CEODashboardProps {
     products: Product[];
     suppliers: Supplier[];
     storeSettings: StoreSettings | null;
+    dailyExpenses: DailyExpense[];
     t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
     language: Language;
     setLanguage: (lang: Language) => void;
@@ -30,7 +30,7 @@ interface CEODashboardProps {
     onNavigate: (view: string, state?: any) => void;
 }
 
-const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, transactions, bills, users, products, suppliers, storeSettings, t, language, setLanguage, onBillUpdated, showAlert, onNavigate }) => {
+const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, transactions, bills, users, products, suppliers, storeSettings, dailyExpenses, t, language, setLanguage, onBillUpdated, showAlert, onNavigate }) => {
 
     // Widget visibility based on role settings
     const getVisibleWidgets = (): string[] => {
@@ -73,7 +73,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
     const [transactionModalData, setTransactionModalData] = useState<{ isOpen: boolean; title: string; transactions: Transaction[] }>({ isOpen: false, title: '', transactions: [] });
     const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] = useState(false);
     const [billToRecordPaymentFor, setBillToRecordPaymentFor] = useState<Bill | null>(null);
-    const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
+    // const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]); // Now passed as prop
     const [isDailyExpensesExpanded, setIsDailyExpensesExpanded] = useState(false);
 
     // To-Do List Logic
@@ -92,20 +92,20 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
         return date;
     };
 
-    // Fetch Daily Expenses
-    useEffect(() => {
-        const loadDailyExpenses = async () => {
-            const now = new Date();
-            // Use local time instead of UTC to ensure correct daily reset
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const today = `${year}-${month}-${day}`;
-            const expenses = await fetchDailyExpenses(today);
-            setDailyExpenses(expenses);
-        };
-        loadDailyExpenses();
-    }, []);
+    // Fetch Daily Expenses - MOVED TO APP.TSX
+    // useEffect(() => {
+    //     const loadDailyExpenses = async () => {
+    //         const now = new Date();
+    //         // Use local time instead of UTC to ensure correct daily reset
+    //         const year = now.getFullYear();
+    //         const month = String(now.getMonth() + 1).padStart(2, '0');
+    //         const day = String(now.getDate()).padStart(2, '0');
+    //         const today = `${year}-${month}-${day}`;
+    //         const expenses = await fetchDailyExpenses(today);
+    //         setDailyExpenses(expenses);
+    //     };
+    //     loadDailyExpenses();
+    // }, []);
 
     const saveTodos = (newTodos: ToDoItem[]) => {
         try {

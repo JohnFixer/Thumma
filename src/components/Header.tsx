@@ -1,7 +1,7 @@
 import React from 'react';
 // FIX: Corrected import paths by removing file extensions.
 import type { User, Language } from '../types';
-import { BellIcon, LanguageIcon, Bars3Icon, ArrowLeftIcon, ExclamationTriangleIcon, ChevronRightIcon } from './icons/HeroIcons';
+import { BellIcon, LanguageIcon, Bars3Icon, ArrowLeftIcon, ExclamationTriangleIcon, ChevronRightIcon, ArrowPathIcon } from './icons/HeroIcons';
 import type { TranslationKey } from '../translations';
 
 interface HeaderProps {
@@ -17,9 +17,10 @@ interface HeaderProps {
   canGoForward: boolean;
   originalUser: User | null;
   onStopSimulation: () => void;
+  onRefresh?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentUser, activeView, language, setLanguage, t, onOpenSidebar, onBack, canGoBack, onForward, canGoForward, originalUser, onStopSimulation }) => {
+const Header: React.FC<HeaderProps> = ({ currentUser, activeView, language, setLanguage, t, onOpenSidebar, onBack, canGoBack, onForward, canGoForward, originalUser, onStopSimulation, onRefresh }) => {
   const titleKey = activeView as TranslationKey;
   const simulatedRoleName = originalUser ? currentUser.role[0] : '';
 
@@ -70,6 +71,15 @@ const Header: React.FC<HeaderProps> = ({ currentUser, activeView, language, setL
         </div>
 
         <div className="flex items-center gap-4">
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="p-1 text-text-secondary hover:text-primary"
+              title={t('refresh_data') || "Refresh Data"}
+            >
+              <ArrowPathIcon className="h-6 w-6" />
+            </button>
+          )}
           <div className="relative">
             <select
               value={language}

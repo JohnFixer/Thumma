@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { DailyExpense } from './ExpenseTypes';
+import { DailyExpense } from '../../types';
 import { PlusIcon, TrashIcon, PencilIcon, XMarkIcon, CheckIcon } from '../../components/icons/HeroIcons';
 import { createDailyExpense, fetchDailyExpenses, updateDailyExpense, deleteDailyExpense } from '../../services/db';
 
 interface DailyExpensesViewProps {
     currentUser: { name: string; id: string };
+    dailyExpenses: DailyExpense[];
     t: (key: string) => string;
     showAlert: (title: string, message: string) => void;
 }
 
-const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, t, showAlert }) => {
-    const [expenses, setExpenses] = useState<DailyExpense[]>([]);
+const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, dailyExpenses, t, showAlert }) => {
+    // const [expenses, setExpenses] = useState<DailyExpense[]>([]); // Now passed as prop
     const [amount, setAmount] = useState('');
     const [remark, setRemark] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -19,15 +20,15 @@ const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, t, s
     const [editAmount, setEditAmount] = useState('');
     const [editRemark, setEditRemark] = useState('');
 
-    useEffect(() => {
-        loadExpenses();
-    }, []);
+    // useEffect(() => {
+    //     loadExpenses();
+    // }, []);
 
-    const loadExpenses = async () => {
-        const today = new Date().toISOString().split('T')[0];
-        const data = await fetchDailyExpenses(today);
-        setExpenses(data);
-    };
+    // const loadExpenses = async () => {
+    //     const today = new Date().toISOString().split('T')[0];
+    //     const data = await fetchDailyExpenses(today);
+    //     setExpenses(data);
+    // };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,7 +45,7 @@ const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, t, s
 
             const created = await createDailyExpense(newExpense);
             if (created) {
-                setExpenses(prev => [created, ...prev]);
+                // setExpenses(prev => [created, ...prev]); // Handled by Realtime
                 setAmount('');
                 setRemark('');
                 showAlert(t('alert_success'), t('expense_added_success'));
@@ -80,7 +81,7 @@ const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, t, s
         });
 
         if (success) {
-            setExpenses(prev => prev.map(e => e.id === id ? { ...e, amount: parseFloat(editAmount), remark: editRemark } : e));
+            // setExpenses(prev => prev.map(e => e.id === id ? { ...e, amount: parseFloat(editAmount), remark: editRemark } : e)); // Handled by Realtime
             setEditingId(null);
             showAlert(t('alert_success'), t('expense_updated_success'));
         } else {
@@ -93,7 +94,7 @@ const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, t, s
 
         const success = await deleteDailyExpense(id);
         if (success) {
-            setExpenses(prev => prev.filter(e => e.id !== id));
+            // setExpenses(prev => prev.filter(e => e.id !== id)); // Handled by Realtime
             showAlert(t('alert_success'), t('expense_deleted_success'));
         } else {
             showAlert(t('alert_error'), t('expense_delete_failed'));
@@ -151,10 +152,10 @@ const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, t, s
                 <div className="bg-gray-800 p-6 rounded-lg shadow-lg flex-grow flex flex-col">
                     <h2 className="text-xl font-semibold mb-4">{t('todays_expenses')}</h2>
                     <div className="flex-grow overflow-y-auto pr-2 space-y-3">
-                        {expenses.length === 0 ? (
+                        {dailyExpenses.length === 0 ? (
                             <p className="text-gray-500 text-center py-8">{t('no_expenses_today')}</p>
                         ) : (
-                            expenses.map((expense) => (
+                            dailyExpenses.map((expense) => (
                                 <div key={expense.id} className="bg-gray-700/50 p-4 rounded-md flex justify-between items-start group">
                                     {editingId === expense.id ? (
                                         <div className="flex-grow flex flex-col gap-2">
@@ -212,7 +213,7 @@ const DailyExpensesView: React.FC<DailyExpensesViewProps> = ({ currentUser, t, s
                     <div className="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center">
                         <span className="text-gray-400">{t('total')}</span>
                         <span className="text-xl font-bold text-white">
-                            ฿{expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
+                            ฿{dailyExpenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
                         </span>
                     </div>
                 </div>

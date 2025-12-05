@@ -127,13 +127,14 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
                 {t_receipt('operator')}: {transaction.operator || 'N/A'}
               </p>
               <p>
-                {t_receipt('customer')}: {transaction.customerName || 'Walk-in Customer'}{' '}
-                {(transaction.customerAddress || transaction.customerPhone) && (
-                  <span className="text-xs">
-                    {transaction.customerAddress} {transaction.customerPhone ? `Tel: ${transaction.customerPhone}` : ''}
-                  </span>
-                )}
+                {t_receipt('customer')}: {transaction.customerName || 'Walk-in Customer'}
+                {transaction.customerPhone && ` - Tel: ${transaction.customerPhone}`}
               </p>
+              {transaction.customerAddress && (
+                <p className="text-xs">
+                  {transaction.customerAddress}
+                </p>
+              )}
             </div>
             <table className="w-full text-sm font-sans">
               <thead>

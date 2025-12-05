@@ -60,6 +60,7 @@ export interface UserPermissions {
     store_settings: boolean;
     dashboard_management: boolean;
     category_management: boolean;
+    daily_expenses: boolean;
   };
 }
 
@@ -399,4 +400,12 @@ export interface ToDoItem {
   text: string;
   completed: boolean;
   dueDate?: string;
+}
+
+export interface DailyExpense {
+  id: string;
+  amount: number;
+  remark: string;
+  date: string; // ISO string
+  createdBy: string; // User ID or Name
 }

@@ -166,7 +166,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
 
   return (
     <>
-      <div className="bg-surface rounded-lg shadow flex flex-col">
+      <div className="bg-surface rounded-lg shadow overflow-y-auto h-full">
         {/* Header */}
         <div className="p-4 border-b bg-background rounded-t-lg">
           <div className="flex justify-between items-center mb-4">

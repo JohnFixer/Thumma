@@ -64,7 +64,7 @@ import type {
     Bill, NewBillData, StoreSettings,
     Category, NewCategoryData,
     Language, PaymentMethod,
-    StoreCredit, ReturnedItem, PastInvoiceData, BillPayment, CustomerType, NewProductVariantData, ProductImportPayload
+    StoreCredit, ReturnedItem, PastInvoiceData, BillPayment, CustomerType, NewProductVariantData, ProductImportPayload, DailyExpense
 } from './types';
 import { ProductStatus, Role, FulfillmentStatus, PaymentStatus, BillStatus } from './types';
 import type { TranslationKey } from './translations';
@@ -72,6 +72,7 @@ import {
     ChartPieIcon, ShoppingCartIcon, CubeIcon, ArrowUturnLeftIcon, UserGroupIcon, TruckIcon,
     BanknotesIcon, CurrencyBangladeshiIcon, ListBulletIcon, EyeIcon, UsersIcon, UserCircleIcon, ShieldCheckIcon, CalendarDaysIcon, Cog6ToothIcon, ClipboardDocumentListIcon
 } from './components/icons/HeroIcons';
+import { cacheService, CACHE_KEYS } from './services/cache';
 
 interface BillImportData {
     supplierName: string;
@@ -99,13 +100,14 @@ const App: React.FC = () => {
     const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
     const [shiftReports, setShiftReports] = useState<ShiftReport[]>([]);
     const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
+    const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
 
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         try {
             const savedUserJSON = localStorage.getItem('currentUser');
             if (savedUserJSON) {
                 const savedUser = JSON.parse(savedUserJSON);
-                // Quick validation to ensure it's a user object and has new permissions
+                // Quick validation to ensure it's a user object and has permissions structure
                 if (savedUser && savedUser.id && savedUser.name && savedUser.permissions && savedUser.permissions.category_management && savedUser.permissions.sidebar?.user_management) {
                     return savedUser as User;
                 }
@@ -121,8 +123,11 @@ const App: React.FC = () => {
             const savedUserJSON = localStorage.getItem('currentUser');
             if (savedUserJSON) {
                 const user = JSON.parse(savedUserJSON);
-                if (user.role && user.role[0] === 'CEO') {
-                    return 'ceo_dashboard';
+                // Only set ceo_dashboard if user has valid permissions
+                if (user && user.id && user.name && user.permissions && user.permissions.category_management && user.permissions.sidebar?.user_management) {
+                    if (user.role && user.role[0] === 'CEO') {
+                        return 'ceo_dashboard';
+                    }
                 }
             }
         } catch (e) { }
@@ -245,58 +250,223 @@ const App: React.FC = () => {
         setIsAlertModalOpen(true);
     }, []);
 
-    useEffect(() => {
-        const fetchInitialData = async () => {
+    const fetchInitialData = useCallback(async () => {
+        // 1. Load from Cache immediately
+        const cachedProducts = cacheService.load<Product[]>(CACHE_KEYS.PRODUCTS);
+        const cachedCustomers = cacheService.load<Customer[]>(CACHE_KEYS.CUSTOMERS);
+        const cachedSuppliers = cacheService.load<Supplier[]>(CACHE_KEYS.SUPPLIERS);
+        const cachedCategories = cacheService.load<Category[]>(CACHE_KEYS.CATEGORIES);
+        const cachedSettings = cacheService.load<StoreSettings>(CACHE_KEYS.STORE_SETTINGS);
+        const cachedUsers = cacheService.load<User[]>(CACHE_KEYS.USERS);
+        const cachedStoreCredits = cacheService.load<StoreCredit[]>(CACHE_KEYS.STORE_CREDITS);
+
+        if (cachedProducts) setProducts(cachedProducts);
+        if (cachedCustomers) setCustomers(cachedCustomers);
+        if (cachedSuppliers) setSuppliers(cachedSuppliers);
+        if (cachedCategories) setCategories(cachedCategories);
+        if (cachedSettings) setStoreSettings(cachedSettings);
+        if (cachedUsers) setUsers(cachedUsers);
+        if (cachedStoreCredits) setStoreCredits(cachedStoreCredits);
+
+        // Only show loading if we have absolutely no data (first run ever)
+        if (!cachedProducts || !cachedCustomers) {
             setIsLoading(true);
+        }
+
+        try {
+            // 2. Fetch fresh data from server
+            const [
+                fetchedProducts,
+                fetchedCustomers,
+                fetchedSuppliers,
+                // fetchedTransactions,
+                fetchedBills,
+                fetchedUsers,
+                fetchedSettings,
+                fetchedCategories,
+                fetchedStoreCredits,
+                fetchedOrders,
+                fetchedDailyExpenses
+            ] = await Promise.all([
+                db.fetchProducts(),
+                db.fetchCustomers(),
+                db.fetchSuppliers(),
+                // db.fetchTransactions(), // Moved out to prevent timeout
+                db.fetchBills(),
+                db.fetchUsers(),
+                db.fetchStoreSettings(),
+                db.fetchCategories(),
+                db.fetchStoreCredits(),
+                db.fetchOrders(),
+                db.fetchDailyExpenses(new Date().toISOString().split('T')[0])
+            ]);
+
+            // 3. Update State & Cache
+            setProducts(fetchedProducts);
+            cacheService.save(CACHE_KEYS.PRODUCTS, fetchedProducts);
+
+            setCustomers(fetchedCustomers);
+            cacheService.save(CACHE_KEYS.CUSTOMERS, fetchedCustomers);
+
+            setSuppliers(fetchedSuppliers);
+            cacheService.save(CACHE_KEYS.SUPPLIERS, fetchedSuppliers);
+
+            setBills(fetchedBills);
+            // Bills are not cached for now, but could be
+
+            setUsers(fetchedUsers);
+            if (fetchedUsers.length > 0) cacheService.save(CACHE_KEYS.USERS, fetchedUsers);
+
+            setStoreSettings(fetchedSettings);
+            if (fetchedSettings) cacheService.save(CACHE_KEYS.STORE_SETTINGS, fetchedSettings);
+
+            setCategories(fetchedCategories);
+            cacheService.save(CACHE_KEYS.CATEGORIES, fetchedCategories);
+
+            setStoreCredits(fetchedStoreCredits);
+            cacheService.save(CACHE_KEYS.STORE_CREDITS, fetchedStoreCredits);
+
+            setOrders(fetchedOrders);
+            // Orders are not cached
+
+            setDailyExpenses(fetchedDailyExpenses);
+
+            // 4. Fetch Transactions Separately (Heavy Load)
             try {
-                const [
-                    fetchedProducts,
-                    fetchedCustomers,
-                    fetchedSuppliers,
-                    fetchedTransactions,
-                    fetchedBills,
-                    fetchedUsers,
-                    fetchedSettings,
-                    fetchedCategories,
-                    fetchedStoreCredits,
-                    fetchedOrders
-                ] = await Promise.all([
-                    db.fetchProducts(),
-                    db.fetchCustomers(),
-                    db.fetchSuppliers(),
-                    db.fetchTransactions(),
-                    db.fetchBills(),
-                    db.fetchUsers(),
-                    db.fetchStoreSettings(),
-                    db.fetchCategories(),
-                    db.fetchStoreCredits(),
-                    db.fetchOrders()
-                ]);
-
-                setProducts(fetchedProducts);
-                setCustomers(fetchedCustomers);
-                setSuppliers(fetchedSuppliers);
-                setTransactions(fetchedTransactions);
-                setBills(fetchedBills);
-                setUsers(fetchedUsers);
-                setStoreSettings(fetchedSettings);
-                setCategories(fetchedCategories);
-                setStoreCredits(fetchedStoreCredits);
-                setOrders(fetchedOrders);
-                // Note: In a real app, users might be managed differently, but we fetch public profiles here
-                if (fetchedUsers.length > 0) setUsers(fetchedUsers);
-                if (fetchedSettings) setStoreSettings(fetchedSettings);
-
-            } catch (error) {
-                console.error("Error fetching initial data:", error);
-                showAlert(t('alert_error'), t('database_load_failed'));
-            } finally {
-                setIsLoading(false);
+                const fetchedTransactions = await db.fetchTransactions();
+                if (fetchedTransactions) {
+                    setTransactions(fetchedTransactions);
+                } else {
+                    console.error("Failed to fetch transactions.");
+                    showAlert(t('alert_error'), t('transaction_fetch_failed') || "Failed to load transactions. Please try refreshing.");
+                }
+            } catch (txError) {
+                console.error("Error fetching transactions separately:", txError);
+                showAlert(t('alert_error'), t('transaction_fetch_failed') || "Failed to load transactions.");
             }
-        };
 
+        } catch (error) {
+            console.error("Error fetching initial data:", error);
+            showAlert(t('alert_error'), t('database_load_failed'));
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showAlert, t]);
+
+    useEffect(() => {
         fetchInitialData();
-    }, [showAlert]);
+    }, [fetchInitialData]);
+
+    // REALTIME SUBSCRIPTIONS
+    useEffect(() => {
+        const transactionsSubscription = supabase
+            .channel('public:transactions')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, async (payload) => {
+                console.log('Realtime transaction change:', payload);
+                const updatedTransactions = await db.fetchTransactions();
+                if (updatedTransactions) {
+                    setTransactions(updatedTransactions);
+                }
+                // Also refresh products as stock might have changed
+                const updatedProducts = await db.fetchProducts();
+                setProducts(updatedProducts);
+            })
+            .subscribe();
+
+        const productsSubscription = supabase
+            .channel('public:products')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async (payload) => {
+                console.log('Realtime product change:', payload);
+                const updatedProducts = await db.fetchProducts();
+                setProducts(updatedProducts);
+            })
+            .subscribe();
+
+        const variantsSubscription = supabase
+            .channel('public:product_variants')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'product_variants' }, async (payload) => {
+                console.log('Realtime variant change:', payload);
+                const updatedProducts = await db.fetchProducts();
+                setProducts(updatedProducts);
+            })
+            .subscribe();
+
+        const customersSubscription = supabase
+            .channel('public:customers')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, async (payload) => {
+                console.log('Realtime customer change:', payload);
+                const updatedCustomers = await db.fetchCustomers();
+                setCustomers(updatedCustomers);
+            })
+            .subscribe();
+
+        const suppliersSubscription = supabase
+            .channel('public:suppliers')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, async (payload) => {
+                console.log('Realtime supplier change:', payload);
+                const updatedSuppliers = await db.fetchSuppliers();
+                setSuppliers(updatedSuppliers);
+            })
+            .subscribe();
+
+        const ordersSubscription = supabase
+            .channel('public:orders')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async (payload) => {
+                console.log('Realtime order change:', payload);
+                const updatedOrders = await db.fetchOrders();
+                setOrders(updatedOrders);
+            })
+            .subscribe();
+
+        const billsSubscription = supabase
+            .channel('public:bills')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'bills' }, async (payload) => {
+                console.log('Realtime bill change:', payload);
+                const updatedBills = await db.fetchBills();
+                setBills(updatedBills);
+            })
+            .subscribe();
+
+        const settingsSubscription = supabase
+            .channel('public:store_settings')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, async (payload) => {
+                console.log('Realtime settings change:', payload);
+                const updatedSettings = await db.fetchStoreSettings();
+                setStoreSettings(updatedSettings);
+            })
+            .subscribe();
+
+        const creditsSubscription = supabase
+            .channel('public:store_credits')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'store_credits' }, async (payload) => {
+                console.log('Realtime credit change:', payload);
+                const updatedCredits = await db.fetchStoreCredits();
+                setStoreCredits(updatedCredits);
+            })
+            .subscribe();
+
+        const dailyExpensesSubscription = supabase
+            .channel('public:daily_expenses')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_expenses' }, async () => {
+                const today = new Date().toISOString().split('T')[0];
+                const updatedExpenses = await db.fetchDailyExpenses(today);
+                setDailyExpenses(updatedExpenses);
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(transactionsSubscription);
+            supabase.removeChannel(productsSubscription);
+            supabase.removeChannel(variantsSubscription);
+            supabase.removeChannel(customersSubscription);
+            supabase.removeChannel(suppliersSubscription);
+            supabase.removeChannel(ordersSubscription);
+            supabase.removeChannel(billsSubscription);
+            supabase.removeChannel(settingsSubscription);
+            supabase.removeChannel(creditsSubscription);
+            supabase.removeChannel(dailyExpensesSubscription);
+        };
+    }, []);
 
     const logActivity = (action: string, user: User) => {
         const newLog: ActivityLog = { id: `log-${Date.now()}`, userId: user.id, action, timestamp: new Date().toISOString() };
@@ -1075,8 +1245,8 @@ const App: React.FC = () => {
             // or we assume the user knows what they are doing. 
             // In a real scenario: if (user.password === password) ...
 
-            // Ensure permissions are set (if not already in the user object, generate them based on role)
-            const permissions = user.permissions || getPermissionsFromRoles(user.role);
+            // Always regenerate permissions to ensure latest permission structure
+            const permissions = getPermissionsFromRoles(user.role);
             const userWithPermissions = { ...user, permissions };
 
             setCurrentUser(userWithPermissions);
@@ -1175,16 +1345,17 @@ const App: React.FC = () => {
         shift_history: <ClipboardDocumentListIcon className="h-5 w-5" />,
         activity_log: <ShieldCheckIcon className="h-5 w-5" />,
         user_management: <UserCircleIcon className="h-5 w-5" />,
+        daily_expenses: <BanknotesIcon className="h-5 w-5" />,
     };
 
     const renderView = () => {
         if (!currentUser) return <LoginView onLogin={handleLogin} storeSettings={storeSettings} language={language} setLanguage={setLanguage} t={t} />;
-        if (activeView === 'ceo_dashboard') return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
+        if (activeView === 'ceo_dashboard') return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} dailyExpenses={dailyExpenses} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
 
         switch (activeView) {
             case 'dashboard':
                 if (currentUser && currentUser.role[0] === 'CEO') {
-                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} dailyExpenses={dailyExpenses} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
                 }
                 return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
             case 'pos': return <POSView products={products} currentUser={currentUser} customers={customers} storeCredits={storeCredits} transactions={transactions} onNewTransaction={handleNewTransaction} onNewInvoice={handleNewInvoice} onNewOrder={handleNewOrder} onAddNewCustomerFromPOS={handleAddNewCustomerFromPOS} openScanner={openScanner} posScannedCode={posScannedCode} setPosScannedCode={setPosScannedCode} showAlert={showAlert} storeSettings={storeSettings} onProductMouseEnter={handleProductMouseEnter} onProductMouseLeave={handleProductMouseLeave} t={t} language={language} />;
@@ -1205,10 +1376,10 @@ const App: React.FC = () => {
             case 'my_profile': return <ProfileView currentUser={currentUser} onUpdateUser={handleUpdateUser} onUpdatePassword={handleUpdatePassword} links={navLinks} t={t} />;
             case 'category_management': return <CategoryManagementView categories={categories} currentUser={currentUser} onAddCategory={() => setIsAddCategoryModalOpen(true)} onEditCategory={(cat) => { setCategoryToEdit(cat); setIsEditCategoryModalOpen(true); }} onDeleteCategory={handleDeleteCategory} t={t} language={language} />;
             case 'dashboard_management': return <DashboardManagementView storeSettings={storeSettings} onUpdateSettings={handleUpdateSettings} t={t} />;
-            case 'daily_expenses': return <DailyExpensesView currentUser={currentUser} t={t as any} showAlert={showAlert} />;
+            case 'daily_expenses': return <DailyExpensesView currentUser={currentUser} dailyExpenses={dailyExpenses} t={t as any} showAlert={showAlert} />;
             default:
                 if (currentUser && (currentUser.role[0] === 'CEO' || currentUser.role[0] === 'Admin')) {
-                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} dailyExpenses={dailyExpenses} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
                 }
                 return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
         }
@@ -1259,6 +1430,7 @@ const App: React.FC = () => {
                         canGoForward={historyIndex < navigationHistory.length - 1}
                         originalUser={originalUser}
                         onStopSimulation={handleStopSimulation}
+                        onRefresh={fetchInitialData}
                     />
                 )}
                 <main className="flex-1 overflow-y-auto p-4 md:p-6">

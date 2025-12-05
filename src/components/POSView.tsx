@@ -588,8 +588,8 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
     }, [posScannedCode, setPosScannedCode, products, handleProductSelect, showAlert, t]);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            <div className="lg:sticky lg:top-0 lg:h-[calc(100vh-6rem)] z-10">
+        <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 min-w-0">
                 <ProductGrid
                     products={products}
                     onProductSelect={handleProductSelect}
@@ -600,7 +600,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                     language={language}
                 />
             </div>
-            <div>
+            <div className="flex-1 lg:sticky lg:top-4 lg:self-start lg:h-[calc(100vh-8rem)]">
                 <CartPanel
                     cartItems={cartItems}
                     customers={customers}

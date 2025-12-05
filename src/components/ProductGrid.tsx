@@ -41,7 +41,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, on
     }
 
     return (
-        <div className="bg-surface rounded-lg shadow flex flex-col h-full">
+        <div className="bg-surface rounded-lg shadow flex flex-col">
             <div className="p-4 border-b flex flex-wrap gap-4 justify-between items-center">
                 <h3 className="text-lg font-semibold text-text-primary">{t('products')}</h3>
                 <div className="flex items-center gap-2 flex-wrap flex-grow sm:flex-grow-0">
@@ -75,9 +75,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductSelect, on
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 min-h-0">
+            <div className="p-4">
                 {filteredProducts.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                         {filteredProducts.map(product => {
                             const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
                             const hasMultipleVariants = product.variants.length > 1;

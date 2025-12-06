@@ -13,7 +13,8 @@ export const cacheService = {
                 data,
                 timestamp: Date.now(),
             };
-            localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(item));
+            // Temporarily disabled to fix QuotaExceededError
+            // localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(item));
         } catch (error) {
             console.warn('Failed to save to cache:', error);
         }

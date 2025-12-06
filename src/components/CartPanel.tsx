@@ -288,7 +288,7 @@ const CartPanel: React.FC<CartPanelProps> = ({
         </div>
 
         {/* Scrollable Content Area: Product List + Footer */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {/* Product List */}
           <div className="p-4">
             {cartItems.length === 0 ? (

@@ -13,10 +13,20 @@ export const cacheService = {
                 data,
                 timestamp: Date.now(),
             };
-            // Temporarily disabled to fix QuotaExceededError
-            // localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(item));
+            const serialized = JSON.stringify(item);
+            // Only cache if size is reasonable (< 5MB)
+            if (serialized.length < 5 * 1024 * 1024) {
+                localStorage.setItem(CACHE_PREFIX + key, serialized);
+            } else {
+                console.warn(`Cache item ${key} too large (${(serialized.length / 1024 / 1024).toFixed(2)}MB), skipping`);
+            }
         } catch (error) {
             console.warn('Failed to save to cache:', error);
+            // If quota exceeded, try to clear old cache items
+            if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+                console.warn('Storage quota exceeded, clearing cache');
+                cacheService.clearAll();
+            }
         }
     },
 

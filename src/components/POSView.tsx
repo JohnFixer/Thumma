@@ -600,7 +600,7 @@ const POSView: React.FC<POSViewProps> = ({ products, currentUser, customers, sto
                     language={language}
                 />
             </div>
-            <div className="flex-1 lg:sticky lg:top-4 lg:self-start lg:h-[calc(100vh-8rem)]">
+            <div className="flex-1 h-[calc(100vh-8rem)] lg:sticky lg:top-4 lg:self-start">
                 <CartPanel
                     cartItems={cartItems}
                     customers={customers}

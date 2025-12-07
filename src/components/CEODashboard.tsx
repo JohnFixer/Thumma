@@ -21,7 +21,7 @@ interface CEODashboardProps {
     products: Product[];
     suppliers: Supplier[];
     storeSettings: StoreSettings | null;
-    dailyExpenses: DailyExpense[];
+
     t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
     language: Language;
     setLanguage: (lang: Language) => void;
@@ -30,7 +30,7 @@ interface CEODashboardProps {
     onNavigate: (view: string, state?: any) => void;
 }
 
-const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, transactions, bills, users, products, suppliers, storeSettings, dailyExpenses, t, language, setLanguage, onBillUpdated, showAlert, onNavigate }) => {
+const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, transactions, bills, users, products, suppliers, storeSettings, t, language, setLanguage, onBillUpdated, showAlert, onNavigate }) => {
 
     // Widget visibility based on role settings
     const getVisibleWidgets = (): string[] => {
@@ -74,7 +74,7 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
     const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] = useState(false);
     const [billToRecordPaymentFor, setBillToRecordPaymentFor] = useState<Bill | null>(null);
     // const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]); // Now passed as prop
-    const [isDailyExpensesExpanded, setIsDailyExpensesExpanded] = useState(false);
+
 
     // To-Do List Logic
     useEffect(() => {
@@ -311,39 +311,6 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ currentUser, onLogout, tran
                     {/* Column 2 */}
                     <div className="space-y-6">
                         {/* Daily Expenses */}
-                        {isWidgetVisible('ceo_daily_expenses') && (
-                            <div className="bg-gray-800 p-4 rounded-lg">
-                                <h2 className="text-lg font-semibold mb-4">{t('daily_expenses')}</h2>
-                                <StatsCard
-                                    title={t('daily_expenses_total')}
-                                    value={`฿${dailyExpenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}`}
-                                    icon={<BanknotesIcon className="h-6 w-6" />}
-                                    color="text-red-400"
-                                    className="bg-gray-700/50"
-                                    isClickable
-                                    onClick={() => setIsDailyExpensesExpanded(!isDailyExpensesExpanded)}
-                                    valueColor="text-gray-900"
-                                    titleColor="text-gray-600"
-                                />
-                                {isDailyExpensesExpanded && (
-                                    <div className="mt-4 bg-gray-700/30 rounded-lg p-3 space-y-2 animate-fadeIn">
-                                        {dailyExpenses.length > 0 ? (
-                                            dailyExpenses.map(expense => (
-                                                <div key={expense.id} className="flex justify-between items-center text-sm border-b border-gray-600/50 last:border-0 pb-2 last:pb-0">
-                                                    <div>
-                                                        <p className="font-medium">{expense.remark}</p>
-                                                        <p className="text-xs text-gray-400">{safeDate(expense.date).toLocaleTimeString()} • {expense.createdBy}</p>
-                                                    </div>
-                                                    <span className="text-red-400 font-bold">-฿{expense.amount.toLocaleString()}</span>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-center text-gray-500 text-sm">{t('no_expenses_today')}</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
                         {/* Accounts Summary */}
                         {isWidgetVisible('ceo_accounts_summary') && (
                             <div className="bg-gray-800 p-4 rounded-lg">

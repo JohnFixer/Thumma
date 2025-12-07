@@ -22,7 +22,6 @@ import CustomerAssistView from './components/CustomerAssistView';
 import OrderFulfillmentView from './components/OrderFulfillmentView';
 import SalesHistoryView from './components/SalesHistoryView';
 import ActivityLogView from './components/ActivityLogView';
-import DailyExpensesView from './features/DailyExpenses/DailyExpensesView';
 import ProfileView from './components/ProfileView';
 import EndOfDayView from './components/EndOfDayView';
 import ShiftHistoryView from './components/ShiftHistoryView';
@@ -100,7 +99,7 @@ const App: React.FC = () => {
     const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
     const [shiftReports, setShiftReports] = useState<ShiftReport[]>([]);
     const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
-    const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
+
 
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         try {
@@ -285,8 +284,7 @@ const App: React.FC = () => {
                 fetchedSettings,
                 fetchedCategories,
                 fetchedStoreCredits,
-                fetchedOrders,
-                fetchedDailyExpenses
+                fetchedOrders
             ] = await Promise.all([
                 db.fetchProducts(),
                 db.fetchCustomers(),
@@ -297,8 +295,7 @@ const App: React.FC = () => {
                 db.fetchStoreSettings(),
                 db.fetchCategories(),
                 db.fetchStoreCredits(),
-                db.fetchOrders(),
-                db.fetchDailyExpenses(new Date().toISOString().split('T')[0])
+                db.fetchOrders()
             ]);
 
             // 3. Update State & Cache
@@ -329,7 +326,7 @@ const App: React.FC = () => {
             setOrders(fetchedOrders);
             // Orders are not cached
 
-            setDailyExpenses(fetchedDailyExpenses);
+
 
             // 4. Fetch Transactions Separately (Heavy Load)
             try {
@@ -445,15 +442,6 @@ const App: React.FC = () => {
             })
             .subscribe();
 
-        const dailyExpensesSubscription = supabase
-            .channel('public:daily_expenses')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_expenses' }, async () => {
-                const today = new Date().toISOString().split('T')[0];
-                const updatedExpenses = await db.fetchDailyExpenses(today);
-                setDailyExpenses(updatedExpenses);
-            })
-            .subscribe();
-
         return () => {
             supabase.removeChannel(transactionsSubscription);
             supabase.removeChannel(productsSubscription);
@@ -464,7 +452,6 @@ const App: React.FC = () => {
             supabase.removeChannel(billsSubscription);
             supabase.removeChannel(settingsSubscription);
             supabase.removeChannel(creditsSubscription);
-            supabase.removeChannel(dailyExpensesSubscription);
         };
     }, []);
 
@@ -1364,12 +1351,12 @@ const App: React.FC = () => {
 
     const renderView = () => {
         if (!currentUser) return <LoginView onLogin={handleLogin} storeSettings={storeSettings} language={language} setLanguage={setLanguage} t={t} />;
-        if (activeView === 'ceo_dashboard') return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} dailyExpenses={dailyExpenses} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
+        if (activeView === 'ceo_dashboard') return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
 
         switch (activeView) {
             case 'dashboard':
                 if (currentUser && currentUser.role[0] === 'CEO') {
-                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} dailyExpenses={dailyExpenses} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
                 }
                 return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
             case 'pos': return <POSView products={products} currentUser={currentUser} customers={customers} storeCredits={storeCredits} transactions={transactions} onNewTransaction={handleNewTransaction} onNewInvoice={handleNewInvoice} onNewOrder={handleNewOrder} onAddNewCustomerFromPOS={handleAddNewCustomerFromPOS} openScanner={openScanner} posScannedCode={posScannedCode} setPosScannedCode={setPosScannedCode} showAlert={showAlert} storeSettings={storeSettings} onProductMouseEnter={handleProductMouseEnter} onProductMouseLeave={handleProductMouseLeave} t={t} language={language} />;
@@ -1390,10 +1377,10 @@ const App: React.FC = () => {
             case 'my_profile': return <ProfileView currentUser={currentUser} onUpdateUser={handleUpdateUser} onUpdatePassword={handleUpdatePassword} links={navLinks} t={t} />;
             case 'category_management': return <CategoryManagementView categories={categories} currentUser={currentUser} onAddCategory={() => setIsAddCategoryModalOpen(true)} onEditCategory={(cat) => { setCategoryToEdit(cat); setIsEditCategoryModalOpen(true); }} onDeleteCategory={handleDeleteCategory} t={t} language={language} />;
             case 'dashboard_management': return <DashboardManagementView storeSettings={storeSettings} onUpdateSettings={handleUpdateSettings} t={t} />;
-            case 'daily_expenses': return <DailyExpensesView currentUser={currentUser} dailyExpenses={dailyExpenses} t={t as any} showAlert={showAlert} />;
+
             default:
                 if (currentUser && (currentUser.role[0] === 'CEO' || currentUser.role[0] === 'Admin')) {
-                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} dailyExpenses={dailyExpenses} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
+                    return <CEODashboard currentUser={currentUser} onLogout={handleLogout} transactions={transactions} bills={bills} users={users} products={products} suppliers={suppliers} storeSettings={storeSettings} t={t} language={language} setLanguage={setLanguage} onBillUpdated={handleBillUpdate} showAlert={showAlert} onNavigate={handleNavigate} />;
                 }
                 return <Dashboard products={products} users={users} transactions={transactions} bills={bills} t={t} language={language} onNavigate={handleNavigate} currentUser={currentUser} storeSettings={storeSettings} />;
         }
